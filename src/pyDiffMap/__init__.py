@@ -1,1 +1,6 @@
-__version__ = '0.1.0'
+"""
+A library for constructing diffusion maps.
+"""
+from __future__ import absolute_import
+
+from . import diffusion_map
