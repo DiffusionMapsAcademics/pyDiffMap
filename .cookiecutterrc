@@ -1,0 +1,52 @@
+# This file exists so you can easily regenerate your project.
+#
+# `cookiepatcher` is a convenient shim around `cookiecutter`
+# for regenerating projects (it will generate a .cookiecutterrc
+# automatically for any template). To use it:
+#
+#    pip install cookiepatcher
+#    cookiepatcher gh:ionelmc/cookiecutter-pylibrary project-path
+#
+# See:
+#    https://pypi.python.org/pypi/cookiepatcher
+#
+# Alternatively, you can run:
+#
+#    cookiecutter --overwrite-if-exists --config-file=project-path/.cookiecutterrc gh:ionelmc/cookiecutter-pylibrary
+
+default_context:
+
+    appveyor:                  'no'
+    c_extension_function:      'longest'
+    c_extension_module:        '_pyDiffMap'
+    c_extension_optional:      'no'
+    c_extension_support:       'no'
+    codacy:                    'no'
+    codeclimate:               'no'
+    codecov:                   'yes'
+    command_line_interface:    'plain'
+    command_line_interface_bin_name: 'pyDiffMap'
+    coveralls:                 'no'
+    distribution_name:         'pyDiffMap'
+    email:                     'zofia.trstanova@ed.ac.uk'
+    full_name:                 'Zofia Trstanova'
+    github_username:           'ZofiaTr'
+    landscape:                 'no'
+    license:                   'MIT license'
+    linter:                    'flake8'
+    package_name:              'pyDiffMap'
+    project_name:              'pyDiffMap'
+    project_short_description: 'Library for constructing variable bandwidth diffusion maps'
+    release_date:              'today'
+    repo_name:                 'python-pydiffmap'
+    requiresio:                'no'
+    scrutinizer:               'no'
+    sphinx_doctest:            'no'
+    sphinx_theme:              'sphinx-rtd-theme'
+    test_matrix_configurator:  'no'
+    test_matrix_separate_coverage: 'no'
+    test_runner:               'pytest'
+    travis:                    'yes'
+    version:                   '0.1.0'
+    website:                   'na'
+    year:                      'now'
