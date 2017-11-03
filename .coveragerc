@@ -1,12 +1,12 @@
 [paths]
 source =
-   src/pyDiffMap
-   */site-packages/pyDiffMap
+   src/pydiffmap
+   */site-packages/pydiffmap
 
 [run]
 branch = true
 source =
-    pyDiffMap
+    pydiffmap
     tests
 parallel = true
 

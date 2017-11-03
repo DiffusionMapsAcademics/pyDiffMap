@@ -3,7 +3,7 @@ pyDiffMap
 
 .. testsetup::
 
-    from pyDiffMap import *
+    from pydiffmap import *
 
-.. automodule:: pyDiffMap
+.. automodule:: pydiffmap
     :members:
