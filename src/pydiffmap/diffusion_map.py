@@ -14,7 +14,7 @@ import scipy.sparse.linalg as spsl
 
 class DiffusionMap(object):
     """
-        
+
     """
 
     def __init__(self):
@@ -46,7 +46,7 @@ class DiffusionMap(object):
         """
 
         """
-        return 
+        return
 
     def compute_dirichlet_basis(self):
         """
@@ -60,5 +60,4 @@ def get_optimal_epsilon_BH(scaled_distsq, epses=2.**np.arange(-40, 41)):
     """
     Calculates the optimal bandwidth for kernel density estimation, according to the algorithm of Berry and Harlim.
     """
-    return 
-
+    return
