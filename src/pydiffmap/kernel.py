@@ -36,6 +36,6 @@ class Kernel():
             raise("Error: Kernel type not understood.")
         # symmetrize
         if (compute_self == True):
-            A = 0.5*(A+A.transpose)
+            A = 0.5*(A+A.transpose())
 
         return A
