@@ -51,7 +51,10 @@ class DiffusionMap(object):
         #if (choose_eps=='auto'):
             #self.epsilon = choose_epsilon(X)
         #compute kernel matrix
-        kernel_matrix = kernel.Kernel(type=self.kernel_type, epsilon = self.epsilon, k=self.k).compute(X)
+        my_kernel = kernel.Kernel(type=self.kernel_type, epsilon = self.epsilon, k=self.k).fit(X)
+        self.local_kernel = my_kernel
+        kernel_matrix = _symmetrize_kernel_matrix(my_kernel.compute(X))
+
         #alpha normalization
         m = np.shape(X)[0]
         q = np.array(sps.csr_matrix.sum(kernel_matrix, axis=1)).ravel()
@@ -59,10 +62,13 @@ class DiffusionMap(object):
         kernel_matrix = Dalpha * kernel_matrix * Dalpha
         #save kernel density estimate for later
         self.q = q
+
         #row normalization
         D = sps.csr_matrix.sum(kernel_matrix, axis=1).transpose()
         Dalpha = sps.spdiags(np.power(D,-1), 0, m, m)
         P = Dalpha * kernel_matrix
+        self.P = P
+
         #diagonalise and sort eigenvalues
         evals, evecs = spsl.eigs(P, k=(self.n_evecs+1), which='LM')
         ix = evals.argsort()[::-1]
@@ -98,7 +104,8 @@ class DiffusionMap(object):
         if (x.ndim==1):
             x = x[np.newaxis,:]
         #compute the kernel k(x,X). x is the query point, X the data points.
-        kernel_extended = kernel.Kernel(type=self.kernel_type, epsilon = self.epsilon, k=self.k).compute(x, self.data)
+#        kernel_extended = kernel.Kernel(type=self.kernel_type, epsilon = self.epsilon, k=self.k).compute(x, self.data)
+        kernel_extended = self.local_kernel.compute(x)
         #right normalization
         m = np.shape(self.data)[0]
         Dalpha = sps.spdiags(np.power(self.q,-self.alpha), 0, m, m)
@@ -122,6 +129,38 @@ class DiffusionMap(object):
         """
         return
 
+
+def _symmetrize_kernel_matrix(K,mode='average'):
+    """
+    Symmetrizes a sparse kernel matrix.
+
+    Parameters
+    ----------
+    K : scipy sparse matrix
+        The sparse matrix to be symmetrized, with positive elements on the nearest neighbors.
+    mode : string
+        The method of symmetrization to be implemented.  Current options are 'average', 'and', and 'or'.
+    
+    Returns
+    -------
+    K_sym : scipy sparse matrix
+        Symmetrized kernel matrix.
+    """
+
+    if mode == 'average':
+        return 0.5*(K + K.transpose())
+    elif mode == 'or':
+        Ktrans = K.transpose()
+        dK = abs(K - Ktrans)
+        K = K + Ktrans
+        K = K + dK
+        return 0.5*K
+    elif mode == 'and':
+        Ktrans = K.transpose()
+        dK = abs(K - Ktrans)
+        K = K + Ktrans
+        K = K - dK
+        return 0.5*K
 
 
 def get_optimal_epsilon_BH(scaled_distsq, epses=2.**np.arange(-40, 41)):

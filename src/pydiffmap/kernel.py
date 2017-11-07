@@ -17,7 +17,13 @@ class Kernel():
         self.distance = distance
         self.k = k
 
-    def compute(self, X, Y=None):
+    def fit(self, X):
+        self.k0 = min(self.k, np.shape(X)[0])
+        self.data = X
+        self.neigh = NearestNeighbors(metric=self.distance).fit(X)
+        return self
+
+    def compute(self, Y=None):
         """
         compute sparse kernel matrix
         input:  X = (n,d) numpy array of X data points,
@@ -26,22 +32,12 @@ class Kernel():
                 columns to different variables
         output: sparse n x m kernel matrix k(X,Y).
         """
-        compute_self = False
-        if Y is None:
-            Y = X
-            compute_self = True
         # perform k nearest neighbour search on X and Y and construct sparse matrix
-        neigh = NearestNeighbors(metric=self.distance)
-        k0 = min(self.k, np.shape(Y)[0])
-        A = neigh.fit(Y).kneighbors_graph(X,n_neighbors=k0, mode='distance')
+        A = self.neigh.kneighbors_graph(Y,n_neighbors=self.k0, mode='distance')
         # retrieve all nonzero elements and apply kernel function to it
         v = A.data
         if (self.type=='gaussian'):
             A.data = np.exp(-v**2/self.epsilon)
         else:
             raise("Error: Kernel type not understood.")
-        # symmetrize
-        if (compute_self == True):
-            A = 0.5*(A+A.transpose())
-
         return A
