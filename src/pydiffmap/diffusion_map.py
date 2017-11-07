@@ -99,7 +99,6 @@ class DiffusionMap(object):
             x = x[np.newaxis,:]
         #compute the kernel k(x,X). x is the query point, X the data points.
         kernel_extended = kernel.Kernel(type=self.kernel_type, epsilon = self.epsilon, k=self.k).compute(x, self.data)
-#        print kernel_extended
         #right normalization
         m = np.shape(self.data)[0]
         Dalpha = sps.spdiags(np.power(self.q,-self.alpha), 0, m, m)
