@@ -45,6 +45,7 @@ class DiffusionMap(object):
         """
         # save the locations of data points into the class.
         # Not pretty, but needed for the nystroem extension
+        # Erik: This is totally fine, and exactly what we should do :).
         self.data = X
         #ToDo: compute epsilon automatically
         #if (choose_eps=='auto'):
@@ -53,7 +54,7 @@ class DiffusionMap(object):
         kernel_matrix = kernel.Kernel(type=self.kernel_type, epsilon = self.epsilon, k=self.k).compute(X)
         #alpha normalization
         m = np.shape(X)[0]
-        q = sps.csr_matrix.sum(kernel_matrix, axis=1).transpose()
+        q = np.array(sps.csr_matrix.sum(kernel_matrix, axis=1)).ravel()
         Dalpha = sps.spdiags(np.power(q,-self.alpha), 0, m, m)
         kernel_matrix = Dalpha * kernel_matrix * Dalpha
         #save kernel density estimate for later
@@ -98,13 +99,14 @@ class DiffusionMap(object):
             x = x[np.newaxis,:]
         #compute the kernel k(x,X). x is the query point, X the data points.
         kernel_extended = kernel.Kernel(type=self.kernel_type, epsilon = self.epsilon, k=self.k).compute(x, self.data)
+#        print kernel_extended
         #right normalization
-        m = np.shape(x)[0]
+        m = np.shape(self.data)[0]
         Dalpha = sps.spdiags(np.power(self.q,-self.alpha), 0, m, m)
         kernel_extended = kernel_extended * Dalpha
         #left normalization
         D = sps.csr_matrix.sum(kernel_extended, axis=1).transpose()
-        Dalpha = sps.spdiags(np.power(D,-1), 0, np.shape(D)[1], np.shape(D)[1])
+        Dalpha = sps.spdiags(np.power(D,-1), 0, np.shape(D)[1], np.shape(D)[1]) 
         P = Dalpha * kernel_extended
         return P * self.evecs
 
