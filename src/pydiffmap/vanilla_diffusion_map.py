@@ -51,10 +51,10 @@ class VanillaDiffusionMap(DiffusionMap):
 
         alpha = 0.5;
         m = np.shape(X)[0];
-        D = sps.csr_matrix.sum(kernel, axis=0);
+        D = sps.csr_matrix.sum(kernel, axis=1).transpose();
         Dalpha = sps.spdiags(np.power(D,-alpha), 0, m, m)
         kernel = Dalpha * kernel * Dalpha;
-        D = sps.csr_matrix.sum(kernel, axis=0);
+        D = sps.csr_matrix.sum(kernel, axis=1).transpose();
         Dalpha = sps.spdiags(np.power(D,-1), 0, m, m)
         L = Dalpha * kernel;
 

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Routines and Class definitions for constructing basis sets using the
+"""Routines and Class definitions for the
 diffusion maps algorithm.
 
-@author: Erik
+@authors: Erik, Zofia, Ralf, Lorenzo
 
 """
 from __future__ import absolute_import
@@ -33,7 +33,15 @@ class DiffusionMap(object):
     def fit(self,X):
         """
         Fits the data.
-
+        input: X = (n,d) numpy array. Rows correspond to different observations,
+        columns to different variables.
+        creates the following new attributes:
+        self.data   =   a copy of the data X
+        self.q      =   the KDE of sampling density q as a row vector
+        self.evals  =   eigenvalues 1 to n_evecs
+        self.evecs  =   eigenvectors 1 to n_evecs
+        self.dmap   =   diffusion map coordinates (eigenvectors scaled by eigenvalues)
+                        1 to n_evecs
         """
         # save the locations of data points into the class.
         # Not pretty, but needed for the nystroem extension
@@ -78,7 +86,8 @@ class DiffusionMap(object):
 
     def transform(self, x):
         """
-        input: Scalar or (n,d) numpy array. rows correspond to different
+        computes diffusion map at location x.
+        input: x = d-dim vector or (n,d) numpy array. rows correspond to different
         observations, columns to different variables.
         returns the diffusion map self.dmap evaluated at the point(s) x by
         the nystroem extension method.

@@ -1,3 +1,9 @@
+"""A class to implement diffusion kernels.
+
+@authors: Erik, Zofia, Ralf, Lorenzo
+
+"""
+
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 
