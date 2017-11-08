@@ -1,7 +1,13 @@
 Welcome to pydiffmap
 ====================
 
-This is the home of the documentation for the python diffusion map project pyDiffMap. 
+This is the home of the documentation for the python diffusion map project pyDiffMap.  Code can be found on our `github page`__.
+
+.. _github: https://github.com/DiffusionMapsAcademics/pyDiffMap/
+
+__ github_
+
+
 
 
 ========
