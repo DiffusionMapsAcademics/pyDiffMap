@@ -73,15 +73,15 @@ class DiffusionMap(object):
 
         # alpha normalization
         m = np.shape(X)[0]
-        q = np.array(sps.csr_matrix.sum(kernel_matrix, axis=1)).ravel()
+        q = np.array(kernel_matrix.sum(axis=1)).ravel()
         Dalpha = sps.spdiags(np.power(q, -self.alpha), 0, m, m)
         kernel_matrix = Dalpha * kernel_matrix * Dalpha
         # save kernel density estimate for later
         self.q = q
 
         # row normalization
-        D = sps.csr_matrix.sum(kernel_matrix, axis=1).transpose()
-        Dalpha = sps.spdiags(np.power(D, -1), 0, m, m)
+        row_sum = kernel_matrix.sum(axis=1).transpose()
+        Dalpha = sps.spdiags(np.power(row_sum, -1), 0, m, m)
         P = Dalpha * kernel_matrix
         self.P = P
 
@@ -131,7 +131,7 @@ class DiffusionMap(object):
         Dalpha = sps.spdiags(np.power(self.q, -self.alpha), 0, m, m)
         kernel_extended = kernel_extended * Dalpha
         # left normalization
-        D = sps.csr_matrix.sum(kernel_extended, axis=1).transpose()
+        D = kernel_extended.sum(axis=1).transpose()
         Dalpha = sps.spdiags(np.power(D, -1), 0, np.shape(D)[1], np.shape(D)[1])
         P = Dalpha * kernel_extended
         return P * self.evecs
