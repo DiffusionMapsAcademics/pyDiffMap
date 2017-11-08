@@ -1,7 +1,5 @@
-"""A class to implement diffusion kernels.
-
-@authors: Erik, Zofia, Ralf, Lorenzo
-
+"""
+A class to implement diffusion kernels.
 """
 
 import numpy as np
@@ -10,26 +8,22 @@ from sklearn.neighbors import NearestNeighbors
 class Kernel(object):
     """
     Class abstracting the evaluation of kernel functions on the dataset.
+
+    Parameters
+    ----------
+    type : string, optional
+        Type of kernel to construct. Currently the only option is 'gaussian', but more will be implemented.
+    epsilon : scalar, optional
+        Value of the length-scale parameter.
+    k : int, optional
+        Number of nearest neighbors over which to construct the kernel.
+    metric : string, optional
+        Distance metric to use in constructing the kernel.  This can be selected from any of the scipy.spatial.distance metrics, or a callable function returning the distance.
+    metric_params : dict or None, optional
+        Optional parameters required for the metric given.
     """
 
     def __init__(self, type='gaussian', epsilon = 1.0, k=64, metric='euclidean', metric_params=None):
-        """
-        Initializes the kernel object.
-
-        Parameters
-        ----------
-        type : string, optional
-            Type of kernel to construct. Currently the only option is 'gaussian', but more will be implemented.
-        epsilon : scalar, optional
-            Value of the length-scale parameter. Default is 1.
-        k : int, optional
-            Number of nearest neighbors over which to construct the kernel.  Default is 64.
-        metric : string, optional
-            Distance metric to use in constructing the kernel.  This can be selected from any of the scipy.spatial.distance metrics, or a callable function returning the distance.
-        metric_params : dict or None, optional
-            Optional parameters required for the metric.
-
-        """
         self.type = type
         self.epsilon = epsilon
         self.metric = metric
@@ -46,7 +40,7 @@ class Kernel(object):
 
         Returns
         -------
-        self : the object itself.
+        self : the object itself
         """
         self.k0 = min(self.k, np.shape(X)[0])
         self.data = X

@@ -4,4 +4,4 @@ Installation
 
 At the command line::
 
-    pip install pyDiffMap
+    pip install [source_dir]

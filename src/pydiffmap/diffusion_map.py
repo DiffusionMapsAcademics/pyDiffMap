@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Routines and Class definitions for the
-diffusion maps algorithm.
-
-@authors: Erik, Zofia, Ralf, Lorenzo
-
+"""
+Routines and Class definitions for the diffusion maps algorithm.
 """
 from __future__ import absolute_import
 
@@ -15,12 +12,27 @@ from . import kernel
 
 class DiffusionMap(object):
     """
+    Diffusion Map object to be used in data analysis for fun and profit.
 
+    Parameters
+    ----------
+    alpha : scalar, optional 
+        Exponent to be used for the left normalization in constructing the diffusion map.
+    epsilon : scalar, optional
+        Length-scale parameter.
+    k : int, optional
+        Number of nearest neighbors over which to construct the kernel.
+    kernel_type : string, optional
+        Type of kernel to construct. Currently the only option is 'gaussian', but more will be implemented.
+    choose_eps : string, optional
+        Method for choosing the epsilon.  Currently, the only option is 'fixed' (i.e. don't).
+    n_evecs : int, optional
+        Number of diffusion map eigenvectors to return
     """
 
-    def __init__(self, alpha = 0.5, epsilon = 1.0, k=64, kernel_type = 'gaussian', choose_eps = 'auto', n_evecs = 1):
+    def __init__(self, alpha = 0.5, epsilon = 1.0, k=64, kernel_type = 'gaussian', choose_eps = 'fixed', n_evecs = 1):
         """
-        Initializes Diffusion Map Params.
+        Initializes Diffusion Map, sets parameters 
         """
         self.alpha = alpha
         self.epsilon = epsilon
@@ -33,21 +45,25 @@ class DiffusionMap(object):
     def fit(self,X):
         """
         Fits the data.
-        input: X = (n,d) numpy array. Rows correspond to different observations,
-        columns to different variables.
-        creates the following new attributes:
-        self.data   =   a copy of the data X
-        self.q      =   the KDE of sampling density q as a row vector
-        self.evals  =   eigenvalues 1 to n_evecs
-        self.evecs  =   eigenvectors 1 to n_evecs
-        self.dmap   =   diffusion map coordinates (eigenvectors scaled by eigenvalues)
-                        1 to n_evecs
+
+        Parameters
+        ----------
+        X : array-like, shape (n_query, n_features)
+            Data upon which to construct the diffusion map.
+
+        Returns
+        -------
+        self : the object itself
         """
         # save the locations of data points into the class.
         # Not pretty, but needed for the nystroem extension
         # Erik: This is totally fine, and exactly what we should do :).
         self.data = X
         #ToDo: compute epsilon automatically
+        if (choose_eps == 'fixed'):
+            pass
+        else:
+            raise NotImplementedError("We haven't actually implemented any method for automatically choosing epsilon... sorry :-(")
         #if (choose_eps=='auto'):
             #self.epsilon = choose_epsilon(X)
         #compute kernel matrix
@@ -79,33 +95,37 @@ class DiffusionMap(object):
         self.dmap = np.dot(self.evecs,np.diag(self.evals))
         return self
 
-    def _get_bandwidth_fxn(self):
-        """
+#    def _get_bandwidth_fxn(self):
+#        """
+#
+#        """
+#        return
 
-        """
-        return
+#    def _get_optimal_epsilon(self, scaled_distsq):
+#        """
+#
+#        """
+#        return
 
-    def _get_optimal_epsilon(self, scaled_distsq):
+    def transform(self, Y):
         """
+        Performs Nystroem out-of-sample extension to calculate the values of the diffusion coordinates at each given point.
 
-        """
-        return
-
-    def transform(self, x):
-        """
-        computes diffusion map at location x.
-        input: x = d-dim vector or (n,d) numpy array. rows correspond to different
-        observations, columns to different variables.
-        returns the diffusion map self.dmap evaluated at the point(s) x by
-        the nystroem extension method.
-        output: diffusion map evecs scaled by evals evaluated at x.
+        Parameters
+        ----------
+        Y : array-like, shape (n_query, n_features)
+            Data for which to perform the out-of-sample extension.
+        
+        Returns
+        -------
+        phi : numpy array, shape (n_query, n_eigenvectors)
+            Transformed value of the given values.
         """
         # turn x into array if needed
-        if (x.ndim==1):
-            x = x[np.newaxis,:]
-        #compute the kernel k(x,X). x is the query point, X the data points.
-#        kernel_extended = kernel.Kernel(type=self.kernel_type, epsilon = self.epsilon, k=self.k).compute(x, self.data)
-        kernel_extended = self.local_kernel.compute(x)
+        if (Y.ndim==1):
+            Y = Y[np.newaxis,:]
+        # compute the values of the kernel matrix
+        kernel_extended = self.local_kernel.compute(Y)
         #right normalization
         m = np.shape(self.data)[0]
         Dalpha = sps.spdiags(np.power(self.q,-self.alpha), 0, m, m)
@@ -118,16 +138,26 @@ class DiffusionMap(object):
 
     def fit_transform(self, X):
         """
-        fits the data and returns diffusion coordinates.
+        Fits the data and returns diffusion coordinates.  equivalent to calling dmap.fit(X).transform(x).
+
+        Parameters
+        ----------
+        X : array-like, shape (n_query, n_features)
+            Data upon which to construct the diffusion map.
+        
+        Returns
+        -------
+        phi : numpy array, shape (n_query, n_eigenvectors)
+            Transformed value of the given values.
         """
         self.fit(X)
         return self.dmap
 
-    def compute_dirichlet_basis(self):
-        """
-
-        """
-        return
+#    def compute_dirichlet_basis(self):
+#        """
+#
+#        """
+#        return
 
 
 def _symmetrize_kernel_matrix(K,mode='average'):
@@ -162,9 +192,9 @@ def _symmetrize_kernel_matrix(K,mode='average'):
         K = K - dK
         return 0.5*K
 
-
-def get_optimal_epsilon_BH(scaled_distsq, epses=2.**np.arange(-40, 41)):
-    """
-    Calculates the optimal bandwidth for kernel density estimation, according to the algorithm of Berry and Harlim.
-    """
-    return
+# TODO : Implement this!
+#def get_optimal_epsilon_BH(scaled_distsq, epses=None):
+#    """
+#    Calculates the optimal bandwidth for kernel density estimation, according to the algorithm of Berry and Harlim.
+#    """
+#    return
