@@ -1,3 +1,9 @@
+Welcome to pydiffmap
+====================
+
+This is the home of the documentation for the python diffusion map project pyDiffMap. 
+
+
 ========
 Contents
 ========
