@@ -7,8 +7,12 @@ Overview
 .. list-table::
     :stub-columns: 1
 
+    * - docs
+      - |docs|
     * - tests
       - | |travis|
+    * - package
+      - | |commits-since|
 
 ..    * - docs
       - |docs|
@@ -19,13 +23,17 @@ Overview
       - | |version| |wheel| |supported-versions| |supported-implementations|
         | |commits-since|
 
-.. .. |docs| image:: https://readthedocs.org/projects/python-pydiffmap/badge/?style=flat
+ .. |docs| image:: https://readthedocs.org/projects/python-pydiffmap/badge/?style=flat
     :target: https://readthedocs.org/projects/python-pydiffmap
     :alt: Documentation Status
 
 .. |travis| image:: https://travis-ci.org/DiffusionMapsAcademics/pyDiffMap.svg?branch=master
     :alt: Travis-CI Build Status
     :target: https://travis-ci.org/ZofiaTr/python-pyDiffMap
+
+ .. |commits-since| image:: https://img.shields.io/github/commits-since/DiffusionMapsAcademics/pyDiffMap/v0.1.0.svg
+    :alt: Commits since latest release
+    :target: https://github.com/DiffusionMapsAcademics/pyDiffMap/compare/v0.1.0...master
 
 .. .. |codecov| image:: https://codecov.io/github/DiffusionMapsAcademics/pyDiffMap/coverage.svg?branch=master
     :alt: Coverage Status
