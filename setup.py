@@ -60,7 +60,7 @@ setup(
         # eg: 'keyword1', 'keyword2', 'keyword3',
     ],
     install_requires=[
-        'numpy', 'scipy'
+        'numpy', 'scipy', 'scikit-learn'
     ],
     extras_require={
         # eg:

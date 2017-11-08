@@ -63,6 +63,8 @@ class Kernel(object):
             Values of the kernel matrix. 
 
         """
+        if Y is None:
+            Y = self.data
         # perform k nearest neighbour search on X and Y and construct sparse matrix
         K = self.neigh.kneighbors_graph(Y, n_neighbors=self.k0, mode='distance')
         # retrieve all nonzero elements and apply kernel function to it
