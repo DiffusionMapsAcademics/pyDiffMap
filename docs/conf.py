@@ -6,25 +6,28 @@ import os
 
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
+#    'sphinx.ext.autosummary',
     'sphinx.ext.coverage',
-    'sphinx.ext.doctest',
     'sphinx.ext.extlinks',
     'sphinx.ext.ifconfig',
+    'sphinx.ext.mathjax',
     'sphinx.ext.napoleon',
-    'sphinx.ext.todo',
+#    'sphinx.ext.todo',
     'sphinx.ext.viewcode',
+#    'sphinx.ext.doctest',
 ]
 if os.getenv('SPELLCHECK'):
     extensions += 'sphinxcontrib.spelling',
     spelling_show_suggestions = True
     spelling_lang = 'en_US'
 
+show_authors = False
+
 source_suffix = '.rst'
 master_doc = 'index'
-project = u'pyDiffMap'
+project = u'pydiffmap'
 year = '2017'
-author = u'Zofia Trstanova'
+author = u'Ralf Banisch, Lorenzo Boninsegna, Erik Henning Thiede, Zofia Trstanova'
 copyright = '{0}, {1}'.format(year, author)
 version = release = u'0.1.0'
 

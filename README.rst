@@ -7,7 +7,10 @@ Overview
 .. list-table::
     :stub-columns: 1
 
-    * - docs
+    * - tests
+      - | |travis|
+
+..    * - docs
       - |docs|
     * - tests
       - | |travis|
@@ -16,35 +19,35 @@ Overview
       - | |version| |wheel| |supported-versions| |supported-implementations|
         | |commits-since|
 
-.. |docs| image:: https://readthedocs.org/projects/python-pydiffmap/badge/?style=flat
+.. .. |docs| image:: https://readthedocs.org/projects/python-pydiffmap/badge/?style=flat
     :target: https://readthedocs.org/projects/python-pydiffmap
     :alt: Documentation Status
 
-.. |travis| image:: https://travis-ci.org/ZofiaTr/python-pydiffmap.svg?branch=master
+.. |travis| image:: https://travis-ci.org/ZofiaTr/pyDiffMap.svg?branch=master
     :alt: Travis-CI Build Status
-    :target: https://travis-ci.org/ZofiaTr/python-pydiffmap
+    :target: https://travis-ci.org/ZofiaTr/python-pyDiffMap
 
-.. |codecov| image:: https://codecov.io/github/ZofiaTr/python-pydiffmap/coverage.svg?branch=master
+.. .. |codecov| image:: https://codecov.io/github/ZofiaTr/pyDiffMap/coverage.svg?branch=master
     :alt: Coverage Status
-    :target: https://codecov.io/github/ZofiaTr/python-pydiffmap
+    :target: https://codecov.io/github/ZofiaTr/pyDiffMap
 
-.. |version| image:: https://img.shields.io/pypi/v/pyDiffMap.svg
+.. .. |version| image:: https://img.shields.io/pypi/v/pyDiffMap.svg
     :alt: PyPI Package latest release
     :target: https://pypi.python.org/pypi/pyDiffMap
 
-.. |commits-since| image:: https://img.shields.io/github/commits-since/ZofiaTr/python-pydiffmap/v0.1.0.svg
+.. .. |commits-since| image:: https://img.shields.io/github/commits-since/ZofiaTr/pyDiffMap/v0.1.0.svg
     :alt: Commits since latest release
-    :target: https://github.com/ZofiaTr/python-pydiffmap/compare/v0.1.0...master
+    :target: https://github.com/ZofiaTr/pyDiffMap/compare/v0.1.0...master
 
-.. |wheel| image:: https://img.shields.io/pypi/wheel/pyDiffMap.svg
+.. .. |wheel| image:: https://img.shields.io/pypi/wheel/pyDiffMap.svg
     :alt: PyPI Wheel
     :target: https://pypi.python.org/pypi/pyDiffMap
 
-.. |supported-versions| image:: https://img.shields.io/pypi/pyversions/pyDiffMap.svg
+.. .. |supported-versions| image:: https://img.shields.io/pypi/pyversions/pyDiffMap.svg
     :alt: Supported versions
     :target: https://pypi.python.org/pypi/pyDiffMap
 
-.. |supported-implementations| image:: https://img.shields.io/pypi/implementation/pyDiffMap.svg
+.. .. |supported-implementations| image:: https://img.shields.io/pypi/implementation/pyDiffMap.svg
     :alt: Supported implementations
     :target: https://pypi.python.org/pypi/pyDiffMap
 
@@ -53,19 +56,27 @@ Overview
 
 Library for constructing variable bandwidth diffusion maps
 
-* Free software: MIT license
+* Free software: GPL
 
 Installation
 ============
+
+Currently, we do not have the package on the python package repository yet.  Once it is, you will be able to install it using
 
 ::
 
     pip install pyDiffMap
 
+In the meantime, you can install the package directly from the source directly by downloading the package from github and running the command below, optionally with the "-e" flag for an editable install.
+
+::
+    
+    pip install [source_directory]
+
 Documentation
 =============
 
-https://python-pydiffmap.readthedocs.io/
+https://pyDiffMap.readthedocs.io/
 
 Development
 ===========
@@ -90,3 +101,10 @@ Note, to combine the coverage data from all the tox environments run:
       - ::
 
             PYTEST_ADDOPTS=--cov-append tox
+
+If you don't have tox installed, you can also run the python tests directly with 
+
+::
+    
+    pytest
+

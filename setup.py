@@ -23,8 +23,8 @@ def read(*names, **kwargs):
 
 
 setup(
-    name='pyDiffMap',
-    version='0.1.0',
+    name='pydiffmap',
+    versio='0.1.0',
     license='GPL license',
     description='Library for constructing variable bandwidth diffusion maps',
     long_description='%s\n%s' % (

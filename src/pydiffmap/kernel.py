@@ -1,47 +1,73 @@
-"""A class to implement diffusion kernels.
-
-@authors: Erik, Zofia, Ralf, Lorenzo
-
+"""
+A class to implement diffusion kernels.
 """
 
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 
-class Kernel():
+class Kernel(object):
+    """
+    Class abstracting the evaluation of kernel functions on the dataset.
 
-    def __init__(self, type='gaussian', distance = 'euclidean', epsilon = 1.0, k=64):
+    Parameters
+    ----------
+    type : string, optional
+        Type of kernel to construct. Currently the only option is 'gaussian', but more will be implemented.
+    epsilon : scalar, optional
+        Value of the length-scale parameter.
+    k : int, optional
+        Number of nearest neighbors over which to construct the kernel.
+    metric : string, optional
+        Distance metric to use in constructing the kernel.  This can be selected from any of the scipy.spatial.distance metrics, or a callable function returning the distance.
+    metric_params : dict or None, optional
+        Optional parameters required for the metric given.
+    """
 
-
+    def __init__(self, type='gaussian', epsilon = 1.0, k=64, metric='euclidean', metric_params=None):
         self.type = type
         self.epsilon = epsilon
-        self.distance = distance
+        self.metric = metric
         self.k = k
 
-    def compute(self, X, Y=None):
+    def fit(self, X):
         """
-        compute sparse kernel matrix
-        input:  X = (n,d) numpy array of X data points,
-                Y = (m,d) numpy array of Y data points,
-                rows correspond to different observations,
-                columns to different variables
-        output: sparse n x m kernel matrix k(X,Y).
+        Fits the kernel to the data X, constructing the nearest neighbor tree.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_query, n_features)
+            Data upon which to fit the nearest neighbor tree.
+
+        Returns
+        -------
+        self : the object itself
         """
-        compute_self = False
-        if Y is None:
-            Y = X
-            compute_self = True
+        self.k0 = min(self.k, np.shape(X)[0])
+        self.data = X
+        self.neigh = NearestNeighbors(metric=self.metric).fit(X)
+        return self
+
+    def compute(self, Y=None):
+        """
+        Computes the sparse kernel matrix.
+
+        Parameters
+        ----------
+        Y : array-like, shape (n_query, n_features), optional.
+            Data against which to calculate the kernel values.  If not provided, calculates against the data provided in the fit.
+
+        Returns
+        -------
+        K : array-like, shape (n_query_X, n_query_Y)
+            Values of the kernel matrix. 
+        
+        """
         # perform k nearest neighbour search on X and Y and construct sparse matrix
-        neigh = NearestNeighbors(metric=self.distance)
-        k0 = min(self.k, np.shape(Y)[0])
-        A = neigh.fit(Y).kneighbors_graph(X,n_neighbors=k0, mode='distance')
+        K = self.neigh.kneighbors_graph(Y,n_neighbors=self.k0, mode='distance')
         # retrieve all nonzero elements and apply kernel function to it
-        v = A.data
+        v = K.data
         if (self.type=='gaussian'):
-            A.data = np.exp(-v**2/self.epsilon)
+            K.data = np.exp(-v**2/self.epsilon)
         else:
             raise("Error: Kernel type not understood.")
-        # symmetrize
-        if (compute_self == True):
-            A = 0.5*(A+A.transpose())
-
-        return A
+        return K

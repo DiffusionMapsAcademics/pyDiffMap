@@ -4,4 +4,5 @@ Reference
 .. toctree::
     :glob:
 
-    pyDiffMap*
+    diffusion_map
+    kernel
