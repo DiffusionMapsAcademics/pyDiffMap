@@ -16,7 +16,7 @@ class DiffusionMap(object):
 
     Parameters
     ----------
-    alpha : scalar, optional 
+    alpha : scalar, optional
         Exponent to be used for the left normalization in constructing the diffusion map.
     epsilon : scalar, optional
         Length-scale parameter.
@@ -32,7 +32,7 @@ class DiffusionMap(object):
 
     def __init__(self, alpha=0.5, epsilon=1.0, k=64, kernel_type='gaussian', choose_eps='fixed', n_evecs=1):
         """
-        Initializes Diffusion Map, sets parameters 
+        Initializes Diffusion Map, sets parameters
         """
         self.alpha = alpha
         self.epsilon = epsilon
@@ -65,7 +65,7 @@ class DiffusionMap(object):
         else:
             raise NotImplementedError("We haven't actually implemented any method for automatically choosing epsilon... sorry :-(")
         # if (choose_eps=='auto'):
-            #self.epsilon = choose_epsilon(X)
+            # self.epsilon = choose_epsilon(X)
         # compute kernel matrix
         my_kernel = kernel.Kernel(type=self.kernel_type, epsilon=self.epsilon, k=self.k).fit(X)
         self.local_kernel = my_kernel

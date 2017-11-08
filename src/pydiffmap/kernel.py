@@ -5,6 +5,7 @@ A class to implement diffusion kernels.
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 
+
 class Kernel(object):
     """
     Class abstracting the evaluation of kernel functions on the dataset.
@@ -23,7 +24,7 @@ class Kernel(object):
         Optional parameters required for the metric given.
     """
 
-    def __init__(self, type='gaussian', epsilon = 1.0, k=64, metric='euclidean', metric_params=None):
+    def __init__(self, type='gaussian', epsilon=1.0, k=64, metric='euclidean', metric_params=None):
         self.type = type
         self.epsilon = epsilon
         self.metric = metric
@@ -60,13 +61,13 @@ class Kernel(object):
         -------
         K : array-like, shape (n_query_X, n_query_Y)
             Values of the kernel matrix. 
-        
+
         """
         # perform k nearest neighbour search on X and Y and construct sparse matrix
-        K = self.neigh.kneighbors_graph(Y,n_neighbors=self.k0, mode='distance')
+        K = self.neigh.kneighbors_graph(Y, n_neighbors=self.k0, mode='distance')
         # retrieve all nonzero elements and apply kernel function to it
         v = K.data
-        if (self.type=='gaussian'):
+        if (self.type == 'gaussian'):
             K.data = np.exp(-v**2/self.epsilon)
         else:
             raise("Error: Kernel type not understood.")
