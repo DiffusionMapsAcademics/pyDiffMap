@@ -10,7 +10,7 @@ from __future__ import absolute_import
 import numpy as np
 import scipy.sparse as sps
 import scipy.sparse.linalg as spsl
-from . import kernel 
+from . import kernel
 
 
 class DiffusionMap(object):
@@ -51,17 +51,19 @@ class DiffusionMap(object):
         #if (choose_eps=='auto'):
             #self.epsilon = choose_epsilon(X)
         #compute kernel matrix
+        #ToDo: To speed up transform(self, x), we could save instance of neigh.fit(Y) from kernel.py as
+        #a class attribute. That would require disentangling the kernel class a bit.
         kernel_matrix = kernel.Kernel(type=self.kernel_type, epsilon = self.epsilon, k=self.k).compute(X)
         #alpha normalization
         m = np.shape(X)[0]
-        q = np.array(sps.csr_matrix.sum(kernel_matrix, axis=1)).ravel()
+        q = np.array(kernel.sum(axis=1)).ravel();
         Dalpha = sps.spdiags(np.power(q,-self.alpha), 0, m, m)
         kernel_matrix = Dalpha * kernel_matrix * Dalpha
         #save kernel density estimate for later
         self.q = q
         #row normalization
-        D = sps.csr_matrix.sum(kernel_matrix, axis=1).transpose()
-        Dalpha = sps.spdiags(np.power(D,-1), 0, m, m)
+        row_sum = np.array(kernel.sum(axis=1)).ravel();
+        Dalpha = sps.spdiags(np.power(row_sum,-1), 0, m, m)
         P = Dalpha * kernel_matrix
         #diagonalise and sort eigenvalues
         evals, evecs = spsl.eigs(P, k=(self.n_evecs+1), which='LM')
@@ -105,7 +107,7 @@ class DiffusionMap(object):
         kernel_extended = kernel_extended * Dalpha
         #left normalization
         D = sps.csr_matrix.sum(kernel_extended, axis=1).transpose()
-        Dalpha = sps.spdiags(np.power(D,-1), 0, np.shape(D)[1], np.shape(D)[1]) 
+        Dalpha = sps.spdiags(np.power(D,-1), 0, np.shape(D)[1], np.shape(D)[1])
         P = Dalpha * kernel_extended
         return P * self.evecs
 
