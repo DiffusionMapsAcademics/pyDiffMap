@@ -33,7 +33,7 @@ setup(
     ),
     author='Zofia Trstanova, Erik Henning Thiede',
     author_email='zofia.trstanova [at symbol] ed.ac.uk, ehthiede [at symbol] gmail.com',
-    url='https://github.com/ZofiaTr/python-pydiffmap',
+    url='https://github.com/DiffusionMapsAcademics/pyDiffMap',
     packages=find_packages('src'),
     package_dir={'': 'src'},
     py_modules=[splitext(basename(path))[0] for path in glob('src/*.py')],

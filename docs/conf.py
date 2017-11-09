@@ -34,8 +34,8 @@ version = release = u'0.1.0'
 pygments_style = 'trac'
 templates_path = ['.']
 extlinks = {
-    'issue': ('https://github.com/ZofiaTr/python-pydiffmap/issues/%s', '#'),
-    'pr': ('https://github.com/ZofiaTr/python-pydiffmap/pull/%s', 'PR #'),
+    'issue': ('https://github.com/DiffusionMapsAcademics/pydiffmap/issues/%s', '#'),
+    'pr': ('https://github.com/DiffusionMapsAcademics/pydiffmap/pull/%s', 'PR #'),
 }
 # on_rtd is whether we are on readthedocs.org
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
