@@ -2,6 +2,10 @@ graft docs
 graft src
 graft ci
 graft tests
+graft examples
+
+prune docs/_build
+prune examples/.ipynb_checkpoints
 
 include .bumpversion.cfg
 include .coveragerc
@@ -16,4 +20,4 @@ include README.rst
 
 include tox.ini .travis.yml appveyor.yml
 
-global-exclude *.py[cod] __pycache__ *.so *.dylib
+global-exclude *.py[cod] __pycache__ *.so *.dylib *.bak
