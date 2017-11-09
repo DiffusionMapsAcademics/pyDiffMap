@@ -24,8 +24,8 @@ Overview
       - | |version| |wheel| |supported-versions| |supported-implementations|
         | |commits-since|
 
-.. |docs| image:: https://readthedocs.org/projects/python-pydiffmap/badge/?style=flat
-    :target: https://readthedocs.org/projects/pydiffmap
+.. |docs| image:: https://readthedocs.org/projects/pydiffmap/badge/?version=master
+    :target: http://pydiffmap.readthedocs.io/en/master/?badge=master
     :alt: Documentation Status
 
 .. |travis| image:: https://travis-ci.org/DiffusionMapsAcademics/pyDiffMap.svg?branch=master
@@ -36,9 +36,9 @@ Overview
     :alt: Commits since latest release
     :target: https://github.com/DiffusionMapsAcademics/pyDiffMap/compare/v0.1.0...master
 
-.. |codecov| image:: https://codecov.io/github/DiffusionMapsAcademics/pyDiffMap/coverage.svg?branch=master
+.. |codecov| image:: image:: https://codecov.io/gh/DiffusionMapsAcademics/pyDiffMap/branch/master/graph/badge.svg
     :alt: Coverage Status
-    :target: https://codecov.io/github/DiffusionMapsAcademics/pyDiffMap
+    :target: https://codecov.io/gh/DiffusionMapsAcademics/pyDiffMap
 
 .. .. |version| image:: https://img.shields.io/pypi/v/pyDiffMap.svg
     :alt: PyPI Package latest release
