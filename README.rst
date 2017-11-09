@@ -12,8 +12,6 @@ Overview
     * - tests
       - | |travis|
         | |codecov|
-    * - package
-      - | |commits-since|
 
 ..    * - docs
       - |docs|
@@ -32,13 +30,13 @@ Overview
     :alt: Travis-CI Build Status
     :target: https://travis-ci.org/DiffusionMapsAcademics/pyDiffMap
 
-.. |commits-since| image:: https://img.shields.io/github/commits-since/DiffusionMapsAcademics/pyDiffMap/v0.1.0.svg
-    :alt: Commits since latest release
-    :target: https://github.com/DiffusionMapsAcademics/pyDiffMap/compare/v0.1.0...master
-
-.. |codecov| image:: image:: https://codecov.io/gh/DiffusionMapsAcademics/pyDiffMap/branch/master/graph/badge.svg
+.. |codecov| image:: https://codecov.io/gh/DiffusionMapsAcademics/pyDiffMap/branch/master/graph/badge.svg
     :alt: Coverage Status
     :target: https://codecov.io/gh/DiffusionMapsAcademics/pyDiffMap
+
+.. .. |commits-since| image:: https://img.shields.io/github/commits-since/DiffusionMapsAcademics/pyDiffMap/v0.1.0.svg
+    :alt: Commits since latest release
+    :target: https://github.com/DiffusionMapsAcademics/pyDiffMap/compare/v0.1.0...master
 
 .. .. |version| image:: https://img.shields.io/pypi/v/pyDiffMap.svg
     :alt: PyPI Package latest release
