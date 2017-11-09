@@ -5,7 +5,7 @@ from pydiffmap import kernel
 from scipy.spatial.distance import cdist
 
 x_values = np.vstack((np.linspace(-1, 1, 11), np.arange(11))).T  # set of X vals
-y_values_set = [None, x_values, np.arange(6).reshape(-1,2), np.arange(44).reshape(-1, 2)]  # all sets of Y's
+y_values_set = [None, x_values, np.arange(6).reshape(-1, 2), np.arange(44).reshape(-1, 2)]  # all sets of Y's
 epsilons = [10., 1., 0.1]  # Possible epsilons
 
 
@@ -36,14 +36,14 @@ class TestKernel(object):
         total_error = np.linalg.norm(error_values)
         assert(total_error < 1E-8)
 
-    @pytest.mark.parametrize('k', np.arange(2,14,2))
-    def test_neighborlists(self,k):
+    @pytest.mark.parametrize('k', np.arange(2, 14, 2))
+    def test_neighborlists(self, k):
         """
         Test that neighborlisting gives the right number of elements.
         """
         # Correct number of nearest neighbors.
-        k0 = min(k,len(x_values))
-        
+        k0 = min(k, len(x_values))
+
         # Construct kernel matrix.
         mykernel = kernel.Kernel(type='gaussian', metric='euclidean',
                                  epsilon=1., k=k)

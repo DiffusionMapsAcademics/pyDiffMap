@@ -60,7 +60,7 @@ class Kernel(object):
         Returns
         -------
         K : array-like, shape (n_query_X, n_query_Y)
-            Values of the kernel matrix. 
+            Values of the kernel matrix.
 
         """
         if Y is None:
