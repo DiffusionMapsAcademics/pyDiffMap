@@ -39,11 +39,9 @@ class TestKernel(object):
     @pytest.mark.parametrize('k', np.arange(2,14,2))
     def test_neighborlists(self,k):
         """
-        Test that neighborlisting is working correctly.
+        Test that neighborlisting gives the right number of elements.
         """
-        # Setup reference matrix
-        pw_distance = cdist(x_values, x_values, metric='sqeuclidean')
-        true_values = np.exp(-1.*pw_distance)
+        # Correct number of nearest neighbors.
         k0 = min(k,len(x_values))
         
         # Construct kernel matrix.
