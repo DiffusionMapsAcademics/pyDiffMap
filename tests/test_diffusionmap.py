@@ -29,7 +29,7 @@ class TestDiffusionMap(object):
         test_evals = -4./eps*(mydmap.evals - 1)
 
         # Check that relative error values are beneath tolerance.
-        errors_eval = abs(test_evals - real_evals)/real_evals)
+        errors_eval = abs((test_evals - real_evals)/real_evals)
         total_error = np.min(errors_eval)
         assert(total_error < THRESH)
 
