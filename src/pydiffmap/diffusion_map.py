@@ -121,20 +121,24 @@ class DiffusionMap(object):
         phi : numpy array, shape (n_query, n_eigenvectors)
             Transformed value of the given values.
         """
-        # turn x into array if needed
-        if (Y.ndim == 1):
-            Y = Y[np.newaxis, :]
-        # compute the values of the kernel matrix
-        kernel_extended = self.local_kernel.compute(Y)
-        # right normalization
-        m = np.shape(self.data)[0]
-        Dalpha = sps.spdiags(np.power(self.q, -self.alpha), 0, m, m)
-        kernel_extended = kernel_extended * Dalpha
-        # left normalization
-        D = kernel_extended.sum(axis=1).transpose()
-        Dalpha = sps.spdiags(np.power(D, -1), 0, np.shape(D)[1], np.shape(D)[1])
-        P = Dalpha * kernel_extended
-        return P * self.evecs
+        # check if Y is equal to data. If yes, no computation needed.
+        if np.array_equal(self.data,Y):
+            return self.dmap
+        else:
+            # turn x into array if needed
+            if (Y.ndim == 1):
+                Y = Y[np.newaxis, :]
+            # compute the values of the kernel matrix
+            kernel_extended = self.local_kernel.compute(Y)
+            # right normalization
+            m = np.shape(self.data)[0]
+            Dalpha = sps.spdiags(np.power(self.q, -self.alpha), 0, m, m)
+            kernel_extended = kernel_extended * Dalpha
+            # left normalization
+            D = kernel_extended.sum(axis=1).transpose()
+            Dalpha = sps.spdiags(np.power(D, -1), 0, np.shape(D)[1], np.shape(D)[1])
+            P = Dalpha * kernel_extended
+            return P * self.evecs
 
     def fit_transform(self, X):
         """
