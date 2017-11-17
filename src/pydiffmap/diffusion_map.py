@@ -122,7 +122,7 @@ class DiffusionMap(object):
             Transformed value of the given values.
         """
         # check if Y is equal to data. If yes, no computation needed.
-        if np.array_equal(self.data,Y):
+        if np.array_equal(self.data, Y):
             return self.dmap
         else:
             # turn x into array if needed
