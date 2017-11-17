@@ -69,7 +69,7 @@ class DiffusionMap(object):
         # compute kernel matrix
         my_kernel = kernel.Kernel(type=self.kernel_type, epsilon=self.epsilon, k=self.k).fit(X)
         self.local_kernel = my_kernel
-        kernel_matrix = _symmetrize_kernel_matrix(my_kernel.compute(X))
+        kernel_matrix = _symmetrize_matrix(my_kernel.compute(X))
 
         # alpha normalization
         m = np.shape(X)[0]
@@ -164,7 +164,7 @@ class DiffusionMap(object):
 #        return
 
 
-def _symmetrize_kernel_matrix(K, mode='average'):
+def _symmetrize_matrix(K, mode='average'):
     """
     Symmetrizes a sparse kernel matrix.
 

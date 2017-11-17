@@ -1,15 +1,12 @@
 import numpy as np
-import pytest
 
 from pydiffmap import diffusion_map as dm
+from scipy.sparse import csr_matrix
 
 np.random.seed(100)
 
 
 class TestDiffusionMap(object):
-    # These decorators run the test against all possible y, epsilon values.
-    #@pytest.mark.parametrize('y_values', y_values_set)
-    #@pytest.mark.parametrize('epsilon', epsilons)
     def test_1Dstrip_evals(self):
         """
         Test that we compute the correct eigenvalues on a 1d strip of length 2*pi.
@@ -27,7 +24,7 @@ class TestDiffusionMap(object):
         # Setup diffusion map
         eps = 0.01
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=100)
-        dmap = mydmap.fit_transform(data)
+        mydmap.fit_transform(data)
         test_evals = -4./eps*(mydmap.evals - 1)
 
         # Check that relative error values are beneath tolerance.
@@ -51,10 +48,10 @@ class TestDiffusionMap(object):
         # Setup diffusion map
         eps = 0.01
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=100)
-        dmap = mydmap.fit_transform(data)
+        mydmap.fit_transform(data)
         errors_evec = []
         for k in np.arange(4):
-            errors_evec.append(abs(np.corrcoef(np.cos(0.5*(k+1)*X),mydmap.evecs[:,k])[0,1]))
+            errors_evec.append(abs(np.corrcoef(np.cos(0.5*(k+1)*X), mydmap.evecs[:, k])[0, 1]))
 
         # Check that relative error values are beneath tolerance.
         total_error = 1 - np.min(errors_evec)
@@ -79,7 +76,7 @@ class TestDiffusionMap(object):
         # Setup diffusion map
         eps = 0.01
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=200)
-        dmap = mydmap.fit_transform(data)
+        mydmap.fit_transform(data)
         test_evals = -4./eps*(mydmap.evals - 1)
 
         # Check that relative error values are beneath tolerance.
@@ -105,11 +102,33 @@ class TestDiffusionMap(object):
         # Setup diffusion map
         eps = 0.01
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=200)
-        dmap = mydmap.fit_transform(data)
+        mydmap.fit_transform(data)
         errors_evec = []
         for k in np.arange(4):
-            errors_evec.append(abs(np.corrcoef(np.cos(0.5*(k+1)*X),mydmap.evecs[:,k])[0,1]))
+            errors_evec.append(abs(np.corrcoef(np.cos(0.5*(k+1)*X), mydmap.evecs[:, k])[0, 1]))
 
         # Check that relative error values are beneath tolerance.
         total_error = 1 - np.min(errors_evec)
         assert(total_error < THRESH)
+
+
+class TestSymmetrization():
+    test_mat = csr_matrix([[0, 2.], [0, 3.]])
+
+    def test_and_symmetrization(self):
+        ref_mat = np.array([[0, 0], [0, 3.]])
+        symmetrized = dm._symmetrize_matrix(self.test_mat, mode='and')
+        symmetrized = symmetrized.toarray()
+        assert (np.linalg.norm(ref_mat - symmetrized) == 0.)
+
+    def test_or_symmetrization(self):
+        ref_mat = np.array([[0, 2.], [2., 3.]])
+        symmetrized = dm._symmetrize_matrix(self.test_mat, mode='or')
+        symmetrized = symmetrized.toarray()
+        assert (np.linalg.norm(ref_mat - symmetrized) == 0.)
+
+    def test_avg_symmetrization(self):
+        ref_mat = np.array([[0, 1.], [1., 3.]])
+        symmetrized = dm._symmetrize_matrix(self.test_mat, mode='average')
+        symmetrized = symmetrized.toarray()
+        assert (np.linalg.norm(ref_mat - symmetrized) == 0.)
