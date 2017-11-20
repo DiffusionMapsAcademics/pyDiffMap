@@ -24,7 +24,7 @@ class TestDiffusionMap(object):
         # Setup diffusion map
         eps = 0.01
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=100)
-        mydmap.fit_transform(data)
+        mydmap.fit(data)
         test_evals = -4./eps*(mydmap.evals - 1)
 
         # Check that relative error values are beneath tolerance.
@@ -48,7 +48,7 @@ class TestDiffusionMap(object):
         # Setup diffusion map
         eps = 0.01
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=100)
-        mydmap.fit_transform(data)
+        mydmap.fit(data)
         errors_evec = []
         for k in np.arange(4):
             errors_evec.append(abs(np.corrcoef(np.cos(0.5*(k+1)*X), mydmap.evecs[:, k])[0, 1]))
@@ -76,7 +76,7 @@ class TestDiffusionMap(object):
         # Setup diffusion map
         eps = 0.01
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=200)
-        mydmap.fit_transform(data)
+        mydmap.fit(data)
         test_evals = -4./eps*(mydmap.evals - 1)
 
         # Check that relative error values are beneath tolerance.
@@ -102,7 +102,7 @@ class TestDiffusionMap(object):
         # Setup diffusion map
         eps = 0.01
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=200)
-        mydmap.fit_transform(data)
+        mydmap.fit(data)
         errors_evec = []
         for k in np.arange(4):
             errors_evec.append(abs(np.corrcoef(np.cos(0.5*(k+1)*X), mydmap.evecs[:, k])[0, 1]))
@@ -129,7 +129,7 @@ class TestDiffusionMap(object):
 
         eps = 0.02
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=200)
-        mydmap.fit_transform(data)
+        mydmap.fit(data)
         test_evals = -4./eps*(mydmap.evals - 1)
 
         # Check that relative error values are beneath tolerance.
@@ -154,7 +154,7 @@ class TestDiffusionMap(object):
 
         eps = 0.05
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=200)
-        mydmap.fit_transform(data)
+        mydmap.fit(data)
         errors_evec = []
         errors_evec.append(abs(np.corrcoef(np.cos(0.5*1*X), mydmap.evecs[:, 0])[0, 1]))
         errors_evec.append(abs(np.corrcoef(np.cos(Y), mydmap.evecs[:, 1])[0, 1]))
@@ -164,6 +164,36 @@ class TestDiffusionMap(object):
         # Check that relative error values are beneath tolerance.
         total_error = 1 - np.min(errors_evec)
         assert(total_error < THRESH)
+
+    def test_2Dstrip_nystroem(self):
+        """
+        Test the nystroem extension in the transform() function.
+        """
+        # Setup data and accuracy threshold
+        m = 5000
+        X = 2.0*np.pi*np.random.rand(m)
+        Y = 1.0*np.pi*np.random.rand(m)
+        data = np.array([X, Y]).transpose()
+        THRESH = 1.0/np.sqrt(m)
+        # Setup diffusion map
+        eps = 0.05
+        mydmap = dm.DiffusionMap(n_evecs=1, epsilon=eps, alpha=1.0, k=200)
+        mydmap.fit(data)
+        # Setup values to test against (regular grid)
+        x_test, y_test = np.meshgrid(np.linspace(0, 2*np.pi, 80), np.linspace(0, np.pi, 40))
+        X_test = np.array([x_test.ravel(), y_test.ravel()]).transpose()
+        # call nystroem extension
+        dmap_ext = mydmap.transform(X_test)
+        # extract first diffusion coordinate and normalize
+        V_test = dmap_ext[:,0]
+        V_test = V_test/np.linalg.norm(V_test)
+        # true dominant eigenfunction = cos(0.5*x), normalize
+        V_true = np.cos(.5*x_test).ravel()
+        V_true = V_true/np.linalg.norm(V_true)
+        # compute L2 error, deal with remaining sign ambiguity
+        error = min([np.linalg.norm(V_true+V_test), np.linalg.norm(V_true-V_test)])
+        assert(error < THRESH)
+
 
 
 class TestSymmetrization():
