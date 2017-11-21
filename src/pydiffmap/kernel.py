@@ -79,15 +79,15 @@ class Kernel(object):
             raise("Error: Kernel type not understood.")
         return K
 
-def get_optimal_epsilon_BGH(scaled_distsq, epsilons=None, h=0.1, maxiter=100):
+def get_optimal_epsilon_BGH(scaled_distsq, epsilons=None):
     """
     Calculates the optimal bandwidth for kernel density estimation according to 
     the criteria in Berry, Giannakis, and Harlim.
 
     Parameters
     ----------
-    scaled_distsq : scipy sparse matrix
-        Matrix of scaled distance square values (The exponent in the Gaussian).
+    scaled_distsq : numpy array
+        Values for scaled distance squared values, in no particular order or shape. (This is the exponent in the Gaussian Kernel, aka the thing that gets divided by epsilon).
     epsilons : array-like, optional
         Values of epsilon from which to choose the optimum.  If not provided, uses all powers of 2. from 2^-40 to 2^40
 
@@ -103,7 +103,7 @@ def get_optimal_epsilon_BGH(scaled_distsq, epsilons=None, h=0.1, maxiter=100):
     Erik sez : I have a suspicion that the derivation here explicitly assumes that
     the kernel is Gaussian.  However, I'm not sure.  Also, we should perhaps replace
     this with some more intelligent optimization routine.  Here, I'm just 
-    picking from several values as a first step.
+    picking from several values and choosin the best.
 
     References
     ----------
@@ -116,11 +116,10 @@ def get_optimal_epsilon_BGH(scaled_distsq, epsilons=None, h=0.1, maxiter=100):
         epsilons = 2**np.arange(-40.,41.,1.)
     
     epsilons = np.sort(epsilons).astype('float')
-    print epsilons
     log_T = [logsumexp(-scaled_distsq/eps) for eps in epsilons]
     log_eps = np.log(epsilons)
     log_deriv = np.diff(log_T)/np.diff(log_eps)
     max_loc = np.argmax(log_deriv)
-    epsilon = np.max([np.exp(log_eps[max_loc]), np.exp(log_eps[max_loc+1])])
+    epsilon = np.exp(log_eps[max_loc])
     d = np.round(2.*log_deriv[max_loc])
-    return epsilon, d, log_deriv
+    return epsilon, d
