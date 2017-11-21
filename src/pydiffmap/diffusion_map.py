@@ -7,8 +7,8 @@ from __future__ import absolute_import
 import numpy as np
 import scipy.sparse as sps
 import scipy.sparse.linalg as spsl
-from . import kernel
-
+#from . import kernel
+import kernel
 
 class DiffusionMap(object):
     """
@@ -162,6 +162,84 @@ class DiffusionMap(object):
 #
 #        """
 #        return
+
+
+#########################################
+
+class TargetMeasureDiffusionMap(DiffusionMap):
+    """
+    Target Measure Diffusion Map object to be used in data analysis for fun and profit. Target Measure Diffusion Map
+    creates (TMDmap) is algorithm which constructs a matrix on the data that approximates the differential operator
+    .. math::  Lf = \Delta f + \nabla (\log \pi)\cdot\nabla f. The target density .. math:: \pi
+    is evaluated on the data up to a normalization constant.
+
+    Parameters
+    ----------
+    target distribution : array-like, shape n_query
+        Target measure for TMDmap.
+    """
+
+    def __init__(self, target_distribution, *args, **kwargs):
+        self.target_distribution=target_distribution
+        super().__init__(*args, **kwargs)
+        return
+
+    def fit(self, X):
+        """
+        Parameters
+        ----------
+        X : array-like, shape (n_query, n_features)
+            Data upon which to construct the diffusion map.
+
+        Returns
+        -------
+        self : the object itself
+        """
+        self.data = X
+        # ToDo: compute epsilon automatically
+        if (self.choose_eps == 'fixed'):
+            pass
+        else:
+            raise NotImplementedError("We haven't actually implemented any method for automatically choosing epsilon... sorry :-(")
+        # if (choose_eps=='auto'):
+            # self.epsilon = choose_epsilon(X)
+        # compute kernel matrix
+        my_kernel = kernel.Kernel(type=self.kernel_type, epsilon=self.epsilon, k=self.k).fit(X)
+        self.local_kernel = my_kernel
+        kernel_matrix = _symmetrize_matrix(my_kernel.compute(X))
+
+        # alpha normalization: unbias point to obtain target measure
+        m = np.shape(X)[0]
+        # compute kernel density estimator: TODO use some other options (i.e. landmark KDE)
+        q = np.array(kernel_matrix.sum(axis=1)).ravel()
+        self.q = q
+        #compute weights
+        weights = np.zeros(m)
+        for i in range(0,len(X)):
+            weights[i] = np.sqrt(self.target_distribution[i]) /  q[i]
+        # save the weights
+        self.weigths=weights
+
+        D = sps.spdiags(weights, 0, m, m)
+        Ktilde =  kernel_matrix * D
+        # row normalization
+        Dalpha = sps.csr_matrix.sum(Ktilde, axis=1).transpose();
+        Dtilde = sps.spdiags(np.power(Dalpha,-1), 0, m, m)
+
+        P = Dtilde * Ktilde
+        self.P = P
+
+        # diagonalise and sort eigenvalues
+        evals, evecs = spsl.eigs(P, k=(self.n_evecs+1), which='LM')
+        ix = evals.argsort()[::-1]
+        evals = evals[ix]
+        evecs = evecs[:, ix]
+        self.evals = np.real(evals[1:])
+        self.evecs = np.real(evecs[:, 1:])
+        self.dmap = np.dot(self.evecs, np.diag(self.evals))
+        return self
+
+TMDiffusionMap=TargetMeasureDiffusionMap
 
 
 def _symmetrize_matrix(K, mode='average'):
