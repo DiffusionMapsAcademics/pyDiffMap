@@ -79,29 +79,17 @@ class Kernel(object):
             raise("Error: Kernel type not understood.")
         return K
 
-#class VariableBandwidthKernel(Kernel):
-#    """
-#
-#    """
-
-def get_optimal_epsilon_BGH(scaled_distsq, log_epsilon_bracket=None, h=0.1, maxiter=100):
+def get_optimal_epsilon_BGH(scaled_distsq, epsilons=None, h=0.1, maxiter=100):
     """
     Calculates the optimal bandwidth for kernel density estimation according to 
     the criteria in Berry, Giannakis, and Harlim.
-
 
     Parameters
     ----------
     scaled_distsq : scipy sparse matrix
         Matrix of scaled distance square values (The exponent in the Gaussian).
-    log_epsilon_bracket : iterable with two scalars, optional
-        Bracket for log epsilon. See scipy.optimive.minimize_scalar for details.
-    h : scalar, optional
-        Step in log epsilon for calculating the derivative in log(T).
-    tol : float, optional
-        Tolerance for the optimization
-    maxiter : int, optional
-        Maximum number of optimization iterations to perform.
+    epsilons : array-like, optional
+        Values of epsilon from which to choose the optimum.  If not provided, uses all powers of 2. from 2^-40 to 2^40
 
     Returns
     -------
@@ -113,7 +101,9 @@ def get_optimal_epsilon_BGH(scaled_distsq, log_epsilon_bracket=None, h=0.1, maxi
     Notes
     -----
     Erik sez : I have a suspicion that the derivation here explicitly assumes that
-    the kernel is Gaussian.  However, I'm not sure...
+    the kernel is Gaussian.  However, I'm not sure.  Also, we should perhaps replace
+    this with some more intelligent optimization routine.  Here, I'm just 
+    picking from several values as a first step.
 
     References
     ----------
@@ -122,16 +112,15 @@ def get_optimal_epsilon_BGH(scaled_distsq, log_epsilon_bracket=None, h=0.1, maxi
     .. [1] T. Berry, D. Giannakis, and J. Harlim, Physical Review E 91, 032915 
        (2015).
     """
-    objective_fxn = lambda log_eps: _objective_fxn_BGH(scaled_distsq.data, log_eps, h)
-    result = minimize_scalar(objective_fxn, bracket=log_epsilon_bracket, options={'maxiter' : maxiter})
-    epsilon = np.exp(result['x'])
-    d = np.round(2 * np.exp(result['x']))
-    return epsilon, d
-
-def _objective_fxn_BGH(scaled_distsq_data,log_epsilon,h):
-    epsilon_bwd = np.exp(log_epsilon-h)
-    epsilon_fwd = np.exp(log_epsilon+h)
-    # Can this be optimized using numexpr?
-    kernel_vals_eps_bwd = logsumexp(-scaled_distsq_data/epsilon_bwd)
-    kernel_vals_eps_fwd = logsumexp(-scaled_distsq_data/epsilon_fwd)
-    return (kernel_vals_eps_bwd - kernel_vals_eps_fwd) / h
+    if epsilons is None:
+        epsilons = 2**np.arange(-40.,41.,1.)
+    
+    epsilons = np.sort(epsilons).astype('float')
+    print epsilons
+    log_T = [logsumexp(-scaled_distsq/eps) for eps in epsilons]
+    log_eps = np.log(epsilons)
+    log_deriv = np.diff(log_T)/np.diff(log_eps)
+    max_loc = np.argmax(log_deriv)
+    epsilon = np.max([np.exp(log_eps[max_loc]), np.exp(log_eps[max_loc+1])])
+    d = np.round(2.*log_deriv[max_loc])
+    return epsilon, d, log_deriv
