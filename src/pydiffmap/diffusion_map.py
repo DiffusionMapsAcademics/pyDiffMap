@@ -7,8 +7,8 @@ from __future__ import absolute_import
 import numpy as np
 import scipy.sparse as sps
 import scipy.sparse.linalg as spsl
-#from . import kernel
-import kernel
+from . import kernel
+
 
 class DiffusionMap(object):
     """
