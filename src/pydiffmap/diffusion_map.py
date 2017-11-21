@@ -7,7 +7,8 @@ from __future__ import absolute_import
 import numpy as np
 import scipy.sparse as sps
 import scipy.sparse.linalg as spsl
-from . import kernel
+#from . import kernel
+import kernel
 
 class DiffusionMap(object):
     """
@@ -172,29 +173,34 @@ class TargetMeasureDiffusionMap(DiffusionMap):
     .. math::  Lf = \Delta f + \nabla (\log \pi)\cdot\nabla f. The target density .. math:: \pi
     is evaluated on the data up to a normalization constant.
 
-    Parameters
-    ----------
-    target distribution : array-like, shape n_query
-        Target measure for TMDmap.
+
     """
 
-    def __init__(self, target_distribution, *args, **kwargs):
-        self.target_distribution=target_distribution
-        super().__init__(*args, **kwargs)
-        return
+    # def __init__(self, target_distribution, *args, **kwargs):
+    #     self.target_distribution=target_distribution
+    #     super().__init__(*args, **kwargs)
+    #     return
 
-    def fit(self, X):
+    def fit_transform(self, X, target_distribution ):
+        self.fit(X, target_distribution)
+        return self.dmap
+
+    def fit(self, X, target_distribution):
         """
         Parameters
         ----------
         X : array-like, shape (n_query, n_features)
             Data upon which to construct the diffusion map.
-
+        Parameters
+        ----------
+        target distribution : array-like, shape n_query
+            Target measure for TMDmap.
         Returns
         -------
         self : the object itself
         """
         self.data = X
+        self.target_distribution=target_distribution
         # ToDo: compute epsilon automatically
         if (self.choose_eps == 'fixed'):
             pass
