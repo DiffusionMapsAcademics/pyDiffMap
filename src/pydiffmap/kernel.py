@@ -86,7 +86,7 @@ class Kernel(object):
             raise("Error: Kernel type not understood.")
         return K
 
-    def self.choose_optimal_epsilon(self, choose_eps='bgh'):
+    def choose_optimal_epsilon(self, choose_eps='bgh'):
         """
         Chooses the optimal value of epsilon and automatically detects the 
         dimensionality of the data.
@@ -104,7 +104,7 @@ class Kernel(object):
         K = self.neigh.kneighbors_graph(self.data, mode='distance')
         # retrieve all nonzero elements and apply kernel function to it
         sq_distances = K.data**2
-        if choose_eps == 'bgh'
+        if choose_eps == 'bgh':
             eps, d = choose_optimal_epsilon_BGH(sq_distances)
         self.epsilon = eps
         self.dim = d
