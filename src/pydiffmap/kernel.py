@@ -81,7 +81,7 @@ class Kernel(object):
         # retrieve all nonzero elements and apply kernel function to it
         v = K.data
         if (self.type == 'gaussian'):
-            K.data = np.exp(-v**2/self.epsilon)
+            K.data = np.exp(-v**2/self.epsilon  )
         else:
             raise("Error: Kernel type not understood.")
         return K
