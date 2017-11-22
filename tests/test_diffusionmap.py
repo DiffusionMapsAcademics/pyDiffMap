@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from pydiffmap import diffusion_map as dm
 from scipy.sparse import csr_matrix
@@ -6,8 +7,9 @@ from scipy.sparse import csr_matrix
 np.random.seed(100)
 
 
+@pytest.mark.parametrize('choose_eps', ['fixed', 'bgh'])
 class TestDiffusionMap(object):
-    def test_1Dstrip_evals(self):
+    def test_1Dstrip_evals(self, choose_eps):
         """
         Test that we compute the correct eigenvalues on a 1d strip of length 2*pi.
         Diffusion map parameters in this test are hand-selected to give good results.
@@ -23,16 +25,17 @@ class TestDiffusionMap(object):
         THRESH = 3.0/np.sqrt(m)
         # Setup diffusion map
         eps = 0.01
-        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=100)
+        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, alpha=1.0, k=100)
         mydmap.fit_transform(data)
-        test_evals = -4./eps*(mydmap.evals - 1)
+#        print mydmap.epsilon, eps
+        test_evals = -4./mydmap.epsilon*(mydmap.evals - 1)
 
         # Check that relative error values are beneath tolerance.
         errors_eval = abs((test_evals - real_evals)/real_evals)
         total_error = np.min(errors_eval)
         assert(total_error < THRESH)
 
-    def test_1Dstrip_evecs(self):
+    def test_1Dstrip_evecs(self, choose_eps):
         """
         Test that we compute the correct eigenvectors (cosines) on a 1d strip of length 2*pi.
         Diffusion map parameters in this test are hand-selected to give good results.
@@ -47,7 +50,7 @@ class TestDiffusionMap(object):
         THRESH = 0.3/np.sqrt(m)
         # Setup diffusion map
         eps = 0.01
-        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=100)
+        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, alpha=1.0, k=100)
         mydmap.fit_transform(data)
         errors_evec = []
         for k in np.arange(4):
@@ -57,7 +60,7 @@ class TestDiffusionMap(object):
         total_error = 1 - np.min(errors_evec)
         assert(total_error < THRESH)
 
-    def test_1Dstrip_nonunif_evals(self):
+    def test_1Dstrip_nonunif_evals(self, choose_eps):
         """
         Test that we compute the correct eigenvalues on a 1d strip of length 2*pi with nonuniform sampling.
         Diffusion map parameters in this test are hand-selected to give good results.
@@ -75,16 +78,16 @@ class TestDiffusionMap(object):
         THRESH = 3.0/np.sqrt(m)
         # Setup diffusion map
         eps = 0.01
-        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=200)
+        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, alpha=1.0, k=200)
         mydmap.fit_transform(data)
-        test_evals = -4./eps*(mydmap.evals - 1)
+        test_evals = -4./mydmap.epsilon*(mydmap.evals - 1)
 
         # Check that relative error values are beneath tolerance.
         errors_eval = abs((test_evals - real_evals)/real_evals)
         total_error = np.min(errors_eval)
         assert(total_error < THRESH)
 
-    def test_1Dstrip_nonunif_evecs(self):
+    def test_1Dstrip_nonunif_evecs(self, choose_eps):
         """
         Test that we compute the correct eigenvectors (cosines) on a 1d strip of length 2*pi with nonuniform sampling.
         Diffusion map parameters in this test are hand-selected to give good results.
@@ -101,7 +104,7 @@ class TestDiffusionMap(object):
         THRESH = 0.3/np.sqrt(m)
         # Setup diffusion map
         eps = 0.01
-        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=200)
+        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, alpha=1.0, k=200)
         mydmap.fit_transform(data)
         errors_evec = []
         for k in np.arange(4):
@@ -112,7 +115,7 @@ class TestDiffusionMap(object):
         assert(total_error < THRESH)
 
 
-class TestSymmetrization():
+class TestSymmetrizationRoutine():
     test_mat = csr_matrix([[0, 2.], [0, 3.]])
 
     def test_and_symmetrization(self):

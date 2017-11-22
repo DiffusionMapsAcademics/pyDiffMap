@@ -25,7 +25,7 @@ class DiffusionMap(object):
     kernel_type : string, optional
         Type of kernel to construct. Currently the only option is 'gaussian', but more will be implemented.
     choose_eps : string, optional
-        Method for choosing the epsilon.  Currently, the only option is 'fixed' (i.e. don't).
+        Method for choosing the epsilon.  Currently, the only option is 'fixed' (i.e. don't) or 'bgh' (Berry, Giannakis and Harlim)
     n_evecs : int, optional
         Number of diffusion map eigenvectors to return
     metric : string, optional
@@ -58,20 +58,12 @@ class DiffusionMap(object):
         -------
         self : the object itself
         """
-        # save the locations of data points into the class.
-        # Not pretty, but needed for the nystroem extension
-        # Erik: This is totally fine, and exactly what we should do :).
         self.data = X
-        # ToDo: compute epsilon automatically
-        if (self.choose_eps == 'fixed'):
-            pass
-        else:
-            raise NotImplementedError("We haven't actually implemented any method for automatically choosing epsilon... sorry :-(")
-        # if (choose_eps=='auto'):
-            # self.epsilon = choose_epsilon(X)
         # compute kernel matrix
-        my_kernel = kernel.Kernel(type=self.kernel_type, epsilon=self.epsilon, k=self.k).fit(X)
-        self.local_kernel = my_kernel
+        my_kernel = kernel.Kernel(type=self.kernel_type, epsilon=self.epsilon,
+                                  choose_eps=self.choose_eps, k=self.k)
+        self.local_kernel = my_kernel.fit(X)
+        self.epsilon = my_kernel.epsilon
         kernel_matrix = _symmetrize_matrix(my_kernel.compute(X))
 
         # alpha normalization
