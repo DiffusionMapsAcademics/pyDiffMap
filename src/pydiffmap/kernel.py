@@ -5,7 +5,7 @@ A class to implement diffusion kernels.
 import numpy as np
 from scipy.misc import logsumexp
 from sklearn.neighbors import NearestNeighbors
-
+import warnings
 
 class Kernel(object):
     """
@@ -109,6 +109,8 @@ class Kernel(object):
         if choose_eps == 'fixed':
             return self
         elif choose_eps == 'bgh':
+            if (self.metric != 'euclidean'):  # TODO : replace with call to scipy metrics.
+                warnings.warn('The BGH method for choosing epsilon assumes a euclidean metric.  However, the metric being used is %s.  Proceed at your own risk...'%self.metric)
             eps, d = choose_optimal_epsilon_BGH(sq_distances)
         else:
             raise ValueError("Method for automatically choosing epsilon was given as %s, but this was not recognized" % choose_eps)
