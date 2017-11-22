@@ -55,6 +55,14 @@ class TestKernel(object):
         row_has_k_elements = (K_matrix.nnz == k0*len(x_values))
         assert(row_has_k_elements)
 
+    def test_auto_epsilon_selection(self):
+        X = np.arange(100).reshape(-1, 1)
+        mykernel = kernel.Kernel(type='gaussian', metric='euclidean',
+                                 choose_eps='bgh', k=10)
+        mykernel.fit(X)
+        assert(mykernel.epsilon == 1.0)
+        assert(mykernel.dim == 1.0)
+
 
 class TestBGHEpsilonSelection(object):
     @pytest.mark.parametrize('k', [10, 30, 100])
