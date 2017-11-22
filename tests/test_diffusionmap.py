@@ -164,3 +164,32 @@ class TestTMDiffusionMap(object):
         errors_eval = abs((test_evals - real_evals)/real_evals)
         total_error = np.min(errors_eval)
         assert(total_error < THRESH)
+
+    def test_1Dstrip_evecs(self):
+        """
+        Test that we compute the correct eigenvectors (cosines) on a 1d strip of length 2*pi.
+        The TMDmap with constant (equal to one) target-measure gives diffusion maps for alpha=1.0.
+        Diffusion map parameters in this test are hand-selected to give good results.
+        Eigenvector approximation will fail if epsilon is set way too small or too large (robust).
+        """
+        # Setup true values to test again.
+        # real_evecs = cos(k*x) for k in 0.5*[1 2 3 4]
+        # Setup data and accuracy threshold
+        m = 1000
+        X = 2*np.pi*np.random.rand(m)
+        data = np.array([X]).transpose()
+        THRESH = 0.3/np.sqrt(m)
+        # Setup diffusion map
+        eps = 0.01
+        target_distribution=np.ones(len(data))
+        mytmdmap = dm.TargetMeasureDiffusionMap(n_evecs=4, epsilon=eps, k=100)
+        mytmdmap.fit_transform(data, target_distribution)
+        errors_evec = []
+        for k in np.arange(4):
+            errors_evec.append(abs(np.corrcoef(np.cos(0.5*(k+1)*X), mytmdmap.evecs[:, k])[0, 1]))
+
+        # Check that relative error values are beneath tolerance.
+        total_error = 1 - np.min(errors_evec)
+
+
+        assert(total_error < THRESH)
