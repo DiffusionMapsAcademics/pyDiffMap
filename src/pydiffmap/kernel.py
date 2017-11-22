@@ -4,7 +4,6 @@ A class to implement diffusion kernels.
 
 import numpy as np
 from scipy.misc import logsumexp
-from scipy.optimize import minimize_scalar 
 from sklearn.neighbors import NearestNeighbors
 
 
@@ -52,11 +51,12 @@ class Kernel(object):
         self.k0 = min(self.k, np.shape(X)[0])
         self.data = X
         # Construct Nearest Neighbor Tree
-        self.neigh = NearestNeighbors(n_neighbors=self.k0, 
-                                      metric=self.metric, 
+        self.neigh = NearestNeighbors(n_neighbors=self.k0,
+                                      metric=self.metric,
                                       metric_params=self.metric_params)
         self.neigh.fit(X)
-        self.choose_optimal_epsilon()
+        if self.choose_eps != 'fixed':
+            self.choose_optimal_epsilon(self.choose_eps)
         return self
 
     def compute(self, Y=None):
@@ -88,13 +88,13 @@ class Kernel(object):
 
     def choose_optimal_epsilon(self, choose_eps='bgh'):
         """
-        Chooses the optimal value of epsilon and automatically detects the 
+        Chooses the optimal value of epsilon and automatically detects the
         dimensionality of the data.
 
         Parameters
         ----------
         choose_eps : string
-            Method for choosing epsilon.  Currently only supports 'BGH', see 
+            Method for choosing epsilon.  Currently only supports 'BGH', see
             the "choose_optimal_epsilon_BGH" method for details.
 
         Returns
@@ -110,9 +110,10 @@ class Kernel(object):
         self.dim = d
         return self
 
+
 def choose_optimal_epsilon_BGH(scaled_distsq, epsilons=None):
     """
-    Calculates the optimal epsilon for kernel density estimation according to 
+    Calculates the optimal epsilon for kernel density estimation according to
     the criteria in Berry, Giannakis, and Harlim.
 
     Parameters
@@ -133,19 +134,19 @@ def choose_optimal_epsilon_BGH(scaled_distsq, epsilons=None):
     -----
     Erik sez : I have a suspicion that the derivation here explicitly assumes that
     the kernel is Gaussian.  However, I'm not sure.  Also, we should perhaps replace
-    this with some more intelligent optimization routine.  Here, I'm just 
+    this with some more intelligent optimization routine.  Here, I'm just
     picking from several values and choosin the best.
 
     References
     ----------
     The algorithm given is based on [1]_.  If you use this code, please cite them.
 
-    .. [1] T. Berry, D. Giannakis, and J. Harlim, Physical Review E 91, 032915 
+    .. [1] T. Berry, D. Giannakis, and J. Harlim, Physical Review E 91, 032915
        (2015).
     """
     if epsilons is None:
-        epsilons = 2**np.arange(-40.,41.,1.)
-    
+        epsilons = 2**np.arange(-40., 41., 1.)
+
     epsilons = np.sort(epsilons).astype('float')
     log_T = [logsumexp(-scaled_distsq/eps) for eps in epsilons]
     log_eps = np.log(epsilons)

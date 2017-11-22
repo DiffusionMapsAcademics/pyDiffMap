@@ -6,16 +6,16 @@ import os
 
 extensions = [
     'sphinx.ext.autodoc',
-#    'sphinx.ext.autosummary',
     'sphinx.ext.coverage',
     'sphinx.ext.extlinks',
     'sphinx.ext.ifconfig',
     'sphinx.ext.mathjax',
     'sphinx.ext.napoleon',
-#    'sphinx.ext.todo',
     'sphinx.ext.viewcode',
-#    'sphinx.ext.doctest',
 ]
+#    'sphinx.ext.autosummary',
+#    'sphinx.ext.todo',
+#    'sphinx.ext.doctest',
 if os.getenv('SPELLCHECK'):
     extensions += 'sphinxcontrib.spelling',
     spelling_show_suggestions = True
@@ -47,7 +47,7 @@ html_use_smartypants = True
 html_last_updated_fmt = '%b %d, %Y'
 html_split_index = False
 html_sidebars = {
-   '**': ['searchbox.html', 'globaltoc.html', 'sourcelink.html'],
+    '**': ['searchbox.html', 'globaltoc.html', 'sourcelink.html'],
 }
 html_short_title = '%s-%s' % (project, version)
 

@@ -55,14 +55,14 @@ class TestKernel(object):
         row_has_k_elements = (K_matrix.nnz == k0*len(x_values))
         assert(row_has_k_elements)
 
+
 class TestBGHEpsilonSelection(object):
-    @pytest.mark.parametrize('k', [10,30,100])
+    @pytest.mark.parametrize('k', [10, 30, 100])
     def test_1D_uniform_data(self, k):
-        X = np.arange(100).reshape(-1,1)
+        X = np.arange(100).reshape(-1, 1)
         neigh = NearestNeighbors(n_neighbors=k)
         sq_dist = neigh.fit(X).kneighbors_graph(X, mode='distance').data**2.
-        epsilons = 2**np.arange(-20.,20.)
+        epsilons = 2**np.arange(-20., 20.)
         eps, d = kernel.choose_optimal_epsilon_BGH(sq_dist, epsilons)
         assert(eps == 1.0)
         assert(d == 1.0)
-
