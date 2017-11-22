@@ -9,7 +9,6 @@ import scipy.sparse as sps
 import scipy.sparse.linalg as spsl
 from . import kernel
 
-
 class DiffusionMap(object):
     """
     Diffusion Map object to be used in data analysis for fun and profit.
