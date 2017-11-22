@@ -9,6 +9,7 @@ import scipy.sparse as sps
 import scipy.sparse.linalg as spsl
 from . import kernel
 
+
 class DiffusionMap(object):
     """
     Diffusion Map object to be used in data analysis for fun and profit.
@@ -183,7 +184,7 @@ class TargetMeasureDiffusionMap(DiffusionMap):
     #     super().__init__(*args, **kwargs)
     #     return
 
-    def fit_transform(self, X, target_distribution ):
+    def fit_transform(self, X, target_distribution):
         self.fit(X, target_distribution)
         return self.dmap
 
@@ -202,7 +203,7 @@ class TargetMeasureDiffusionMap(DiffusionMap):
         self : the object itself
         """
         self.data = X
-        self.target_distribution=target_distribution
+        self.target_distribution = target_distribution
         # ToDo: compute epsilon automatically
         if (self.choose_eps == 'fixed'):
             pass
@@ -220,18 +221,18 @@ class TargetMeasureDiffusionMap(DiffusionMap):
         # compute kernel density estimator: TODO use some other options (i.e. landmark KDE)
         q = np.array(kernel_matrix.sum(axis=1)).ravel()
         self.q = q
-        #compute weights
+        # compute weights
         weights = np.zeros(m)
-        for i in range(0,len(X)):
-            weights[i] = np.sqrt(self.target_distribution[i]) /  q[i]
+        for i in range(0, len(X)):
+            weights[i] = np.sqrt(self.target_distribution[i]) / q[i]
         # save the weights
-        self.weigths=weights
+        self.weigths = weights
 
         D = sps.spdiags(weights, 0, m, m)
-        Ktilde =  kernel_matrix * D
+        Ktilde = kernel_matrix * D
         # row normalization
-        Dalpha = sps.csr_matrix.sum(Ktilde, axis=1).transpose();
-        Dtilde = sps.spdiags(np.power(Dalpha,-1), 0, m, m)
+        Dalpha = sps.csr_matrix.sum(Ktilde, axis=1).transpose()
+        Dtilde = sps.spdiags(np.power(Dalpha, -1), 0, m, m)
 
         P = Dtilde * Ktilde
         self.P = P
@@ -246,7 +247,8 @@ class TargetMeasureDiffusionMap(DiffusionMap):
         self.dmap = np.dot(self.evecs, np.diag(self.evals))
         return self
 
-TMDiffusionMap=TargetMeasureDiffusionMap
+
+TMDiffusionMap = TargetMeasureDiffusionMap
 
 
 def _symmetrize_matrix(K, mode='average'):

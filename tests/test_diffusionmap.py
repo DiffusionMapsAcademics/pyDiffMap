@@ -111,6 +111,7 @@ class TestDiffusionMap(object):
         total_error = 1 - np.min(errors_evec)
         assert(total_error < THRESH)
 
+
 class TestSymmetrization():
     test_mat = csr_matrix([[0, 2.], [0, 3.]])
 
@@ -155,7 +156,7 @@ class TestTMDiffusionMap(object):
         # Setup diffusion map
         eps = 0.01
 
-        target_distribution=np.ones(len(data))
+        target_distribution = np.ones(len(data))
         mytmdmap = dm.TargetMeasureDiffusionMap(n_evecs=4, epsilon=eps, k=100)
         mytmdmap.fit_transform(data, target_distribution)
         test_evals = -4./eps*(mytmdmap.evals - 1)
@@ -181,7 +182,7 @@ class TestTMDiffusionMap(object):
         THRESH = 0.3/np.sqrt(m)
         # Setup diffusion map
         eps = 0.01
-        target_distribution=np.ones(len(data))
+        target_distribution = np.ones(len(data))
         mytmdmap = dm.TargetMeasureDiffusionMap(n_evecs=4, epsilon=eps, k=100)
         mytmdmap.fit_transform(data, target_distribution)
         errors_evec = []
@@ -190,6 +191,5 @@ class TestTMDiffusionMap(object):
 
         # Check that relative error values are beneath tolerance.
         total_error = 1 - np.min(errors_evec)
-
 
         assert(total_error < THRESH)
