@@ -21,17 +21,19 @@ class Kernel(object):
     k : int, optional
         Number of nearest neighbors over which to construct the kernel.
     choose_eps : string, optional
-        Method for choosing the epsilon.  Currently, the only option is 'fixed' (i.e. don't).
+        Method for choosing the epsilon.  Currently, the only option is 'fixed' (i.e. don't), and 'bgh'.
     metric : string, optional
         Distance metric to use in constructing the kernel.  This can be selected from any of the scipy.spatial.distance metrics, or a callable function returning the distance.
     metric_params : dict or None, optional
         Optional parameters required for the metric given.
     """
 
-    def __init__(self, type='gaussian', epsilon=1.0, k=64, metric='euclidean', metric_params=None):
+    def __init__(self, type='gaussian', epsilon=1.0, choose_eps='fixed', k=64, metric='euclidean', metric_params=None):
         self.type = type
         self.epsilon = epsilon
+        self.choose_eps = choose_eps
         self.metric = metric
+        self.metric_params = metric_params
         self.k = k
 
     def fit(self, X):
@@ -49,7 +51,12 @@ class Kernel(object):
         """
         self.k0 = min(self.k, np.shape(X)[0])
         self.data = X
-        self.neigh = NearestNeighbors(metric=self.metric).fit(X)
+        # Construct Nearest Neighbor Tree
+        self.neigh = NearestNeighbors(n_neighbors=self.k0, 
+                                      metric=self.metric, 
+                                      metric_params=self.metric_params)
+        self.neigh.fit(X)
+        self.choose_optimal_epsilon()
         return self
 
     def compute(self, Y=None):
@@ -79,9 +86,33 @@ class Kernel(object):
             raise("Error: Kernel type not understood.")
         return K
 
-def get_optimal_epsilon_BGH(scaled_distsq, epsilons=None):
+    def self.choose_optimal_epsilon(self, choose_eps='bgh'):
+        """
+        Chooses the optimal value of epsilon and automatically detects the 
+        dimensionality of the data.
+
+        Parameters
+        ----------
+        choose_eps : string
+            Method for choosing epsilon.  Currently only supports 'BGH', see 
+            the "choose_optimal_epsilon_BGH" method for details.
+
+        Returns
+        -------
+        self : the object itself
+        """
+        K = self.neigh.kneighbors_graph(self.data, mode='distance')
+        # retrieve all nonzero elements and apply kernel function to it
+        sq_distances = K.data**2
+        if choose_eps == 'bgh'
+            eps, d = choose_optimal_epsilon_BGH(sq_distances)
+        self.epsilon = eps
+        self.dim = d
+        return self
+
+def choose_optimal_epsilon_BGH(scaled_distsq, epsilons=None):
     """
-    Calculates the optimal bandwidth for kernel density estimation according to 
+    Calculates the optimal epsilon for kernel density estimation according to 
     the criteria in Berry, Giannakis, and Harlim.
 
     Parameters
@@ -94,7 +125,7 @@ def get_optimal_epsilon_BGH(scaled_distsq, epsilons=None):
     Returns
     -------
     epsilon : float
-        Estimated value of the optimal bandwidth.
+        Estimated value of the optimal length-scale parameter.
     d : int
         Estimated dimensionality of the system.
 
