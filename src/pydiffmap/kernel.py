@@ -81,12 +81,12 @@ class Kernel(object):
         # retrieve all nonzero elements and apply kernel function to it
         v = K.data
         if (self.type == 'gaussian'):
-            K.data = np.exp(-v**2/self.epsilon  )
+            K.data = np.exp(-v**2/self.epsilon)
         else:
             raise("Error: Kernel type not understood.")
         return K
 
-    def choose_optimal_epsilon(self, choose_eps='bgh'):
+    def choose_optimal_epsilon(self, choose_eps=None):
         """
         Chooses the optimal value of epsilon and automatically detects the
         dimensionality of the data.
@@ -101,11 +101,17 @@ class Kernel(object):
         -------
         self : the object itself
         """
+        if choose_eps is None:
+            choose_eps = self.choose_eps
         K = self.neigh.kneighbors_graph(self.data, mode='distance')
         # retrieve all nonzero elements and apply kernel function to it
         sq_distances = K.data**2
-        if choose_eps == 'bgh':
+        if choose_eps == 'fixed':
+            return self
+        elif choose_eps == 'bgh':
             eps, d = choose_optimal_epsilon_BGH(sq_distances)
+        else:
+            raise ValueError("Method for automatically choosing epsilon was given as %s, but this was not recognized" % choose_eps)
         self.epsilon = eps
         self.dim = d
         return self
