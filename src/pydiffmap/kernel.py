@@ -66,11 +66,11 @@ class Kernel(object):
         if Y is None:
             Y = self.data
         # perform k nearest neighbour search on X and Y and construct sparse matrix
-        K = self.neigh.kneighbors_graph(Y, n_neighbors=self.k0, mode='distance')
+        K = self.neigh.kneighbors_graph(Y, n_neighbors=self.k0, mode='distance', metric = self.metric)
         # retrieve all nonzero elements and apply kernel function to it
         v = K.data
         if (self.type == 'gaussian'):
-            K.data = np.exp(-v**2/self.epsilon)
+            K.data = np.exp(-v**2/self.epsilon )
         else:
             raise("Error: Kernel type not understood.")
         return K
