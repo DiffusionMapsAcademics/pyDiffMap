@@ -58,9 +58,9 @@ class Kernel(object):
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", message="Parameter p is found in metric_params. The corresponding parameter from __init__ is ignored.")
             self.neigh = NearestNeighbors(n_neighbors=self.k0,
-                                      metric=self.metric,
-                                      metric_params=self.metric_params,
-                                      algorithm=self.nn_algorithm)
+                                          metric=self.metric,
+                                          metric_params=self.metric_params,
+                                          algorithm=self.nn_algorithm)
         self.neigh.fit(X)
         if self.choose_eps != 'fixed':
             self.choose_optimal_epsilon(self.choose_eps)

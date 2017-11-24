@@ -14,9 +14,9 @@ class TestKernel(object):
     # These decorators run the test against all possible y, epsilon values.
     @pytest.mark.parametrize('y_values', y_values_set)
     @pytest.mark.parametrize('epsilon', epsilons)
-    @pytest.mark.parametrize('metric, metric_params',[
-        ('euclidean',None),
-        ('minkowski',{'p':1})
+    @pytest.mark.parametrize('metric, metric_params', [
+        ('euclidean', None),
+        ('minkowski', {'p': 1})
     ])
     def test_matrix_output(self, y_values, epsilon, metric, metric_params):
         """
@@ -28,14 +28,14 @@ class TestKernel(object):
         else:
             y_values_ref = y_values
         if metric == 'minkowski':
-            pw_distance = cdist(y_values_ref, x_values, metric='minkowski',p=metric_params['p'])
+            pw_distance = cdist(y_values_ref, x_values, metric='minkowski', p=metric_params['p'])
         else:
             pw_distance = cdist(y_values_ref, x_values, metric=metric)
         true_values = np.exp(-1.*pw_distance**2/epsilon)
 
         # Construct the kernel and fit to data.
-        mykernel = kernel.Kernel(type='gaussian', metric=metric, 
-                                 metric_params=metric_params, epsilon=epsilon, 
+        mykernel = kernel.Kernel(type='gaussian', metric=metric,
+                                 metric_params=metric_params, epsilon=epsilon,
                                  k=len(x_values))
         mykernel.fit(x_values)
         K_matrix = mykernel.compute(y_values).toarray()
@@ -46,7 +46,7 @@ class TestKernel(object):
         assert(total_error < 1E-8)
 
     @pytest.mark.parametrize('k', np.arange(2, 14, 2))
-    @pytest.mark.parametrize('nn_algorithm', ['auto','ball_tree'])
+    @pytest.mark.parametrize('nn_algorithm', ['auto', 'ball_tree'])
     def test_neighborlists(self, k, nn_algorithm):
         """
         Test that neighborlisting gives the right number of elements.

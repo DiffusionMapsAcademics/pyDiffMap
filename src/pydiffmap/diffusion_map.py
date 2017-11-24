@@ -150,6 +150,7 @@ class DiffusionMap(object):
         self.fit(X)
         return self.dmap
 
+
 class TargetMeasureDiffusionMap(DiffusionMap):
     """
     Target Measure Diffusion Map object to be used in data analysis for fun and profit. Target Measure Diffusion Map
