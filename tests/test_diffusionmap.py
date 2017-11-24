@@ -260,32 +260,9 @@ class TestNystroem(object):
         error = min([np.linalg.norm(V_true+V_test), np.linalg.norm(V_true-V_test)])
         assert(error < THRESH)
 
-
-
-class TestSymmetrization():
-    test_mat = csr_matrix([[0, 2.], [0, 3.]])
-
-    def test_and_symmetrization(self):
-        ref_mat = np.array([[0, 0], [0, 3.]])
-        symmetrized = dm._symmetrize_matrix(self.test_mat, mode='and')
-        symmetrized = symmetrized.toarray()
-        assert (np.linalg.norm(ref_mat - symmetrized) == 0.)
-
-    def test_or_symmetrization(self):
-        ref_mat = np.array([[0, 2.], [2., 3.]])
-        symmetrized = dm._symmetrize_matrix(self.test_mat, mode='or')
-        symmetrized = symmetrized.toarray()
-        assert (np.linalg.norm(ref_mat - symmetrized) == 0.)
-
-    def test_avg_symmetrization(self):
-        ref_mat = np.array([[0, 1.], [1., 3.]])
-        symmetrized = dm._symmetrize_matrix(self.test_mat, mode='average')
-        symmetrized = symmetrized.toarray()
-        assert (np.linalg.norm(ref_mat - symmetrized) == 0.)
-
-
 class TestTMDiffusionMap(object):
-    def test_1Dstrip_evals(self):
+    @pytest.mark.parametrize('choose_eps', ['fixed', 'bgh'])
+    def test_1Dstrip_evals(self, choose_eps):
         """
         Test that we compute the correct eigenvalues on a 1d strip of length 2*pi.
         Using the data set of uniformly distributed points on 1 dimensional periodic domain [0,2 pi],
@@ -307,16 +284,17 @@ class TestTMDiffusionMap(object):
         eps = 0.01
 
         target_distribution = np.ones(len(data))
-        mytmdmap = dm.TargetMeasureDiffusionMap(n_evecs=4, epsilon=eps, k=100)
+        mytmdmap = dm.TargetMeasureDiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, k=100)
         mytmdmap.fit_transform(data, target_distribution)
-        test_evals = -4./eps*(mytmdmap.evals - 1)
+        test_evals = -4./mytmdmap.epsilon*(mytmdmap.evals - 1)
 
         # Check that relative error values are beneath tolerance.
         errors_eval = abs((test_evals - real_evals)/real_evals)
         total_error = np.min(errors_eval)
         assert(total_error < THRESH)
 
-    def test_1Dstrip_evecs(self):
+    @pytest.mark.parametrize('choose_eps', ['fixed', 'bgh'])
+    def test_1Dstrip_evecs(self, choose_eps):
         """
         Test that we compute the correct eigenvectors (cosines) on a 1d strip of length 2*pi.
         The TMDmap with constant (equal to one) target-measure gives diffusion maps for alpha=1.0.
@@ -333,7 +311,7 @@ class TestTMDiffusionMap(object):
         # Setup diffusion map
         eps = 0.01
         target_distribution = np.ones(len(data))
-        mytmdmap = dm.TargetMeasureDiffusionMap(n_evecs=4, epsilon=eps, k=100)
+        mytmdmap = dm.TargetMeasureDiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, k=100)
         mytmdmap.fit_transform(data, target_distribution)
         errors_evec = []
         for k in np.arange(4):
@@ -343,3 +321,24 @@ class TestTMDiffusionMap(object):
         total_error = 1 - np.min(errors_evec)
 
         assert(total_error < THRESH)
+
+class TestSymmetrization():
+    test_mat = csr_matrix([[0, 2.], [0, 3.]])
+
+    def test_and_symmetrization(self):
+        ref_mat = np.array([[0, 0], [0, 3.]])
+        symmetrized = dm._symmetrize_matrix(self.test_mat, mode='and')
+        symmetrized = symmetrized.toarray()
+        assert (np.linalg.norm(ref_mat - symmetrized) == 0.)
+
+    def test_or_symmetrization(self):
+        ref_mat = np.array([[0, 2.], [2., 3.]])
+        symmetrized = dm._symmetrize_matrix(self.test_mat, mode='or')
+        symmetrized = symmetrized.toarray()
+        assert (np.linalg.norm(ref_mat - symmetrized) == 0.)
+
+    def test_avg_symmetrization(self):
+        ref_mat = np.array([[0, 1.], [1., 3.]])
+        symmetrized = dm._symmetrize_matrix(self.test_mat, mode='average')
+        symmetrized = symmetrized.toarray()
+        assert (np.linalg.norm(ref_mat - symmetrized) == 0.)

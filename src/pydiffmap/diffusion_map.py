@@ -30,9 +30,11 @@ class DiffusionMap(object):
         Number of diffusion map eigenvectors to return
     metric : string, optional
         Metric for distances in the kernel. Default is 'euclidean'. The callable should take two arrays as input and return one value indicating the distance between them.
+    metric_params : dict or None, optional
+        Optional parameters required for the metric given.
     """
 
-    def __init__(self, alpha=0.5, epsilon=1.0, k=64, kernel_type='gaussian', choose_eps='fixed', n_evecs=1, metric='euclidean'):
+    def __init__(self, alpha=0.5, epsilon=1.0, k=64, kernel_type='gaussian', choose_eps='fixed', n_evecs=1, metric='euclidean', metric_params=None):
         """
         Initializes Diffusion Map, sets parameters
         """
@@ -44,6 +46,7 @@ class DiffusionMap(object):
         self.k = k
         self.n_evecs = n_evecs
         self.metric = metric
+        self.metric_params = metric_params
 
         return
 
@@ -63,7 +66,8 @@ class DiffusionMap(object):
         self.data = X
         # compute kernel matrix
         my_kernel = kernel.Kernel(type=self.kernel_type, epsilon=self.epsilon,
-                                  choose_eps=self.choose_eps, k=self.k, metric=self.metric)
+                                  choose_eps=self.choose_eps, k=self.k, 
+                                  metric=self.metric, metric_params=self.metric_params)
         self.local_kernel = my_kernel.fit(X)
         self.epsilon = my_kernel.epsilon
         kernel_matrix = _symmetrize_matrix(my_kernel.compute(X))
@@ -198,15 +202,11 @@ class TargetMeasureDiffusionMap(DiffusionMap):
         """
         self.data = X
         self.target_distribution = target_distribution
-        # ToDo: compute epsilon automatically
-        if (self.choose_eps == 'fixed'):
-            pass
-        else:
-            raise NotImplementedError("We haven't actually implemented any method for automatically choosing epsilon... sorry :-(")
-        # if (choose_eps=='auto'):
-            # self.epsilon = choose_epsilon(X)
         # compute kernel matrix
-        my_kernel = kernel.Kernel(type=self.kernel_type, epsilon=self.epsilon, k=self.k, metric=self.metric).fit(X)
+        my_kernel = kernel.Kernel(type=self.kernel_type, epsilon=self.epsilon,
+                                  choose_eps=self.choose_eps, k=self.k, 
+                                  metric=self.metric, metric_params=self.metric_params)
+        self.local_kernel = my_kernel.fit(X)
         self.local_kernel = my_kernel
         kernel_matrix = _symmetrize_matrix(my_kernel.compute(X))
 
@@ -276,10 +276,3 @@ def _symmetrize_matrix(K, mode='average'):
         K = K + Ktrans
         K = K - dK
         return 0.5*K
-
-# TODO : Implement this!
-# def get_optimal_epsilon_BH(scaled_distsq, epses=None):
-#    """
-#    Calculates the optimal bandwidth for kernel density estimation, according to the algorithm of Berry and Harlim.
-#    """
-#    return
