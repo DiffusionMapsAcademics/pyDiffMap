@@ -21,8 +21,8 @@ def embedding_plot(DiffusionMapObject, color=None, size=None):
         DiffusionMap.fit(). Customizes the size of points in the scatter plot.
 
     """
-    plt.figure(figsize=(6,6))
-    plt.scatter(DiffusionMapObject.dmap[:,0],DiffusionMapObject.dmap[:,1], c=color, s=size, cmap=plt.cm.Spectral)
+    plt.figure(figsize=(6, 6))
+    plt.scatter(DiffusionMapObject.dmap[:, 0], DiffusionMapObject.dmap[:, 1], c=color, s=size, cmap=plt.cm.Spectral)
     plt.title('Embedding')
     plt.xlabel(r'$\psi_1$')
     plt.ylabel(r'$\psi_2$')

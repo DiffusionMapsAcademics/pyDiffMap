@@ -218,17 +218,17 @@ class TestDiffusionMap(object):
         mydmap = dm.DiffusionMap(n_evecs=1, epsilon=eps, alpha=1.0, k=400)
         mydmap.fit(data)
         # rotate sphere so that maximum of first DC is at the north pole
-        northpole = np.argmax(mydmap.dmap[:,0])
-        north = data[northpole,:]
+        northpole = np.argmax(mydmap.dmap[:, 0])
         phi_n = Phi[northpole]
         theta_n = Theta[northpole]
         R = np.array([[np.sin(theta_n)*np.cos(phi_n), np.sin(theta_n)*np.sin(phi_n), -np.cos(theta_n)],
-        [-np.sin(phi_n), np.cos(phi_n), 0],
-        [np.cos(theta_n)*np.cos(phi_n), np.cos(theta_n)*np.sin(phi_n), np.sin(theta_n)]])
-        data_rotated = np.dot(R,data.transpose())
+                      [-np.sin(phi_n), np.cos(phi_n), 0],
+                      [np.cos(theta_n)*np.cos(phi_n), np.cos(theta_n)*np.sin(phi_n), np.sin(theta_n)]])
+        data_rotated = np.dot(R, data.transpose())
         # check that error is beneath tolerance.
-        total_error = 1 - np.corrcoef(mydmap.dmap[:,0], data_rotated[2,:])[0, 1]
+        total_error = 1 - np.corrcoef(mydmap.dmap[:, 0], data_rotated[2, :])[0, 1]
         assert(total_error < THRESH)
+
 
 class TestNystroem(object):
     def test_2Dstrip_nystroem(self):
@@ -251,7 +251,7 @@ class TestNystroem(object):
         # call nystroem extension
         dmap_ext = mydmap.transform(X_test)
         # extract first diffusion coordinate and normalize
-        V_test = dmap_ext[:,0]
+        V_test = dmap_ext[:, 0]
         V_test = V_test/np.linalg.norm(V_test)
         # true dominant eigenfunction = cos(0.5*x), normalize
         V_true = np.cos(.5*x_test).ravel()
@@ -259,6 +259,7 @@ class TestNystroem(object):
         # compute L2 error, deal with remaining sign ambiguity
         error = min([np.linalg.norm(V_true+V_test), np.linalg.norm(V_true-V_test)])
         assert(error < THRESH)
+
 
 class TestTMDiffusionMap(object):
     @pytest.mark.parametrize('choose_eps', ['fixed', 'bgh'])
@@ -321,6 +322,7 @@ class TestTMDiffusionMap(object):
         total_error = 1 - np.min(errors_evec)
 
         assert(total_error < THRESH)
+
 
 class TestSymmetrization():
     test_mat = csr_matrix([[0, 2.], [0, 3.]])

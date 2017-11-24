@@ -66,7 +66,7 @@ class DiffusionMap(object):
         self.data = X
         # compute kernel matrix
         my_kernel = kernel.Kernel(type=self.kernel_type, epsilon=self.epsilon,
-                                  choose_eps=self.choose_eps, k=self.k, 
+                                  choose_eps=self.choose_eps, k=self.k,
                                   metric=self.metric, metric_params=self.metric_params)
         self.local_kernel = my_kernel.fit(X)
         self.epsilon = my_kernel.epsilon
@@ -204,7 +204,7 @@ class TargetMeasureDiffusionMap(DiffusionMap):
         self.target_distribution = target_distribution
         # compute kernel matrix
         my_kernel = kernel.Kernel(type=self.kernel_type, epsilon=self.epsilon,
-                                  choose_eps=self.choose_eps, k=self.k, 
+                                  choose_eps=self.choose_eps, k=self.k,
                                   metric=self.metric, metric_params=self.metric_params)
         self.local_kernel = my_kernel.fit(X)
         self.local_kernel = my_kernel
