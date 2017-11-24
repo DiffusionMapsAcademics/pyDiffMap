@@ -51,8 +51,6 @@ class TestDiffusionMap(object):
         eps = 0.01
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, alpha=1.0, k=100)
         mydmap.fit_transform(data)
-        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=100)
-        mydmap.fit(data)
         errors_evec = []
         for k in np.arange(4):
             errors_evec.append(abs(np.corrcoef(np.cos(0.5*(k+1)*X), mydmap.evecs[:, k])[0, 1]))
@@ -82,9 +80,6 @@ class TestDiffusionMap(object):
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, alpha=1.0, k=200)
         mydmap.fit_transform(data)
         test_evals = -4./mydmap.epsilon*(mydmap.evals - 1)
-        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=200)
-        mydmap.fit(data)
-        test_evals = -4./eps*(mydmap.evals - 1)
 
         # Check that relative error values are beneath tolerance.
         errors_eval = abs((test_evals - real_evals)/real_evals)
@@ -110,8 +105,6 @@ class TestDiffusionMap(object):
         eps = 0.01
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, alpha=1.0, k=200)
         mydmap.fit_transform(data)
-        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=200)
-        mydmap.fit(data)
         errors_evec = []
         for k in np.arange(4):
             errors_evec.append(abs(np.corrcoef(np.cos(0.5*(k+1)*X), mydmap.evecs[:, k])[0, 1]))
@@ -120,7 +113,7 @@ class TestDiffusionMap(object):
         total_error = 1 - np.min(errors_evec)
         assert(total_error < THRESH)
 
-    def test_2Dstrip_evals(self):
+    def test_2Dstrip_evals(self, choose_eps):
         """
         Test that we compute the correct eigenvalues on a 1d strip of length 2*pi.
         Diffusion map parameters in this test are hand-selected to give good results.
@@ -137,16 +130,16 @@ class TestDiffusionMap(object):
         THRESH = 5*3.0/np.sqrt(m)
 
         eps = 0.02
-        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=200)
+        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choos_eps, alpha=1.0, k=200)
         mydmap.fit(data)
-        test_evals = -4./eps*(mydmap.evals - 1)
+        test_evals = -4./mydmap.epsilon*(mydmap.evals - 1)
 
         # Check that relative error values are beneath tolerance.
         errors_eval = abs((test_evals - real_evals)/real_evals)
         total_error = np.max(errors_eval)
         assert(total_error < THRESH)
 
-    def test_2Dstrip_evecs(self):
+    def test_2Dstrip_evecs(self, choose_eps):
         """
         Test that we compute the correct eigenvectors (cosines) on a 1d strip of length 2*pi.
         Diffusion map parameters in this test are hand-selected to give good results.
@@ -162,7 +155,7 @@ class TestDiffusionMap(object):
         THRESH = 0.3/np.sqrt(m)
 
         eps = 0.05
-        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=200)
+        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, alpha=1.0, k=200)
         mydmap.fit(data)
         errors_evec = []
         errors_evec.append(abs(np.corrcoef(np.cos(0.5*1*X), mydmap.evecs[:, 0])[0, 1]))
@@ -174,7 +167,7 @@ class TestDiffusionMap(object):
         total_error = 1 - np.min(errors_evec)
         assert(total_error < THRESH)
 
-    def test_sphere_evals(self):
+    def test_sphere_evals(self, choose_eps):
         """
         Test that we compute the correct eigenvalues on a 2d sphere embedded in 3d.
         Diffusion map parameters in this test are hand-selected to give good results.
@@ -201,7 +194,7 @@ class TestDiffusionMap(object):
         total_error = np.max(errors_eval)
         assert(total_error < THRESH)
 
-    def test_sphere_evecs(self):
+    def test_sphere_evecs(self, choose_eps):
         """
         Test that we compute the correct eigenvectors (spherical harmonics) on a 2d sphere embedded in R^3.
         Diffusion map parameters in this test are hand-selected to give good results.
