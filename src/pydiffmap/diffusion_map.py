@@ -32,16 +32,18 @@ class DiffusionMap(object):
         Metric for distances in the kernel. Default is 'euclidean'. The callable should take two arrays as input and return one value indicating the distance between them.
     """
 
-    def __init__(self, alpha=0.5, epsilon=1.0, k=64, kernel_type='gaussian', choose_eps='fixed', n_evecs=1):
+    def __init__(self, alpha=0.5, epsilon=1.0, k=64, kernel_type='gaussian', choose_eps='fixed', n_evecs=1, metric='euclidean'):
         """
         Initializes Diffusion Map, sets parameters
         """
+
         self.alpha = alpha
         self.epsilon = epsilon
         self.kernel_type = kernel_type
         self.choose_eps = choose_eps
         self.k = k
         self.n_evecs = n_evecs
+        self.metric = metric
 
         return
 
@@ -61,7 +63,7 @@ class DiffusionMap(object):
         self.data = X
         # compute kernel matrix
         my_kernel = kernel.Kernel(type=self.kernel_type, epsilon=self.epsilon,
-                                  choose_eps=self.choose_eps, k=self.k)
+                                  choose_eps=self.choose_eps, k=self.k, metric=self.metric)
         self.local_kernel = my_kernel.fit(X)
         self.epsilon = my_kernel.epsilon
         kernel_matrix = _symmetrize_matrix(my_kernel.compute(X))
@@ -204,7 +206,7 @@ class TargetMeasureDiffusionMap(DiffusionMap):
         # if (choose_eps=='auto'):
             # self.epsilon = choose_epsilon(X)
         # compute kernel matrix
-        my_kernel = kernel.Kernel(type=self.kernel_type, epsilon=self.epsilon, k=self.k).fit(X)
+        my_kernel = kernel.Kernel(type=self.kernel_type, epsilon=self.epsilon, k=self.k, metric=self.metric).fit(X)
         self.local_kernel = my_kernel
         kernel_matrix = _symmetrize_matrix(my_kernel.compute(X))
 
