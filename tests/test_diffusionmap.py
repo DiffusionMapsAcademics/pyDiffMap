@@ -22,7 +22,7 @@ class TestDiffusionMap(object):
         m = 1000
         X = 2*np.pi*np.random.rand(m)
         data = np.array([X]).transpose()
-        THRESH = 3.0/np.sqrt(m)
+        THRESH = 10.0/np.sqrt(m)
         # Setup diffusion map
         eps = 0.01
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=100)
@@ -47,7 +47,7 @@ class TestDiffusionMap(object):
         m = 1000
         X = 2*np.pi*np.random.rand(m)
         data = np.array([X]).transpose()
-        THRESH = 0.3/np.sqrt(m)
+        THRESH = 1.0/np.sqrt(m)
         # Setup diffusion map
         eps = 0.01
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, alpha=1.0, k=100)
@@ -76,15 +76,11 @@ class TestDiffusionMap(object):
         X = X**2
         X = 2*np.pi*X
         data = np.array([X]).transpose()
-        THRESH = 3.0/np.sqrt(m)
+        THRESH = 10.0/np.sqrt(m)
         # Setup diffusion map
         eps = 0.01
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, alpha=1.0, k=200)
         mydmap.fit_transform(data)
-        ### START DEBUG ###
-        print(choose_eps, mydmap.epsilon,THRESH)
-        np.save('P_dev_%s.npy'%choose_eps,mydmap.P)
-        #### END DEBUG ####
         test_evals = -4./mydmap.epsilon*(mydmap.evals - 1)
 
         # Check that relative error values are beneath tolerance.
@@ -107,7 +103,7 @@ class TestDiffusionMap(object):
         X = X**2
         X = 2*np.pi*X
         data = np.array([X]).transpose()
-        THRESH = 0.3/np.sqrt(m)
+        THRESH = 1.0/np.sqrt(m)
         # Setup diffusion map
         eps = 0.01
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, alpha=1.0, k=200)
@@ -134,7 +130,7 @@ class TestDiffusionMap(object):
         X = 2.0*np.pi*np.random.rand(m)
         Y = 1.0*np.pi*np.random.rand(m)
         data = np.array([X, Y]).transpose()
-        THRESH = 5*3.0/np.sqrt(m)
+        THRESH = 50./np.sqrt(m)
 
         eps = 0.02
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=200)
@@ -159,7 +155,7 @@ class TestDiffusionMap(object):
         X = 2.0*np.pi*np.random.rand(m)
         Y = 1.0*np.pi*np.random.rand(m)
         data = np.array([X, Y]).transpose()
-        THRESH = 0.3/np.sqrt(m)
+        THRESH = 3./np.sqrt(m)
 
         eps = 0.05
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=200)
@@ -190,7 +186,7 @@ class TestDiffusionMap(object):
         Y = np.cos(Theta)*np.sin(Phi)
         Z = np.sin(Theta)
         data = np.array([X, Y, Z]).transpose()
-        THRESH = 8.0/np.sqrt(m)
+        THRESH = 80.0/np.sqrt(m)
 
         eps = 0.01
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=400)
@@ -216,7 +212,7 @@ class TestDiffusionMap(object):
         Y = np.cos(Theta)*np.sin(Phi)
         Z = np.sin(Theta)
         data = np.array([X, Y, Z]).transpose()
-        THRESH = 0.1/np.sqrt(m)
+        THRESH = 1.0/np.sqrt(m)
 
         eps = 0.01
         mydmap = dm.DiffusionMap(n_evecs=1, epsilon=eps, alpha=1.0, k=400)
@@ -244,7 +240,7 @@ class TestNystroem(object):
         X = 2.0*np.pi*np.random.rand(m)
         Y = 1.0*np.pi*np.random.rand(m)
         data = np.array([X, Y]).transpose()
-        THRESH = 1.0/np.sqrt(m)
+        THRESH = 10.0/np.sqrt(m)
         # Setup diffusion map
         eps = 0.05
         mydmap = dm.DiffusionMap(n_evecs=1, epsilon=eps, alpha=1.0, k=200)
@@ -306,7 +302,7 @@ class TestTMDiffusionMap(object):
         m = 1000
         X = 2*np.pi*np.random.rand(m)
         data = np.array([X]).transpose()
-        THRESH = 3.0/np.sqrt(m)
+        THRESH = 30.0/np.sqrt(m)
         # Setup diffusion map
         eps = 0.01
 
@@ -333,7 +329,7 @@ class TestTMDiffusionMap(object):
         m = 1000
         X = 2*np.pi*np.random.rand(m)
         data = np.array([X]).transpose()
-        THRESH = 0.3/np.sqrt(m)
+        THRESH = 3.0/np.sqrt(m)
         # Setup diffusion map
         eps = 0.01
         target_distribution = np.ones(len(data))
