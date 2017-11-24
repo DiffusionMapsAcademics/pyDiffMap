@@ -14,7 +14,11 @@ class TestKernel(object):
     # These decorators run the test against all possible y, epsilon values.
     @pytest.mark.parametrize('y_values', y_values_set)
     @pytest.mark.parametrize('epsilon', epsilons)
-    def test_matrix_output(self, y_values, epsilon):
+    @pytest.mark.parametrize('metric, metric_params',[
+        ('euclidean',None),
+        ('minkowski',{'p':1})
+    ])
+    def test_matrix_output(self, y_values, epsilon, metric, metric_params):
         """
         Test that we are returning the correct kernel values.
         """
@@ -23,12 +27,16 @@ class TestKernel(object):
             y_values_ref = x_values
         else:
             y_values_ref = y_values
-        pw_distance = cdist(y_values_ref, x_values, metric='sqeuclidean')
-        true_values = np.exp(-1.*pw_distance/epsilon)
+        if metric == 'minkowski':
+            pw_distance = cdist(y_values_ref, x_values, metric='minkowski',p=metric_params['p'])
+        else:
+            pw_distance = cdist(y_values_ref, x_values, metric=metric)
+        true_values = np.exp(-1.*pw_distance**2/epsilon)
 
         # Construct the kernel and fit to data.
-        mykernel = kernel.Kernel(type='gaussian', metric='euclidean',
-                                 epsilon=epsilon, k=len(x_values))
+        mykernel = kernel.Kernel(type='gaussian', metric=metric, 
+                                 metric_params=metric_params, epsilon=epsilon, 
+                                 k=len(x_values))
         mykernel.fit(x_values)
         K_matrix = mykernel.compute(y_values).toarray()
 

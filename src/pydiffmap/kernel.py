@@ -3,9 +3,9 @@ A class to implement diffusion kernels.
 """
 
 import numpy as np
+import warnings
 from scipy.misc import logsumexp
 from sklearn.neighbors import NearestNeighbors
-import warnings
 
 
 class Kernel(object):
@@ -52,7 +52,9 @@ class Kernel(object):
         self.k0 = min(self.k, np.shape(X)[0])
         self.data = X
         # Construct Nearest Neighbor Tree
-        self.neigh = NearestNeighbors(n_neighbors=self.k0,
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message="Parameter p is found in metric_params. The corresponding parameter from __init__ is ignored.")
+            self.neigh = NearestNeighbors(n_neighbors=self.k0,
                                       metric=self.metric,
                                       metric_params=self.metric_params)
         self.neigh.fit(X)
