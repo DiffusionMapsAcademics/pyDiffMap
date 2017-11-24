@@ -26,14 +26,17 @@ class Kernel(object):
         Distance metric to use in constructing the kernel.  This can be selected from any of the scipy.spatial.distance metrics, or a callable function returning the distance.
     metric_params : dict or None, optional
         Optional parameters required for the metric given.
+    nn_algorithm : {'auto', 'ball_tree', 'kd_tree', 'brute'}, optional
+        Algorithm used to compute the nearest neighbors.  See sklearn.neighbors.NearestNeighbors for details
     """
 
-    def __init__(self, type='gaussian', epsilon=1.0, choose_eps='fixed', k=64, metric='euclidean', metric_params=None):
+    def __init__(self, type='gaussian', epsilon=1.0, choose_eps='fixed', k=64, metric='euclidean', metric_params=None, nn_algorithm='auto'):
         self.type = type
         self.epsilon = epsilon
         self.choose_eps = choose_eps
         self.metric = metric
         self.metric_params = metric_params
+        self.nn_algorithm = nn_algorithm
         self.k = k
 
     def fit(self, X):
@@ -56,7 +59,8 @@ class Kernel(object):
             warnings.filterwarnings("ignore", message="Parameter p is found in metric_params. The corresponding parameter from __init__ is ignored.")
             self.neigh = NearestNeighbors(n_neighbors=self.k0,
                                       metric=self.metric,
-                                      metric_params=self.metric_params)
+                                      metric_params=self.metric_params,
+                                      algorithm=self.nn_algorithm)
         self.neigh.fit(X)
         if self.choose_eps != 'fixed':
             self.choose_optimal_epsilon(self.choose_eps)

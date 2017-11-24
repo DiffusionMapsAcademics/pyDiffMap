@@ -32,9 +32,11 @@ class DiffusionMap(object):
         Metric for distances in the kernel. Default is 'euclidean'. The callable should take two arrays as input and return one value indicating the distance between them.
     metric_params : dict or None, optional
         Optional parameters required for the metric given.
+    nn_algorithm : {'auto', 'ball_tree', 'kd_tree', 'brute'}, optional
+        Algorithm used to compute the nearest neighbors.  See sklearn.neighbors.NearestNeighbors for details
     """
 
-    def __init__(self, alpha=0.5, epsilon=1.0, k=64, kernel_type='gaussian', choose_eps='fixed', n_evecs=1, metric='euclidean', metric_params=None):
+    def __init__(self, alpha=0.5, epsilon=1.0, k=64, kernel_type='gaussian', choose_eps='fixed', n_evecs=1, metric='euclidean', metric_params=None, nn_algorithm='auto'):
         """
         Initializes Diffusion Map, sets parameters
         """
@@ -47,6 +49,7 @@ class DiffusionMap(object):
         self.n_evecs = n_evecs
         self.metric = metric
         self.metric_params = metric_params
+        self.nn_algorithm = nn_algorithm
 
         return
 
@@ -67,7 +70,8 @@ class DiffusionMap(object):
         # compute kernel matrix
         my_kernel = kernel.Kernel(type=self.kernel_type, epsilon=self.epsilon,
                                   choose_eps=self.choose_eps, k=self.k,
-                                  metric=self.metric, metric_params=self.metric_params)
+                                  metric=self.metric, metric_params=self.metric_params,
+                                  nn_algorithm=self.nn_algorithm)
         self.local_kernel = my_kernel.fit(X)
         self.epsilon = my_kernel.epsilon
         kernel_matrix = _symmetrize_matrix(my_kernel.compute(X))
@@ -95,18 +99,6 @@ class DiffusionMap(object):
         self.evecs = np.real(evecs[:, 1:])
         self.dmap = np.dot(self.evecs, np.diag(self.evals))
         return self
-
-#    def _get_bandwidth_fxn(self):
-#        """
-#
-#        """
-#        return
-
-#    def _get_optimal_epsilon(self, scaled_distsq):
-#        """
-#
-#        """
-#        return
 
     def transform(self, Y):
         """
@@ -158,15 +150,6 @@ class DiffusionMap(object):
         self.fit(X)
         return self.dmap
 
-#    def compute_dirichlet_basis(self):
-#        """
-#
-#        """
-#        return
-
-
-#########################################
-
 class TargetMeasureDiffusionMap(DiffusionMap):
     """
     Target Measure Diffusion Map object to be used in data analysis for fun and profit. Target Measure Diffusion Map
@@ -205,7 +188,8 @@ class TargetMeasureDiffusionMap(DiffusionMap):
         # compute kernel matrix
         my_kernel = kernel.Kernel(type=self.kernel_type, epsilon=self.epsilon,
                                   choose_eps=self.choose_eps, k=self.k,
-                                  metric=self.metric, metric_params=self.metric_params)
+                                  metric=self.metric, metric_params=self.metric_params,
+                                  nn_algorithm=self.nn_algorithm)
         self.local_kernel = my_kernel.fit(X)
         self.local_kernel = my_kernel
         kernel_matrix = _symmetrize_matrix(my_kernel.compute(X))

@@ -6,7 +6,7 @@ from scipy.spatial.distance import cdist
 from sklearn.neighbors import NearestNeighbors
 
 x_values = np.vstack((np.linspace(-1, 1, 11), np.arange(11))).T  # set of X vals
-y_values_set = [None, x_values, np.arange(6).reshape(-1, 2), np.arange(44).reshape(-1, 2)]  # all sets of Y's
+y_values_set = [None, x_values, np.arange(6).reshape(-1, 2), np.arange(22).reshape(-1, 2)]  # all sets of Y's
 epsilons = [10., 1., 0.1]  # Possible epsilons
 
 
@@ -46,7 +46,8 @@ class TestKernel(object):
         assert(total_error < 1E-8)
 
     @pytest.mark.parametrize('k', np.arange(2, 14, 2))
-    def test_neighborlists(self, k):
+    @pytest.mark.parametrize('nn_algorithm', ['auto','ball_tree'])
+    def test_neighborlists(self, k, nn_algorithm):
         """
         Test that neighborlisting gives the right number of elements.
         """
@@ -55,7 +56,7 @@ class TestKernel(object):
 
         # Construct kernel matrix.
         mykernel = kernel.Kernel(type='gaussian', metric='euclidean',
-                                 epsilon=1., k=k)
+                                 epsilon=1., k=k, nn_algorithm=nn_algorithm)
         mykernel.fit(x_values)
         K_matrix = mykernel.compute(x_values)
 
