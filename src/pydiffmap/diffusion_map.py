@@ -36,6 +36,7 @@ class DiffusionMap(object):
         """
         Initializes Diffusion Map, sets parameters
         """
+
         self.alpha = alpha
         self.epsilon = epsilon
         self.kernel_type = kernel_type
