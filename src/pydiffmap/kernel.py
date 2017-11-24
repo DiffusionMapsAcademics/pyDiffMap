@@ -77,7 +77,7 @@ class Kernel(object):
         if Y is None:
             Y = self.data
         # perform k nearest neighbour search on X and Y and construct sparse matrix
-        K = self.neigh.kneighbors_graph(Y, n_neighbors=self.k0, mode='distance')
+        K = self.neigh.kneighbors_graph(Y, n_neighbors=self.k0, mode='distance', metric=self.metric)
         # retrieve all nonzero elements and apply kernel function to it
         v = K.data
         if (self.type == 'gaussian'):
@@ -103,7 +103,7 @@ class Kernel(object):
         """
         if choose_eps is None:
             choose_eps = self.choose_eps
-        K = self.neigh.kneighbors_graph(self.data, mode='distance')
+        K = self.neigh.kneighbors_graph(self.data, mode='distance', metric = self.metric)
         # retrieve all nonzero elements and apply kernel function to it
         sq_distances = K.data**2
         if choose_eps == 'fixed':
