@@ -7,8 +7,8 @@ from scipy.sparse import csr_matrix
 np.random.seed(100)
 
 
-@pytest.mark.parametrize('choose_eps', ['fixed', 'bgh'])
 class TestDiffusionMap(object):
+    @pytest.mark.parametrize('choose_eps', ['fixed', 'bgh'])
     def test_1Dstrip_evals(self, choose_eps):
         """
         Test that we compute the correct eigenvalues on a 1d strip of length 2*pi.
@@ -34,6 +34,7 @@ class TestDiffusionMap(object):
         total_error = np.max(errors_eval)
         assert(total_error < THRESH)
 
+    @pytest.mark.parametrize('choose_eps', ['fixed', 'bgh'])
     def test_1Dstrip_evecs(self, choose_eps):
         """
         Test that we compute the correct eigenvectors (cosines) on a 1d strip of length 2*pi.
@@ -59,6 +60,7 @@ class TestDiffusionMap(object):
         total_error = 1 - np.min(errors_evec)
         assert(total_error < THRESH)
 
+    @pytest.mark.parametrize('choose_eps', ['fixed', 'bgh'])
     def test_1Dstrip_nonunif_evals(self, choose_eps):
         """
         Test that we compute the correct eigenvalues on a 1d strip of length 2*pi with nonuniform sampling.
@@ -79,6 +81,10 @@ class TestDiffusionMap(object):
         eps = 0.01
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, alpha=1.0, k=200)
         mydmap.fit_transform(data)
+        ### START DEBUG ###
+        print(choose_eps, mydmap.epsilon,THRESH)
+        np.save('P_dev_%s.npy'%choose_eps,mydmap.P)
+        #### END DEBUG ####
         test_evals = -4./mydmap.epsilon*(mydmap.evals - 1)
 
         # Check that relative error values are beneath tolerance.
@@ -86,6 +92,7 @@ class TestDiffusionMap(object):
         total_error = np.max(errors_eval)
         assert(total_error < THRESH)
 
+    @pytest.mark.parametrize('choose_eps', ['fixed', 'bgh'])
     def test_1Dstrip_nonunif_evecs(self, choose_eps):
         """
         Test that we compute the correct eigenvectors (cosines) on a 1d strip of length 2*pi with nonuniform sampling.
@@ -113,7 +120,7 @@ class TestDiffusionMap(object):
         total_error = 1 - np.min(errors_evec)
         assert(total_error < THRESH)
 
-    def test_2Dstrip_evals(self, choose_eps):
+    def test_2Dstrip_evals(self):
         """
         Test that we compute the correct eigenvalues on a 1d strip of length 2*pi.
         Diffusion map parameters in this test are hand-selected to give good results.
@@ -130,7 +137,7 @@ class TestDiffusionMap(object):
         THRESH = 5*3.0/np.sqrt(m)
 
         eps = 0.02
-        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choos_eps, alpha=1.0, k=200)
+        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=200)
         mydmap.fit(data)
         test_evals = -4./mydmap.epsilon*(mydmap.evals - 1)
 
@@ -139,7 +146,7 @@ class TestDiffusionMap(object):
         total_error = np.max(errors_eval)
         assert(total_error < THRESH)
 
-    def test_2Dstrip_evecs(self, choose_eps):
+    def test_2Dstrip_evecs(self):
         """
         Test that we compute the correct eigenvectors (cosines) on a 1d strip of length 2*pi.
         Diffusion map parameters in this test are hand-selected to give good results.
@@ -155,7 +162,7 @@ class TestDiffusionMap(object):
         THRESH = 0.3/np.sqrt(m)
 
         eps = 0.05
-        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, alpha=1.0, k=200)
+        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=200)
         mydmap.fit(data)
         errors_evec = []
         errors_evec.append(abs(np.corrcoef(np.cos(0.5*1*X), mydmap.evecs[:, 0])[0, 1]))
@@ -167,7 +174,7 @@ class TestDiffusionMap(object):
         total_error = 1 - np.min(errors_evec)
         assert(total_error < THRESH)
 
-    def test_sphere_evals(self, choose_eps):
+    def test_sphere_evals(self):
         """
         Test that we compute the correct eigenvalues on a 2d sphere embedded in 3d.
         Diffusion map parameters in this test are hand-selected to give good results.
@@ -194,7 +201,7 @@ class TestDiffusionMap(object):
         total_error = np.max(errors_eval)
         assert(total_error < THRESH)
 
-    def test_sphere_evecs(self, choose_eps):
+    def test_sphere_evecs(self):
         """
         Test that we compute the correct eigenvectors (spherical harmonics) on a 2d sphere embedded in R^3.
         Diffusion map parameters in this test are hand-selected to give good results.
