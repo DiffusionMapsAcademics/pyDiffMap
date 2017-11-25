@@ -68,7 +68,7 @@ class DiffusionMap(object):
         self.diffmap_params = diffmap_params
         if ('target_distribution' in self.diffmap_params):
             self.target_distribution = self.diffmap_params['target_distribution']
-            assert(self.diffmap == 'tmdmap', "choose tmdmap in which_diffmap if you want to use target measure diffusion map")
+            assert(self.diffmap == 'tmdmap'), "choose tmdmap in which_diffmap if you want to use target measure diffusion map"
         elif ('weights' in self.diffmap_params):
             # TODO
             # self.weights = self.diffmap_params['weights']
