@@ -6,6 +6,20 @@ from scipy.sparse import csr_matrix
 
 np.random.seed(100)
 
+@pytest.fixture(scope='module')
+def spherical_data():
+    # Construct dataset
+    phi = np.pi*np.linspace(-1,1,61)[1:]
+    theta = np.pi*np.linspace(-1,1,33)[1:-1]
+    Phi, Theta = np.meshgrid(phi,theta)
+    Phi = Phi.ravel()
+    Theta = Theta.ravel()
+
+    X = np.cos(Theta)*np.cos(Phi)
+    Y = np.cos(Theta)*np.sin(Phi)
+    Z = np.sin(Theta)
+    return np.array([X, Y, Z]).transpose(), Phi, Theta
+
 
 class TestDiffusionMap(object):
     @pytest.mark.parametrize('choose_eps', ['fixed', 'bgh'])
@@ -170,51 +184,35 @@ class TestDiffusionMap(object):
         total_error = 1 - np.min(errors_evec)
         assert(total_error < THRESH)
 
-    def test_sphere_evals(self):
+    def test_sphere_evals(self, spherical_data):
         """
         Test that we compute the correct eigenvalues on a 2d sphere embedded in 3d.
         Diffusion map parameters in this test are hand-selected to give good results.
         Eigenvalue approximation will fail if k is set too small, or epsilon not optimal (sensitive).
         """
-        # Setup true values to test again.
-        # real_evals = [2, 2, 2, 6].  (=l(l+1))
-        real_evals = np.array([2, 2, 2, 6])
-        m = 10000
-        Phi = 2*np.pi*np.random.rand(m) - np.pi
-        Theta = np.pi*np.random.rand(m) - 0.5*np.pi
-        X = np.cos(Theta)*np.cos(Phi)
-        Y = np.cos(Theta)*np.sin(Phi)
-        Z = np.sin(Theta)
-        data = np.array([X, Y, Z]).transpose()
-        THRESH = 80.0/np.sqrt(m)
-
-        eps = 0.01
+        data, Phi, Theta = spherical_data
+        # Setup true values to test against.
+        real_evals = np.array([2, 2, 2, 6])  # =l(l+1)
+        THRESH = 0.1
+        eps = 0.05
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=400)
         mydmap.fit(data)
-        test_evals = -4./eps*(mydmap.evals - 1)
-        # Check that relative error values are beneath tolerance.
-        errors_eval = abs((test_evals - real_evals)/real_evals)
-        total_error = np.max(errors_eval)
-        assert(total_error < THRESH)
+        test_evals = -4./mydmap.epsilon*(mydmap.evals - 1)
 
-    def test_sphere_evecs(self):
+        # Check eigenvalues pass below error tolerance.
+        errors_eval = abs((test_evals - real_evals)/real_evals)
+        max_eval_error = np.max(errors_eval)
+        assert(max_eval_error < THRESH)
+
+    def test_sphere_evecs(self, spherical_data):
         """
         Test that we compute the correct eigenvectors (spherical harmonics) on a 2d sphere embedded in R^3.
         Diffusion map parameters in this test are hand-selected to give good results.
         Eigenvector approximation will fail if epsilon is set way too small or too large (robust).
         """
-        # real_evec = Y_1^1(Theta, Phi) = sin(Theta) = Z (see spherical harmonics)
-        # Setup data and accuracy threshold
-        m = 10000
-        Phi = 2*np.pi*np.random.rand(m) - np.pi
-        Theta = np.pi*np.random.rand(m) - 0.5*np.pi
-        X = np.cos(Theta)*np.cos(Phi)
-        Y = np.cos(Theta)*np.sin(Phi)
-        Z = np.sin(Theta)
-        data = np.array([X, Y, Z]).transpose()
-        THRESH = 1.0/np.sqrt(m)
-
-        eps = 0.01
+        data, Phi, Theta = spherical_data
+        THRESH = 0.001
+        eps = 0.05
         mydmap = dm.DiffusionMap(n_evecs=1, epsilon=eps, alpha=1.0, k=400)
         mydmap.fit(data)
         # rotate sphere so that maximum of first DC is at the north pole
@@ -226,8 +224,8 @@ class TestDiffusionMap(object):
                       [np.cos(theta_n)*np.cos(phi_n), np.cos(theta_n)*np.sin(phi_n), np.sin(theta_n)]])
         data_rotated = np.dot(R, data.transpose())
         # check that error is beneath tolerance.
-        total_error = 1 - np.corrcoef(mydmap.dmap[:, 0], data_rotated[2, :])[0, 1]
-        assert(total_error < THRESH)
+        evec_error = 1 - np.corrcoef(mydmap.dmap[:, 0], data_rotated[2, :])[0, 1]
+        assert(evec_error < THRESH)
 
 
 class TestNystroem(object):
