@@ -285,8 +285,10 @@ class TestTMDiffusionMap(object):
         eps = 0.01
 
         target_distribution = np.ones(len(data))
-        mytmdmap = dm.TargetMeasureDiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, k=100)
-        mytmdmap.fit_transform(data, target_distribution)
+        diffmap_params = {"target_distribution": target_distribution}
+
+        mytmdmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, k=100, which_diffmap='tmdmap', diffmap_params=diffmap_params)
+        mytmdmap.fit_transform(data)
         test_evals = -4./mytmdmap.epsilon*(mytmdmap.evals - 1)
 
         # Check that relative error values are beneath tolerance.
@@ -312,8 +314,9 @@ class TestTMDiffusionMap(object):
         # Setup diffusion map
         eps = 0.01
         target_distribution = np.ones(len(data))
-        mytmdmap = dm.TargetMeasureDiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, k=100)
-        mytmdmap.fit_transform(data, target_distribution)
+        diffmap_params = {"target_distribution": target_distribution}
+        mytmdmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, k=100, which_diffmap='tmdmap',diffmap_params=diffmap_params)
+        mytmdmap.fit_transform(data)
         errors_evec = []
         for k in np.arange(4):
             errors_evec.append(abs(np.corrcoef(np.cos(0.5*(k+1)*X), mytmdmap.evecs[:, k])[0, 1]))
