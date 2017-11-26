@@ -4,12 +4,13 @@ import pytest
 from pydiffmap import diffusion_map as dm
 from scipy.sparse import csr_matrix
 
+
 @pytest.fixture(scope='module')
 def spherical_data():
     # Construct dataset
-    phi = np.pi*np.linspace(-1,1,61)[1:]
-    theta = np.pi*np.linspace(-1,1,33)[1:-1]
-    Phi, Theta = np.meshgrid(phi,theta)
+    phi = np.pi*np.linspace(-1, 1, 61)[1:]
+    theta = np.pi*np.linspace(-1, 1, 33)[1:-1]
+    Phi, Theta = np.meshgrid(phi, theta)
     Phi = Phi.ravel()
     Theta = Theta.ravel()
 
@@ -18,15 +19,17 @@ def spherical_data():
     Z = np.sin(Theta)
     return np.array([X, Y, Z]).transpose(), Phi, Theta
 
+
 @pytest.fixture(scope='module')
 def uniform_2d_data():
-    x = np.linspace(0.,1.,61)*2.*np.pi
-    y = np.linspace(0.,1.,31)*np.pi
-    X, Y = np.meshgrid(x,y)
+    x = np.linspace(0., 1., 61)*2.*np.pi
+    y = np.linspace(0., 1., 31)*np.pi
+    X, Y = np.meshgrid(x, y)
     X = X.ravel()
     Y = Y.ravel()
     data = np.array([X, Y]).transpose()
     return data, X, Y
+
 
 class TestDiffusionMap(object):
     @pytest.mark.parametrize('choose_eps', ['fixed', 'bgh'])
@@ -39,12 +42,12 @@ class TestDiffusionMap(object):
         # Setup true values to test again.
         # real_evals = k^2 for k in 0.5*[1 2 3 4]
         real_evals = 0.25*np.array([1, 4, 9, 16])
-        X = np.linspace(0.,1.,81)*2.*np.pi
+        X = np.linspace(0., 1., 81)*2.*np.pi
         data = np.array([X]).transpose()
         THRESH = 0.05
         # Setup diffusion map
         eps = 0.005
-        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps,alpha=1.0, k=20)
+        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, alpha=1.0, k=20)
         mydmap.fit(data)
         test_evals = -4./mydmap.epsilon*(mydmap.evals - 1)
 
@@ -63,9 +66,9 @@ class TestDiffusionMap(object):
         # Setup true values to test again.
         # real_evecs = cos(k*x) for k in 0.5*[1 2 3 4]
         # Setup data and accuracy threshold
-        X = np.linspace(0.,1.,81)*2.*np.pi
+        X = np.linspace(0., 1., 81)*2.*np.pi
         data = np.array([X]).transpose()
-        THRESH = 0.003 
+        THRESH = 0.003
         # Setup diffusion map
         eps = 0.005
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, alpha=1.0, k=40)
@@ -89,7 +92,7 @@ class TestDiffusionMap(object):
         # real_evals = k^2 for k in 0.5*[1 2 3 4]
         real_evals = 0.25*np.array([1, 4, 9, 16])
         # Setup data and accuracy threshold
-        X = (np.linspace(0.,1.,81)**2)*2.*np.pi
+        X = (np.linspace(0., 1., 81)**2)*2.*np.pi
         data = np.array([X]).transpose()
         THRESH = 0.1
         # Setup diffusion map
@@ -97,7 +100,7 @@ class TestDiffusionMap(object):
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, alpha=1.0, k=40)
         mydmap.fit_transform(data)
         test_evals = -4./mydmap.epsilon*(mydmap.evals - 1)
-        print(mydmap.epsilon,test_evals)
+        print(mydmap.epsilon, test_evals)
 
         # Check that relative error values are beneath tolerance.
         errors_eval = abs((test_evals - real_evals)/real_evals)
@@ -114,7 +117,7 @@ class TestDiffusionMap(object):
         # Setup true values to test again.
         # real_evecs = cos(k*x) for k in 0.5*[1 2 3 4]
         # Setup data and accuracy threshold
-        X = (np.linspace(0.,1.,81)**2)*2.*np.pi
+        X = (np.linspace(0., 1., 81)**2)*2.*np.pi
         data = np.array([X]).transpose()
         THRESH = 0.01
         # Setup diffusion map
@@ -140,7 +143,7 @@ class TestDiffusionMap(object):
         real_evals = 0.25*np.array([1, 4, 4, 5])
         # Setup data and accuracy threshold
         data, X, Y = uniform_2d_data
-        THRESH = 0.2 
+        THRESH = 0.2
 
         eps = 0.01
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=100)
@@ -265,7 +268,7 @@ class TestTMDiffusionMap(object):
         # real_evals = k^2 for k in 0.5*[1 2 3 4]
         real_evals = 0.25*np.array([1, 4, 9, 16])
         # Setup data and accuracy threshold
-        X = np.linspace(0.,1.,81)*2.*np.pi
+        X = np.linspace(0., 1., 81)*2.*np.pi
         data = np.array([X]).transpose()
         THRESH = 0.05
         # Setup diffusion map
@@ -292,7 +295,7 @@ class TestTMDiffusionMap(object):
         # Setup true values to test again.
         # real_evecs = cos(k*x) for k in 0.5*[1 2 3 4]
         # Setup data and accuracy threshold
-        X = np.linspace(0.,1.,81)*2.*np.pi
+        X = np.linspace(0., 1., 81)*2.*np.pi
         data = np.array([X]).transpose()
         THRESH = 0.05
         # Setup diffusion map

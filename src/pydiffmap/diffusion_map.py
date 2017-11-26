@@ -65,19 +65,17 @@ class DiffusionMap(object):
     def _make_right_norm_vec(self, kernel_matrix, weights=None):
         # perform kde
         q = np.array(kernel_matrix.sum(axis=1)).ravel()
-        m = q.shape[0]
-
         # Apply right normalization
         right_norm_vec = np.power(q, -self.alpha)
         if weights is not None:
-            right_norm_vec *= np.sqrt(weights) 
+            right_norm_vec *= np.sqrt(weights)
         return q, right_norm_vec
 
     def _apply_normalizations(self, kernel_matrix, right_norm_vec):
         # Perform right normalization
         m = right_norm_vec.shape[0]
         Dalpha = sps.spdiags(right_norm_vec, 0, m, m)
-        kernel_matrix = kernel_matrix * Dalpha 
+        kernel_matrix = kernel_matrix * Dalpha
 
         # Perform  row (or left) normalization
         row_sum = kernel_matrix.sum(axis=1).transpose()
@@ -103,7 +101,7 @@ class DiffusionMap(object):
         X : array-like, shape (n_query, n_features)
             Data upon which to construct the diffusion map.
         weights : array-like, optional, shape(n_query)
-            Values of a weight function for the data.  This effectively adds a drift term equivalent to the gradient of the log of weighting function to the final operator.  
+            Values of a weight function for the data.  This effectively adds a drift term equivalent to the gradient of the log of weighting function to the final operator.
 
         Returns
         -------
@@ -119,7 +117,7 @@ class DiffusionMap(object):
         self.weights = weights
         self.kernel_matrix = kernel_matrix
         self.P = P
-        self.q = q 
+        self.q = q
         self.right_norm_vec = right_norm_vec
         self.evals = evals
         self.evecs = evecs
@@ -161,7 +159,7 @@ class DiffusionMap(object):
         X : array-like, shape (n_query, n_features)
             Data upon which to construct the diffusion map.
         weights : array-like, optional, shape (n_query)
-            Values of a weight function for the data.  This effectively adds a drift term equivalent to the gradient of the log of weighting function to the final operator.  
+            Values of a weight function for the data.  This effectively adds a drift term equivalent to the gradient of the log of weighting function to the final operator.
 
         Returns
         -------
