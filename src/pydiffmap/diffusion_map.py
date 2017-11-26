@@ -44,11 +44,10 @@ class DiffusionMap(object):
 
     """
 
-    def __init__(self, alpha=0.5, epsilon=1.0, k=64, kernel_type='gaussian', choose_eps='fixed', n_evecs=1, metric='euclidean', metric_params=None, nn_algorithm='auto', which_diffmap = 'vanilla', diffmap_params = {}):
+    def __init__(self, alpha=0.5, epsilon=1.0, k=64, kernel_type='gaussian', choose_eps='fixed', n_evecs=1, metric='euclidean', metric_params=None, nn_algorithm='auto'):
         """
         Initializes Diffusion Map, sets parameters
         """
-
         self.alpha = alpha
         self.epsilon = epsilon
         self.kernel_type = kernel_type
@@ -58,26 +57,51 @@ class DiffusionMap(object):
         self.metric = metric
         self.metric_params = metric_params
         self.nn_algorithm = nn_algorithm
-
-
-        if (which_diffmap in {'vanilla', 'tmdmap'}):
-            self.diffmap = which_diffmap
-        else:
-            raise("Wrong parameter for which_diffmap: choose vanilla, or tmdmap (or weights once implemented).")
-
-        self.diffmap_params = diffmap_params
-        if ('target_distribution' in self.diffmap_params):
-            self.target_distribution = self.diffmap_params['target_distribution']
-            assert(self.diffmap == 'tmdmap'), "choose tmdmap in which_diffmap if you want to use target measure diffusion map"
-        elif ('weights' in self.diffmap_params):
-            # TODO
-            # self.weights = self.diffmap_params['weights']
-            raise("Weights option not implemented yet.")
-
-
         return
 
-    def fit(self, X):
+    def _compute_kernel_matrix(self, X):
+        my_kernel = kernel.Kernel(type=self.kernel_type, epsilon=self.epsilon,
+                                  choose_eps=self.choose_eps, k=self.k,
+                                  metric=self.metric, metric_params=self.metric_params,
+                                  nn_algorithm=self.nn_algorithm)
+        self.local_kernel = my_kernel.fit(X)
+        self.epsilon = my_kernel.epsilon
+        kernel_matrix = _symmetrize_matrix(my_kernel.compute(X))
+        return kernel_matrix
+
+    def _make_right_norm_vec(self, kernel_matrix, weights=None):
+        # perform kde
+        q = np.array(kernel_matrix.sum(axis=1)).ravel()
+        m = q.shape[0]
+
+        # Apply right normalization
+        right_norm_vec = np.power(q, -self.alpha)
+        if weights is not None:
+            right_norm_vec *= np.sqrt(weights) 
+        return q, right_norm_vec
+
+    def _apply_normalizations(self, kernel_matrix, right_norm_vec):
+        # Perform right normalization
+        m = right_norm_vec.shape[0]
+        Dalpha = sps.spdiags(right_norm_vec, 0, m, m)
+        kernel_matrix = kernel_matrix * Dalpha 
+
+        # Perform  row (or left) normalization
+        row_sum = kernel_matrix.sum(axis=1).transpose()
+        n = row_sum.shape[1]
+        Dalpha = sps.spdiags(np.power(row_sum, -1), 0, n, n)
+        P = Dalpha * kernel_matrix
+        return P
+
+    def _make_diffusion_coords(self, P):
+        evals, evecs = spsl.eigs(P, k=(self.n_evecs+1), which='LM')
+        ix = evals.argsort()[::-1][1:]
+        evals = np.real(evals[ix])
+        evecs = np.real(evecs[:, ix])
+        dmap = np.dot(evecs, np.diag(evals))
+        return dmap, evecs, evals
+
+    def fit(self, X, weights=None):
         """
         Fits the data.
 
@@ -90,59 +114,21 @@ class DiffusionMap(object):
         -------
         self : the object itself
         """
+        kernel_matrix = self._compute_kernel_matrix(X)
+        q, right_norm_vec = self._make_right_norm_vec(kernel_matrix, weights)
+        P = self._apply_normalizations(kernel_matrix, right_norm_vec)
+        dmap, evecs, evals = self._make_diffusion_coords(P)
+
+        # Save constructed data.
         self.data = X
-        # compute kernel matrix
-        my_kernel = kernel.Kernel(type=self.kernel_type, epsilon=self.epsilon,
-                                  choose_eps=self.choose_eps, k=self.k,
-                                  metric=self.metric, metric_params=self.metric_params,
-                                  nn_algorithm=self.nn_algorithm)
-        self.local_kernel = my_kernel.fit(X)
-        self.epsilon = my_kernel.epsilon
-        kernel_matrix = _symmetrize_matrix(my_kernel.compute(X))
-
-        # alpha normalization
-        m = np.shape(X)[0]
-        q = np.array(kernel_matrix.sum(axis=1)).ravel()
-        # save kernel density estimate for later
-        self.q = q
-
-        if (self.diffmap == 'vanilla'):
-            Dalpha = sps.spdiags(np.power(q, -self.alpha), 0, m, m)
-            kernel_matrix = Dalpha * kernel_matrix * Dalpha
-
-            # row normalization
-            row_sum = kernel_matrix.sum(axis=1).transpose()
-            Dalpha = sps.spdiags(np.power(row_sum, -1), 0, m, m)
-            P = Dalpha * kernel_matrix
-
-        elif (self.diffmap == 'tmdmap'):
-
-            weigths_tmdmap = np.zeros(m)
-            for i in range(0, len(X)):
-                weigths_tmdmap[i] = np.sqrt(self.target_distribution[i]) / q[i]
-            # save the weights
-            self.weigths_tmdmap = weigths_tmdmap
-
-            D = sps.spdiags(weigths_tmdmap, 0, m, m)
-            Ktilde = kernel_matrix * D
-            # row normalization
-            Dalpha = sps.csr_matrix.sum(Ktilde, axis=1).transpose()
-            Dtilde = sps.spdiags(np.power(Dalpha, -1), 0, m, m)
-
-            P = Dtilde * Ktilde
-        else:
-            raise("Diffusion map option not found. See available options for which_diffmap parameter.")
-
+        self.weights = weights
+        self.kernel_matrix = kernel_matrix
         self.P = P
-
-        # diagonalise and sort eigenvalues
-        evals, evecs = spsl.eigs(P, k=(self.n_evecs+1), which='LM')
-        ix = evals.argsort()[::-1]
-        evals = evals[ix]
-        evecs = evecs[:, ix]
-        self.evals = np.real(evals[1:])
-        self.evecs = np.real(evecs[:, 1:])
-        self.dmap = np.dot(self.evecs, np.diag(self.evals))
+        self.q = q 
+        self.right_norm_vec = right_norm_vec
+        self.evals = evals
+        self.evecs = evecs
+        self.dmap = dmap
         return self
 
     def transform(self, Y):
@@ -168,27 +154,10 @@ class DiffusionMap(object):
                 Y = Y[np.newaxis, :]
             # compute the values of the kernel matrix
             kernel_extended = self.local_kernel.compute(Y)
-            # right normalization
-            m = np.shape(self.data)[0]
-            if (self.diffmap == 'vanilla'):
-                Dalpha = sps.spdiags(np.power(self.q, -self.alpha), 0, m, m)
-                kernel_extended = kernel_extended * Dalpha
-                # left normalization
-                D = kernel_extended.sum(axis=1).transpose()
-                Dalpha = sps.spdiags(np.power(D, -1), 0, np.shape(D)[1], np.shape(D)[1])
-                P = Dalpha * kernel_extended
-            if (self.diffmap == 'tmdmap'):
-                #TODO nystrom extension for tmdmap
-                Dalpha = sps.spdiags(np.power(self.q, -self.alpha), 0, m, m)
-                kernel_extended = kernel_extended * Dalpha
-                # left normalization
-                D = kernel_extended.sum(axis=1).transpose()
-                Dalpha = sps.spdiags(np.power(D, -1), 0, np.shape(D)[1], np.shape(D)[1])
-                P = Dalpha * kernel_extended
-
+            P = self._apply_normalizations(kernel_extended, self.right_norm_vec)
             return P * self.evecs
 
-    def fit_transform(self, X):
+    def fit_transform(self, X, weights=None):
         """
         Fits the data and returns diffusion coordinates.  equivalent to calling dmap.fit(X).transform(x).
 
@@ -202,10 +171,8 @@ class DiffusionMap(object):
         phi : numpy array, shape (n_query, n_eigenvectors)
             Transformed value of the given values.
         """
-        self.fit(X)
+        self.fit(X, weights=weights)
         return self.dmap
-
-
 
 
 def _symmetrize_matrix(K, mode='average'):
