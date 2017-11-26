@@ -4,8 +4,6 @@ import pytest
 from pydiffmap import diffusion_map as dm
 from scipy.sparse import csr_matrix
 
-np.random.seed(101)
-
 @pytest.fixture(scope='module')
 def spherical_data():
     # Construct dataset
@@ -20,6 +18,16 @@ def spherical_data():
     Z = np.sin(Theta)
     return np.array([X, Y, Z]).transpose(), Phi, Theta
 
+@pytest.fixture(scope='module')
+def uniform_2d_data():
+    x = np.linspace(0.,1.,61)*2.*np.pi
+    y = np.linspace(0.,1.,31)*np.pi
+    X, Y = np.meshgrid(x,y)
+    X = X.ravel()
+    Y = Y.ravel()
+    data = np.array([X, Y]).transpose()
+    return data, X, Y
+
 class TestDiffusionMap(object):
     @pytest.mark.parametrize('choose_eps', ['fixed', 'bgh'])
     def test_1Dstrip_evals(self, choose_eps):
@@ -31,14 +39,13 @@ class TestDiffusionMap(object):
         # Setup true values to test again.
         # real_evals = k^2 for k in 0.5*[1 2 3 4]
         real_evals = 0.25*np.array([1, 4, 9, 16])
-        X = np.linspace(0,1,101)*2.*np.pi
+        X = np.linspace(0.,1.,81)*2.*np.pi
         data = np.array([X]).transpose()
         THRESH = 0.05
         # Setup diffusion map
         eps = 0.005
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps,alpha=1.0, k=20)
         mydmap.fit(data)
-        print(mydmap.epsilon)
         test_evals = -4./mydmap.epsilon*(mydmap.evals - 1)
 
         # Check that relative error values are beneath tolerance.
@@ -56,13 +63,12 @@ class TestDiffusionMap(object):
         # Setup true values to test again.
         # real_evecs = cos(k*x) for k in 0.5*[1 2 3 4]
         # Setup data and accuracy threshold
-        m = 1000
-        X = 2*np.pi*np.random.rand(m)
+        X = np.linspace(0.,1.,81)*2.*np.pi
         data = np.array([X]).transpose()
-        THRESH = 1.0/np.sqrt(m)
+        THRESH = 0.003 
         # Setup diffusion map
-        eps = 0.01
-        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, alpha=1.0, k=100)
+        eps = 0.005
+        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, alpha=1.0, k=40)
         mydmap.fit_transform(data)
         errors_evec = []
         for k in np.arange(4):
@@ -72,7 +78,8 @@ class TestDiffusionMap(object):
         total_error = 1 - np.min(errors_evec)
         assert(total_error < THRESH)
 
-    def test_1Dstrip_nonunif_evals(self):
+    @pytest.mark.parametrize('choose_eps', ['fixed', 'bgh'])
+    def test_1Dstrip_nonunif_evals(self, choose_eps):
         """
         Test that we compute the correct eigenvalues on a 1d strip of length 2*pi with nonuniform sampling.
         Diffusion map parameters in this test are hand-selected to give good results.
@@ -82,25 +89,23 @@ class TestDiffusionMap(object):
         # real_evals = k^2 for k in 0.5*[1 2 3 4]
         real_evals = 0.25*np.array([1, 4, 9, 16])
         # Setup data and accuracy threshold
-        m = 1000
-        X = np.random.rand(m)
-        X = X**2
-        X = 2*np.pi*X
+        X = (np.linspace(0.,1.,81)**2)*2.*np.pi
         data = np.array([X]).transpose()
-        THRESH = 100.0/np.sqrt(m)
+        THRESH = 0.1
         # Setup diffusion map
-        eps = 0.01
-        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=200)
+        eps = 0.02
+        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, alpha=1.0, k=40)
         mydmap.fit_transform(data)
-        print(mydmap.epsilon), 
         test_evals = -4./mydmap.epsilon*(mydmap.evals - 1)
+        print(mydmap.epsilon,test_evals)
 
         # Check that relative error values are beneath tolerance.
         errors_eval = abs((test_evals - real_evals)/real_evals)
         total_error = np.max(errors_eval)
         assert(total_error < THRESH)
 
-    def test_1Dstrip_nonunif_evecs(self):
+    @pytest.mark.parametrize('choose_eps', ['fixed', 'bgh'])
+    def test_1Dstrip_nonunif_evecs(self, choose_eps):
         """
         Test that we compute the correct eigenvectors (cosines) on a 1d strip of length 2*pi with nonuniform sampling.
         Diffusion map parameters in this test are hand-selected to give good results.
@@ -109,15 +114,12 @@ class TestDiffusionMap(object):
         # Setup true values to test again.
         # real_evecs = cos(k*x) for k in 0.5*[1 2 3 4]
         # Setup data and accuracy threshold
-        m = 1000
-        X = np.random.rand(m)
-        X = X**2
-        X = 2*np.pi*X
+        X = (np.linspace(0.,1.,81)**2)*2.*np.pi
         data = np.array([X]).transpose()
-        THRESH = 1.0/np.sqrt(m)
+        THRESH = 0.01
         # Setup diffusion map
-        eps = 0.01
-        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=200)
+        eps = 0.02
+        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, alpha=1.0, k=40)
         mydmap.fit_transform(data)
         errors_evec = []
         for k in np.arange(4):
@@ -127,7 +129,7 @@ class TestDiffusionMap(object):
         total_error = 1 - np.min(errors_evec)
         assert(total_error < THRESH)
 
-    def test_2Dstrip_evals(self):
+    def test_2Dstrip_evals(self, uniform_2d_data):
         """
         Test that we compute the correct eigenvalues on a 1d strip of length 2*pi.
         Diffusion map parameters in this test are hand-selected to give good results.
@@ -137,14 +139,11 @@ class TestDiffusionMap(object):
         # real_evals = kx^2 + ky^2 for kx = 0.5*[1 0 2 1] and ky = [0 1 0 1].
         real_evals = 0.25*np.array([1, 4, 4, 5])
         # Setup data and accuracy threshold
-        m = 5000
-        X = 2.0*np.pi*np.random.rand(m)
-        Y = 1.0*np.pi*np.random.rand(m)
-        data = np.array([X, Y]).transpose()
-        THRESH = 50./np.sqrt(m)
+        data, X, Y = uniform_2d_data
+        THRESH = 0.2 
 
-        eps = 0.02
-        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=200)
+        eps = 0.01
+        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=100)
         mydmap.fit(data)
         test_evals = -4./mydmap.epsilon*(mydmap.evals - 1)
 
@@ -153,7 +152,7 @@ class TestDiffusionMap(object):
         total_error = np.max(errors_eval)
         assert(total_error < THRESH)
 
-    def test_2Dstrip_evecs(self):
+    def test_2Dstrip_evecs(self, uniform_2d_data):
         """
         Test that we compute the correct eigenvectors (cosines) on a 1d strip of length 2*pi.
         Diffusion map parameters in this test are hand-selected to give good results.
@@ -162,14 +161,11 @@ class TestDiffusionMap(object):
         # Setup true values to test again.
         # real_evecs = cos(kx*x)*cos(ky*y) for kx = 0.5*[1 0 2 1] and ky = [0 1 0 1].
         # Setup data and accuracy threshold
-        m = 5000
-        X = 2.0*np.pi*np.random.rand(m)
-        Y = 1.0*np.pi*np.random.rand(m)
-        data = np.array([X, Y]).transpose()
-        THRESH = 3./np.sqrt(m)
+        data, X, Y = uniform_2d_data
+        THRESH = 0.01
 
-        eps = 0.05
-        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=200)
+        eps = 0.01
+        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=100)
         mydmap.fit(data)
         errors_evec = []
         errors_evec.append(abs(np.corrcoef(np.cos(0.5*1*X), mydmap.evecs[:, 0])[0, 1]))
@@ -226,19 +222,16 @@ class TestDiffusionMap(object):
 
 
 class TestNystroem(object):
-    def test_2Dstrip_nystroem(self):
+    def test_2Dstrip_nystroem(self, uniform_2d_data):
         """
         Test the nystroem extension in the transform() function.
         """
         # Setup data and accuracy threshold
-        m = 5000
-        X = 2.0*np.pi*np.random.rand(m)
-        Y = 1.0*np.pi*np.random.rand(m)
-        data = np.array([X, Y]).transpose()
-        THRESH = 10.0/np.sqrt(m)
+        data, X, Y = uniform_2d_data
+        THRESH = 0.01
         # Setup diffusion map
-        eps = 0.05
-        mydmap = dm.DiffusionMap(n_evecs=1, epsilon=eps, alpha=1.0, k=200)
+        eps = 0.01
+        mydmap = dm.DiffusionMap(n_evecs=1, epsilon=eps, alpha=1.0, k=100)
         mydmap.fit(data)
         # Setup values to test against (regular grid)
         x_test, y_test = np.meshgrid(np.linspace(0, 2*np.pi, 80), np.linspace(0, np.pi, 40))
@@ -272,12 +265,11 @@ class TestTMDiffusionMap(object):
         # real_evals = k^2 for k in 0.5*[1 2 3 4]
         real_evals = 0.25*np.array([1, 4, 9, 16])
         # Setup data and accuracy threshold
-        m = 1000
-        X = 2*np.pi*np.random.rand(m)
+        X = np.linspace(0.,1.,81)*2.*np.pi
         data = np.array([X]).transpose()
-        THRESH = 30.0/np.sqrt(m)
+        THRESH = 0.05
         # Setup diffusion map
-        eps = 0.01
+        eps = 0.005
 
         target_distribution = np.ones(len(data))
         mytmdmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, k=100)
@@ -300,12 +292,11 @@ class TestTMDiffusionMap(object):
         # Setup true values to test again.
         # real_evecs = cos(k*x) for k in 0.5*[1 2 3 4]
         # Setup data and accuracy threshold
-        m = 1000
-        X = 2*np.pi*np.random.rand(m)
+        X = np.linspace(0.,1.,81)*2.*np.pi
         data = np.array([X]).transpose()
-        THRESH = 3.0/np.sqrt(m)
+        THRESH = 0.05
         # Setup diffusion map
-        eps = 0.01
+        eps = 0.005
         target_distribution = np.ones(len(data))
         mytmdmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, k=100)
         mytmdmap.fit_transform(data, weights=target_distribution)
