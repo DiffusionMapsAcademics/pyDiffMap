@@ -100,7 +100,6 @@ class TestDiffusionMap(object):
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, alpha=1.0, k=40)
         mydmap.fit_transform(data)
         test_evals = -4./mydmap.epsilon*(mydmap.evals - 1)
-        print(mydmap.epsilon, test_evals)
 
         # Check that relative error values are beneath tolerance.
         errors_eval = abs((test_evals - real_evals)/real_evals)
