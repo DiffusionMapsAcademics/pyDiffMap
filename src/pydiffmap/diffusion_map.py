@@ -32,21 +32,14 @@ class DiffusionMap(object):
         Metric for distances in the kernel. Default is 'euclidean'. The callable should take two arrays as input and return one value indicating the distance between them.
     metric_params : dict or None, optional
         Optional parameters required for the metric given.
-    nn_algorithm : {'auto', 'ball_tree', 'kd_tree', 'brute'}, optional
+    n_algorithm : {'auto', 'ball_tree', 'kd_tree', 'brute'}, optional
         Algorithm used to compute the nearest neighbors.  See sklearn.neighbors.NearestNeighbors for details
-    which_diffmap : {'vanilla', 'tmdmap'}, optional
-        default is vanilla diffusion map (vanilla). tmdmap is target measure diffusion map: in this case, fit and fit_transform require target measure as input parameter.
-        Description: Target Measure Diffusion Map (TMDmap) is algorithm which constructs a matrix on the data that approximates the differential operator
-        .. math::  Lf = \Delta f + \nabla (\log \pi)\cdot\nabla f. The target density .. math:: \pi
-        is evaluated on the data up to a normalization constant.
-    diffmap_params : dict, optional
-        Optional parameters required for the diffusion map given. Default is empty dictionary.
 
     """
 
-    def __init__(self, alpha=0.5, epsilon=1.0, k=64, kernel_type='gaussian', choose_eps='fixed', n_evecs=1, metric='euclidean', metric_params=None, nn_algorithm='auto'):
+    def __init__(self, alpha=0.5, epsilon=1.0, k=64, kernel_type='gaussian', choose_eps='fixed', n_evecs=1, metric='euclidean', metric_params=None, n_algorithm='auto'):
         """
-        Initializes Diffusion Map, sets parameters
+        Initializes Diffusion Map, sets parameters.
         """
         self.alpha = alpha
         self.epsilon = epsilon
@@ -56,14 +49,14 @@ class DiffusionMap(object):
         self.n_evecs = n_evecs
         self.metric = metric
         self.metric_params = metric_params
-        self.nn_algorithm = nn_algorithm
+        self.n_algorithm = n_algorithm
         return
 
     def _compute_kernel_matrix(self, X):
         my_kernel = kernel.Kernel(type=self.kernel_type, epsilon=self.epsilon,
                                   choose_eps=self.choose_eps, k=self.k,
                                   metric=self.metric, metric_params=self.metric_params,
-                                  nn_algorithm=self.nn_algorithm)
+                                  n_algorithm=self.n_algorithm)
         self.local_kernel = my_kernel.fit(X)
         self.epsilon = my_kernel.epsilon
         kernel_matrix = _symmetrize_matrix(my_kernel.compute(X))
@@ -109,6 +102,8 @@ class DiffusionMap(object):
         ----------
         X : array-like, shape (n_query, n_features)
             Data upon which to construct the diffusion map.
+        weights : array-like, optional, shape(n_query)
+            Values of a weight function for the data.  This effectively adds a drift term equivalent to the gradient of the log of weighting function to the final operator.  
 
         Returns
         -------
@@ -165,6 +160,8 @@ class DiffusionMap(object):
         ----------
         X : array-like, shape (n_query, n_features)
             Data upon which to construct the diffusion map.
+        weights : array-like, optional, shape (n_query)
+            Values of a weight function for the data.  This effectively adds a drift term equivalent to the gradient of the log of weighting function to the final operator.  
 
         Returns
         -------
@@ -206,3 +203,5 @@ def _symmetrize_matrix(K, mode='average'):
         K = K + Ktrans
         K = K - dK
         return 0.5*K
+    else:
+        raise ValueError('Did not understand symmetrization method')
