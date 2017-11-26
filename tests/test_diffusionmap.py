@@ -272,7 +272,7 @@ class TestTMDiffusionMap(object):
         eps = 0.005
 
         target_distribution = np.exp(-.5*X**2)
-        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, k=100)
+        mydmap = dm.DiffusionMap(alpha=1., n_evecs=4, epsilon=eps, choose_eps=choose_eps, k=100)
         mydmap.fit_transform(data, weights=target_distribution)
         test_evals = -4./mydmap.epsilon*(mydmap.evals - 1)
 
@@ -300,7 +300,7 @@ class TestTMDiffusionMap(object):
         # Setup diffusion map
         eps = 0.005
         target_distribution = np.exp(-.5*X**2)
-        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, choose_eps=choose_eps, k=100)
+        mydmap = dm.DiffusionMap(alpha=1., n_evecs=4, epsilon=eps, choose_eps=choose_eps, k=100)
         mydmap.fit_transform(data, weights=target_distribution)
         errors_evec = []
         for k in np.arange(4):
