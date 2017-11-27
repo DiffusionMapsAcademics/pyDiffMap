@@ -8,8 +8,9 @@ from pydiffmap import visualization as viz
 
 
 @pytest.fixture(scope='module')
-def dummy_dmap():
-    data = np.linspace(0., 2.*np.pi, 81).reshape(-1, 1)
+def dummy_dmap(uniform_2d_data):
+    data, X, Y= uniform_2d_data
+    print(data)
     mydmap = dm.DiffusionMap(n_evecs=2, k=5)
     mydmap.fit(data)
     return mydmap
@@ -46,3 +47,18 @@ class TestEmbeddingPlot():
         scatter_kwargs = {'c': mydmap.dmap[:, 0], 'cmap': cmap}
         fig = viz.embedding_plot(mydmap, scatter_kwargs, show=False)
         assert(fig)
+
+class TestDataPlot():
+    def test_no_kwargs(self, dummy_dmap):
+        mydmap = dummy_dmap
+        fig = viz.data_plot(mydmap, scatter_kwargs=None, show=False)
+        assert(fig)
+
+    @pytest.mark.parametrize('size', [4., np.arange(1, 82)])
+    def test_size(self, dummy_dmap, size):
+        mydmap = dummy_dmap
+        scatter_kwargs = {'s': size}
+        fig = viz.data_plot(mydmap, 1, scatter_kwargs, show=False)
+        SC = fig.axes[0].collections[0]
+        actual_sizes = SC.get_sizes()
+        assert(np.all(actual_sizes == size))
