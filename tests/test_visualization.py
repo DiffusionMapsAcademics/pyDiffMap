@@ -27,7 +27,6 @@ class TestEmbeddingPlot():
         true_coloring = colors.to_rgba('r')
         fig = viz.embedding_plot(mydmap, scatter_kwargs, show=False)
         SC = fig.axes[0].collections[0]
-        print(SC._facecolors[0])
         assert(np.all(SC._facecolors[0] == true_coloring))
 
     @pytest.mark.parametrize('size', [4., np.arange(1, 82)])
