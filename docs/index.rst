@@ -20,6 +20,7 @@ Contents
    readme
    installation
    usage
+   jupyter notebook tutorials/index
    reference/index
    contributing
    authors
@@ -31,4 +32,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
