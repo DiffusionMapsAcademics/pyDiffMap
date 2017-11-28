@@ -20,6 +20,8 @@ class Kernel(object):
         Value of the length-scale parameter.
     choose_eps : string, optional
         Method for choosing the epsilon.  Currently, the only option is 'fixed' (i.e. don't), and 'bgh'.
+    k : int, optional
+        Number of nearest neighbors over which to construct the kernel.
     neighbor_params : dict or None, optional
         Optional parameters for the nearest Neighbor search. See scikit-learn NearestNeighbors class for details.
     metric : string, optional
@@ -28,14 +30,15 @@ class Kernel(object):
         Optional parameters required for the metric given.
     """
 
-    def __init__(self, type='gaussian', epsilon=1.0, choose_eps='fixed', neighbor_params=None, metric='euclidean', metric_params=None):
+    def __init__(self, type='gaussian', epsilon=1.0, choose_eps='fixed', k=64, neighbor_params=None, metric='euclidean', metric_params=None):
         self.type = type
         self.epsilon = epsilon
         self.choose_eps = choose_eps
+        self.k = k
         self.metric = metric
         self.metric_params = metric_params
         if neighbor_params is None:
-            neighbor_params = {'n_neighbors': 64, 'algorithm': 'auto'}
+            neighbor_params = {}
         self.neighbor_params = neighbor_params
 
     def fit(self, X):
@@ -51,15 +54,15 @@ class Kernel(object):
         -------
         self : the object itself
         """
-        #self.k0 = min(self.k, np.shape(X)[0])
+        self.k0 = min(self.k, np.shape(X)[0])
         self.data = X
         # Construct Nearest Neighbor Tree
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", message="Parameter p is found in metric_params. The corresponding parameter from __init__ is ignored.")
-            kwargs = self.neighbor_params
-            self.neigh = NearestNeighbors(metric=self.metric,
+            self.neigh = NearestNeighbors(n_neighbors = self.k,
+                                          metric=self.metric,
                                           metric_params=self.metric_params,
-                                          **kwargs)
+                                          **self.neighbor_params)
         self.neigh.fit(X)
         if self.choose_eps != 'fixed':
             self.choose_optimal_epsilon(self.choose_eps)
@@ -83,7 +86,7 @@ class Kernel(object):
         if Y is None:
             Y = self.data
         # perform k nearest neighbour search on X and Y and construct sparse matrix
-        K = self.neigh.kneighbors_graph(Y, n_neighbors=self.k0, mode='distance')
+        K = self.neigh.kneighbors_graph(Y, mode='distance')
         # retrieve all nonzero elements and apply kernel function to it
         v = K.data
         if (self.type == 'gaussian'):
