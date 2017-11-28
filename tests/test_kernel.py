@@ -56,7 +56,7 @@ class TestKernel(object):
 
         # Construct kernel matrix.
         mykernel = kernel.Kernel(type='gaussian', metric='euclidean',
-                                 epsilon=1., k=k, neighbor_params=neighbor_params)
+                                 epsilon=1., k=k0, neighbor_params=neighbor_params)
         mykernel.fit(x_values)
         K_matrix = mykernel.compute(x_values)
 
