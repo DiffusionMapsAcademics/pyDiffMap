@@ -18,6 +18,8 @@ class Kernel(object):
         Type of kernel to construct. Currently the only option is 'gaussian', but more will be implemented.
     epsilon : scalar, optional
         Value of the length-scale parameter.
+    neighbor_type : {'kNN', 'radius'}, optional
+        specifies if nearest neighbor search is 'k nearest neighbors' or 'radius nearest neighbors'. Default is 'kNN'.
     k : int, optional
         Number of nearest neighbors over which to construct the kernel.
     choose_eps : string, optional
@@ -30,7 +32,7 @@ class Kernel(object):
         Algorithm used to compute the nearest neighbors.  See sklearn.neighbors.NearestNeighbors for details
     """
 
-    def __init__(self, type='gaussian', epsilon=1.0, choose_eps='fixed', k=64, metric='euclidean', metric_params=None, n_algorithm='auto'):
+    def __init__(self, type='gaussian', epsilon=1.0, choose_eps='fixed', k=64, neighbor_type='kNN', metric='euclidean', metric_params=None, n_algorithm='auto'):
         self.type = type
         self.epsilon = epsilon
         self.choose_eps = choose_eps
@@ -38,6 +40,7 @@ class Kernel(object):
         self.metric_params = metric_params
         self.n_algorithm = n_algorithm
         self.k = k
+        self.neighbor_type = neighbor_type
 
     def fit(self, X):
         """
@@ -84,7 +87,12 @@ class Kernel(object):
         if Y is None:
             Y = self.data
         # perform k nearest neighbour search on X and Y and construct sparse matrix
-        K = self.neigh.kneighbors_graph(Y, n_neighbors=self.k0, mode='distance')
+        if (self.neighbor_type == 'kNN'):
+            K = self.neigh.kneighbors_graph(Y, n_neighbors=self.k0, mode='distance')
+        elif (self.neighbor_type == 'radius'):
+            K = self.neigh.radius_neighbors_graph(Y, radius=np.sqrt(3*self.epsilon), mode='distance')
+        else:
+            raise("Error: neighbor_type not understood, must be 'kNN' or 'radius'.")
         # retrieve all nonzero elements and apply kernel function to it
         v = K.data
         if (self.type == 'gaussian'):

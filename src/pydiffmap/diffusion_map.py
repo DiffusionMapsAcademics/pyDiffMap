@@ -22,6 +22,8 @@ class DiffusionMap(object):
         Length-scale parameter.
     k : int, optional
         Number of nearest neighbors over which to construct the kernel.
+    neighbor_type : {'kNN', 'radius'}, optional
+        specifies if nearest neighbor search is 'k nearest neighbors' or 'radius nearest neighbors'. Default is 'kNN'.
     kernel_type : string, optional
         Type of kernel to construct. Currently the only option is 'gaussian', but more will be implemented.
     choose_eps : string, optional
@@ -37,7 +39,7 @@ class DiffusionMap(object):
 
     """
 
-    def __init__(self, alpha=0.5, epsilon=1.0, k=64, kernel_type='gaussian', choose_eps='fixed', n_evecs=1, metric='euclidean', metric_params=None, n_algorithm='auto'):
+    def __init__(self, alpha=0.5, epsilon=1.0, k=64, neighbor_type='kNN', kernel_type='gaussian', choose_eps='fixed', n_evecs=1, metric='euclidean', metric_params=None, n_algorithm='auto'):
         """
         Initializes Diffusion Map, sets parameters.
         """
@@ -46,6 +48,7 @@ class DiffusionMap(object):
         self.kernel_type = kernel_type
         self.choose_eps = choose_eps
         self.k = k
+        self.neighbor_type = neighbor_type
         self.n_evecs = n_evecs
         self.metric = metric
         self.metric_params = metric_params
@@ -54,7 +57,7 @@ class DiffusionMap(object):
 
     def _compute_kernel_matrix(self, X):
         my_kernel = kernel.Kernel(type=self.kernel_type, epsilon=self.epsilon,
-                                  choose_eps=self.choose_eps, k=self.k,
+                                  choose_eps=self.choose_eps, k=self.k, neighbor_type = self.neighbor_type,
                                   metric=self.metric, metric_params=self.metric_params,
                                   n_algorithm=self.n_algorithm)
         self.local_kernel = my_kernel.fit(X)
