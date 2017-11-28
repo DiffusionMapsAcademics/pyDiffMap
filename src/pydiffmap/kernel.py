@@ -18,26 +18,25 @@ class Kernel(object):
         Type of kernel to construct. Currently the only option is 'gaussian', but more will be implemented.
     epsilon : scalar, optional
         Value of the length-scale parameter.
-    k : int, optional
-        Number of nearest neighbors over which to construct the kernel.
     choose_eps : string, optional
         Method for choosing the epsilon.  Currently, the only option is 'fixed' (i.e. don't), and 'bgh'.
+    neighbor_params : dict or None, optional
+        Optional parameters for the nearest Neighbor search. See scikit-learn NearestNeighbors class for details.
     metric : string, optional
         Distance metric to use in constructing the kernel.  This can be selected from any of the scipy.spatial.distance metrics, or a callable function returning the distance.
     metric_params : dict or None, optional
         Optional parameters required for the metric given.
-    n_algorithm : {'auto', 'ball_tree', 'kd_tree', 'brute'}, optional
-        Algorithm used to compute the nearest neighbors.  See sklearn.neighbors.NearestNeighbors for details
     """
 
-    def __init__(self, type='gaussian', epsilon=1.0, choose_eps='fixed', k=64, metric='euclidean', metric_params=None, n_algorithm='auto'):
+    def __init__(self, type='gaussian', epsilon=1.0, choose_eps='fixed', neighbor_params=None, metric='euclidean', metric_params=None):
         self.type = type
         self.epsilon = epsilon
         self.choose_eps = choose_eps
         self.metric = metric
         self.metric_params = metric_params
-        self.n_algorithm = n_algorithm
-        self.k = k
+        if neighbor_params is None:
+            neighbor_params = {'n_neighbors': 64, 'algorithm': 'auto'}
+        self.neighbor_params = neighbor_params
 
     def fit(self, X):
         """
@@ -52,15 +51,15 @@ class Kernel(object):
         -------
         self : the object itself
         """
-        self.k0 = min(self.k, np.shape(X)[0])
+        #self.k0 = min(self.k, np.shape(X)[0])
         self.data = X
         # Construct Nearest Neighbor Tree
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", message="Parameter p is found in metric_params. The corresponding parameter from __init__ is ignored.")
-            self.neigh = NearestNeighbors(n_neighbors=self.k0,
-                                          metric=self.metric,
+            kwargs = self.neighbor_params
+            self.neigh = NearestNeighbors(metric=self.metric,
                                           metric_params=self.metric_params,
-                                          algorithm=self.n_algorithm)
+                                          **kwargs)
         self.neigh.fit(X)
         if self.choose_eps != 'fixed':
             self.choose_optimal_epsilon(self.choose_eps)
