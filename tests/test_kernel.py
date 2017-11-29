@@ -46,8 +46,8 @@ class TestKernel(object):
         assert(total_error < 1E-8)
 
     @pytest.mark.parametrize('k', np.arange(2, 14, 2))
-    @pytest.mark.parametrize('n_algorithm', ['auto', 'ball_tree'])
-    def test_neighborlists(self, k, n_algorithm):
+    @pytest.mark.parametrize('neighbor_params',[{'algorithm': 'auto'},{'algorithm': 'ball_tree'}])
+    def test_neighborlists(self, k, neighbor_params):
         """
         Test that neighborlisting gives the right number of elements.
         """
@@ -56,7 +56,7 @@ class TestKernel(object):
 
         # Construct kernel matrix.
         mykernel = kernel.Kernel(type='gaussian', metric='euclidean',
-                                 epsilon=1., k=k, n_algorithm=n_algorithm)
+                                 epsilon=1., k=k0, neighbor_params=neighbor_params)
         mykernel.fit(x_values)
         K_matrix = mykernel.compute(x_values)
 

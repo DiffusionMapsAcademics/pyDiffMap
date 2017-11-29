@@ -28,35 +28,42 @@ class DiffusionMap(object):
         Method for choosing the epsilon.  Currently, the only option is 'fixed' (i.e. don't) or 'bgh' (Berry, Giannakis and Harlim)
     n_evecs : int, optional
         Number of diffusion map eigenvectors to return
+    neighbor_params : dict or None, optional
+        Optional parameters for the nearest Neighbor search. See scikit-learn NearestNeighbors class for details.
     metric : string, optional
         Metric for distances in the kernel. Default is 'euclidean'. The callable should take two arrays as input and return one value indicating the distance between them.
     metric_params : dict or None, optional
         Optional parameters required for the metric given.
-    n_algorithm : {'auto', 'ball_tree', 'kd_tree', 'brute'}, optional
-        Algorithm used to compute the nearest neighbors.  See sklearn.neighbors.NearestNeighbors for details
+
+    Examples
+    --------
+    # setup neighbor_params list with as many jobs as CPU cores and kd_tree neighbor search.
+    >>> neighbor_params = {'n_jobs': -1, 'algorithm': 'kd_tree'}
+    # initialize diffusion map object with the top two eigenvalues being computed, epsilon set to 0.1
+    # and alpha set to 1.0.
+    >>> mydmap = DiffusionMap(n_evecs = 2, epsilon = .1, alpha = 1.0, neighbor_params = neighbor_params)
 
     """
 
-    def __init__(self, alpha=0.5, epsilon=1.0, k=64, kernel_type='gaussian', choose_eps='fixed', n_evecs=1, metric='euclidean', metric_params=None, n_algorithm='auto'):
+    def __init__(self, alpha=0.5, epsilon=1.0, k=64, kernel_type='gaussian', choose_eps='fixed', n_evecs=1, neighbor_params=None, metric='euclidean', metric_params=None):
         """
         Initializes Diffusion Map, sets parameters.
         """
         self.alpha = alpha
         self.epsilon = epsilon
+        self.k = k
         self.kernel_type = kernel_type
         self.choose_eps = choose_eps
-        self.k = k
         self.n_evecs = n_evecs
+        self.neighbor_params = neighbor_params
         self.metric = metric
         self.metric_params = metric_params
-        self.n_algorithm = n_algorithm
         return
 
     def _compute_kernel_matrix(self, X):
-        my_kernel = kernel.Kernel(type=self.kernel_type, epsilon=self.epsilon,
-                                  choose_eps=self.choose_eps, k=self.k,
-                                  metric=self.metric, metric_params=self.metric_params,
-                                  n_algorithm=self.n_algorithm)
+        my_kernel = kernel.Kernel(type=self.kernel_type, epsilon=self.epsilon, k = self.k,
+                                  choose_eps=self.choose_eps, neighbor_params=self.neighbor_params,
+                                  metric=self.metric, metric_params=self.metric_params)
         self.local_kernel = my_kernel.fit(X)
         self.epsilon = my_kernel.epsilon
         kernel_matrix = _symmetrize_matrix(my_kernel.compute(X))
