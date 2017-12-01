@@ -5,22 +5,22 @@ Theory
 Diffusion maps is a dimension reduction technique that can be used to discover low dimensional structure in high
 dimensional data. It assumes that the data points, which are given as points in a high dimensional metric space,
 actually live on a lower dimensional structure. To uncover this structure, diffusion maps builds a neighborhood graph
-on the data based on the distances between nearby points. Then a graph Laplacian L is constructed on the neighborhood
+on the data based on the distances between nearby points. Then a graph Laplacian **L** is constructed on the neighborhood
 graph. Many variants exist that approximate different differential operators. For example, *standard* diffusion maps
 approximates the differential operator
 
 .. math::
 
-   Lf = \Delta f - 2(1-\alpha)\nabla f \cdot \frac{\nabla q}{q}
+   \mathcal{L}f = \Delta f - 2(1-\alpha)\nabla f \cdot \frac{\nabla q}{q}
 
 
 where :math:`\Delta` is the Laplace Beltrami operator, :math:`\nabla` is the gradient operator and :math:`q` is the
-sampling density. The normalization parameter :math:`alpha`, which is typically between 0.0 and 1.0, determines how
-much :math:`q` is allowed to bias the operator L.
+sampling density. The normalization parameter :math:`\alpha`, which is typically between 0.0 and 1.0, determines how
+much :math:`q` is allowed to bias the operator :math:`\mathcal{L}`.
 Standard diffusion maps on a dataset ``X``, which has to given as a numpy array with different rows corresponding to
 different observations, is implemented in pydiffmap as::
 
-	mydmap = diffusion_map.DiffusionMap(epsilon = my_epsilon, alpha = my_alpha)
+  mydmap = diffusion_map.DiffusionMap(epsilon = my_epsilon, alpha = my_alpha)
   mydmap.fit(X)
 
 Here ``epsilon`` is a scale parameter used to rescale distances between data points. We can also choose ``epsilon``
