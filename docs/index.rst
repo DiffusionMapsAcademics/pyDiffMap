@@ -19,6 +19,7 @@ Contents
 
    readme
    installation
+   theory
    usage
    jupyter notebook tutorials/index
    reference/index
