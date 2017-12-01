@@ -34,7 +34,7 @@ A variant of diffusion maps, 'TMDmap', unbiases with respect to :math:`q` and ap
 
 .. math::
 
-  Lf = \Delta f + \nabla (\log\pi) \cdot \nabla f
+  \mathcal{L}f = \Delta f + \nabla (\log\pi) \cdot \nabla f
 
 where :math:`\pi` is a 'target distribution' that defines the drift term and has to be known up to a normalization
 constant. TMDmap is implemented in pydiffmap as::
