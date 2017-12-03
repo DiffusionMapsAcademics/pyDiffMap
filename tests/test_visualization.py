@@ -25,7 +25,7 @@ class TestEmbeddingPlot():
     def test_fixed_coloring(self, dummy_dmap):
         mydmap = dummy_dmap
         scatter_kwargs = {'c': 'r'}
-        true_coloring = colors.to_rgba('r')
+        true_coloring = (1.0, 0., 0., 1)
         fig = viz.embedding_plot(mydmap, scatter_kwargs, show=False)
         SC = fig.axes[0].collections[0]
         assert(np.all(SC._facecolors[0] == true_coloring))
@@ -39,7 +39,7 @@ class TestEmbeddingPlot():
         actual_sizes = SC.get_sizes()
         assert(np.all(actual_sizes == size))
 
-    @pytest.mark.parametrize('cmap', [None, 'viridis', plt.cm.spectral])
+    @pytest.mark.parametrize('cmap', [None, 'Blues', plt.cm.spectral])
     def test_colormap(self, dummy_dmap, cmap):
         # This just tests if the code runs...
         # Replace with something more stringent?
