@@ -61,7 +61,7 @@ Overview
 
 .. end-badges
 
-Library for constructing variable bandwidth diffusion maps
+Library for constructing diffusion maps
 
 * Free software: GPL
 
