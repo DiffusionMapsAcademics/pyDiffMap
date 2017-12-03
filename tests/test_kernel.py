@@ -7,7 +7,7 @@ from sklearn.neighbors import NearestNeighbors
 
 x_values = np.vstack((np.linspace(-1, 1, 11), np.arange(11))).T  # set of X vals
 y_values_set = [None, x_values, np.arange(6).reshape(-1, 2), np.arange(22).reshape(-1, 2)]  # all sets of Y's
-epsilons = [10., 1., 0.1]  # Possible epsilons
+epsilons = [10., 1.]  # Possible epsilons
 
 
 class TestKernel(object):
@@ -34,8 +34,8 @@ class TestKernel(object):
         true_values = np.exp(-1.*pw_distance**2/epsilon)
 
         # Construct the kernel and fit to data.
-        mykernel = kernel.Kernel(type='gaussian', metric=metric,
-                                 metric_params=metric_params, epsilon=epsilon,
+        mykernel = kernel.Kernel(kernel_type='gaussian', metric=metric,
+                                 metric_params=metric_params, choose_epsilon=epsilon,
                                  k=len(x_values))
         mykernel.fit(x_values)
         K_matrix = mykernel.compute(y_values).toarray()
@@ -55,8 +55,8 @@ class TestKernel(object):
         k0 = min(k, len(x_values))
 
         # Construct kernel matrix.
-        mykernel = kernel.Kernel(type='gaussian', metric='euclidean',
-                                 epsilon=1., k=k0, neighbor_params=neighbor_params)
+        mykernel = kernel.Kernel(kernel_type='gaussian', metric='euclidean',
+                                 choose_epsilon=1., k=k0, neighbor_params=neighbor_params)
         mykernel.fit(x_values)
         K_matrix = mykernel.compute(x_values)
 
@@ -66,8 +66,8 @@ class TestKernel(object):
 
     def test_auto_epsilon_selection(self):
         X = np.arange(100).reshape(-1, 1)
-        mykernel = kernel.Kernel(type='gaussian', metric='euclidean',
-                                 choose_eps='bgh', k=10)
+        mykernel = kernel.Kernel(kernel_type='gaussian', metric='euclidean',
+                                 choose_epsilon='bgh', k=10)
         mykernel.fit(X)
         assert(mykernel.epsilon == 1.0)
         assert(mykernel.d == 1.0)

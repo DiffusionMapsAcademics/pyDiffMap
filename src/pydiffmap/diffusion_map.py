@@ -18,14 +18,12 @@ class DiffusionMap(object):
     ----------
     alpha : scalar, optional
         Exponent to be used for the left normalization in constructing the diffusion map.
-    epsilon : scalar, optional
-        Length-scale parameter.
     k : int, optional
         Number of nearest neighbors over which to construct the kernel.
     kernel_type : string, optional
         Type of kernel to construct. Currently the only option is 'gaussian', but more will be implemented.
-    choose_eps : string, optional
-        Method for choosing the epsilon.  Currently, the only option is 'fixed' (i.e. don't) or 'bgh' (Berry, Giannakis and Harlim)
+    choose_epsilon : string or scalar, optional
+        Method for choosing the epsilon.  Currently, the only options are to provide a scalar (epsilon is set to the provided scalar) or 'bgh' (Berry, Giannakis and Harlim).
     n_evecs : int, optional
         Number of diffusion map eigenvectors to return
     neighbor_params : dict or None, optional
@@ -45,24 +43,24 @@ class DiffusionMap(object):
 
     """
 
-    def __init__(self, alpha=0.5, epsilon=1.0, k=64, kernel_type='gaussian', choose_eps='fixed', n_evecs=1, neighbor_params=None, metric='euclidean', metric_params=None):
+    def __init__(self, alpha=0.5, k=64, kernel_type='gaussian', choose_epsilon='bgh', n_evecs=1, neighbor_params=None, metric='euclidean', metric_params=None):
         """
         Initializes Diffusion Map, sets parameters.
         """
         self.alpha = alpha
-        self.epsilon = epsilon
         self.k = k
         self.kernel_type = kernel_type
-        self.choose_eps = choose_eps
+        self.choose_epsilon = choose_epsilon
         self.n_evecs = n_evecs
         self.neighbor_params = neighbor_params
         self.metric = metric
         self.metric_params = metric_params
-        return
+        self.epsilon = None
+        self.d = None
 
     def _compute_kernel(self, X):
-        my_kernel = kernel.Kernel(type=self.kernel_type, epsilon=self.epsilon, k=self.k,
-                                  choose_eps=self.choose_eps, neighbor_params=self.neighbor_params,
+        my_kernel = kernel.Kernel(kernel_type=self.kernel_type, k=self.k,
+                                  choose_epsilon=self.choose_epsilon, neighbor_params=self.neighbor_params,
                                   metric=self.metric, metric_params=self.metric_params)
         my_kernel.fit(X)
         kernel_matrix = _symmetrize_matrix(my_kernel.compute(X))
