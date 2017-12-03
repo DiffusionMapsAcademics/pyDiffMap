@@ -46,7 +46,7 @@ class TestKernel(object):
         assert(total_error < 1E-8)
 
     @pytest.mark.parametrize('k', np.arange(2, 14, 2))
-    @pytest.mark.parametrize('neighbor_params',[{'algorithm': 'auto'},{'algorithm': 'ball_tree'}])
+    @pytest.mark.parametrize('neighbor_params', [{'algorithm': 'auto'}, {'algorithm': 'ball_tree'}])
     def test_neighborlists(self, k, neighbor_params):
         """
         Test that neighborlisting gives the right number of elements.
@@ -70,7 +70,7 @@ class TestKernel(object):
                                  choose_eps='bgh', k=10)
         mykernel.fit(X)
         assert(mykernel.epsilon == 1.0)
-        assert(mykernel.dim == 1.0)
+        assert(mykernel.d == 1.0)
 
 
 class TestBGHEpsilonSelection(object):

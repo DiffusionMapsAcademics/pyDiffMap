@@ -60,14 +60,14 @@ class DiffusionMap(object):
         self.metric_params = metric_params
         return
 
-    def _compute_kernel_matrix(self, X):
-        my_kernel = kernel.Kernel(type=self.kernel_type, epsilon=self.epsilon, k = self.k,
+    def _compute_kernel(self, X):
+        my_kernel = kernel.Kernel(type=self.kernel_type, epsilon=self.epsilon, k=self.k,
                                   choose_eps=self.choose_eps, neighbor_params=self.neighbor_params,
                                   metric=self.metric, metric_params=self.metric_params)
-        self.local_kernel = my_kernel.fit(X)
-        self.epsilon = my_kernel.epsilon
+        my_kernel.fit(X)
         kernel_matrix = _symmetrize_matrix(my_kernel.compute(X))
-        return kernel_matrix
+        self.epsilon = my_kernel.epsilon
+        return kernel_matrix, my_kernel
 
     def _make_right_norm_vec(self, kernel_matrix, weights=None):
         # perform kde
@@ -114,12 +114,16 @@ class DiffusionMap(object):
         -------
         self : the object itself
         """
-        kernel_matrix = self._compute_kernel_matrix(X)
+        kernel_matrix, my_kernel = self._compute_kernel(X)
+
         q, right_norm_vec = self._make_right_norm_vec(kernel_matrix, weights)
         P = self._apply_normalizations(kernel_matrix, right_norm_vec)
         dmap, evecs, evals = self._make_diffusion_coords(P)
 
         # Save constructed data.
+        self.local_kernel = my_kernel
+        self.epsilon = my_kernel.epsilon
+        self.d = my_kernel.d
         self.data = X
         self.weights = weights
         self.kernel_matrix = kernel_matrix

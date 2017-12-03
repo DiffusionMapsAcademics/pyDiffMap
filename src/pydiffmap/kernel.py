@@ -33,6 +33,7 @@ class Kernel(object):
     def __init__(self, type='gaussian', epsilon=1.0, choose_eps='fixed', k=64, neighbor_params=None, metric='euclidean', metric_params=None):
         self.type = type
         self.epsilon = epsilon
+        self.d = None
         self.choose_eps = choose_eps
         self.k = k
         self.metric = metric
@@ -59,7 +60,7 @@ class Kernel(object):
         # Construct Nearest Neighbor Tree
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", message="Parameter p is found in metric_params. The corresponding parameter from __init__ is ignored.")
-            self.neigh = NearestNeighbors(n_neighbors = self.k,
+            self.neigh = NearestNeighbors(n_neighbors=self.k,
                                           metric=self.metric,
                                           metric_params=self.metric_params,
                                           **self.neighbor_params)
@@ -124,7 +125,7 @@ class Kernel(object):
         else:
             raise ValueError("Method for automatically choosing epsilon was given as %s, but this was not recognized" % choose_eps)
         self.epsilon = eps
-        self.dim = d
+        self.d = d
         return self
 
 
