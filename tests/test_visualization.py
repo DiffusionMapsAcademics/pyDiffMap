@@ -1,4 +1,3 @@
-import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
@@ -9,7 +8,7 @@ from pydiffmap import visualization as viz
 
 @pytest.fixture(scope='module')
 def dummy_dmap(uniform_2d_data):
-    data, X, Y= uniform_2d_data
+    data, X, Y = uniform_2d_data
     print(data)
     mydmap = dm.DiffusionMap(n_evecs=2, k=5)
     mydmap.fit(data)
@@ -47,6 +46,7 @@ class TestEmbeddingPlot():
         scatter_kwargs = {'c': mydmap.dmap[:, 0], 'cmap': cmap}
         fig = viz.embedding_plot(mydmap, scatter_kwargs, show=False)
         assert(fig)
+
 
 class TestDataPlot():
     def test_no_kwargs(self, dummy_dmap):

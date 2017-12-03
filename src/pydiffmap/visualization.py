@@ -46,6 +46,7 @@ def embedding_plot(dmap_instance, scatter_kwargs=None, show=True):
         plt.show()
     return fig
 
+
 def data_plot(dmap_instance, n_evec=1, scatter_kwargs=None, show=True):
     """
     Creates diffusion map embedding scatterplot. By default, the first two diffusion
@@ -71,8 +72,8 @@ def data_plot(dmap_instance, n_evec=1, scatter_kwargs=None, show=True):
     """
     if scatter_kwargs is None:
         scatter_kwargs = {}
-    fig =  plt.figure(figsize=(6,6))
-    plt.scatter(dmap_instance.data[:, 0], dmap_instance.data[:, 1], c=dmap_instance.dmap[:,n_evec-1], **scatter_kwargs)
+    fig = plt.figure(figsize=(6, 6))
+    plt.scatter(dmap_instance.data[:, 0], dmap_instance.data[:, 1], c=dmap_instance.dmap[:, n_evec-1], **scatter_kwargs)
     plt.title('Data coloured with first DC.')
     plt.xlabel('x')
     plt.ylabel('y')
