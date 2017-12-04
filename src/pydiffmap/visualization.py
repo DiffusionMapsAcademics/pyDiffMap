@@ -5,7 +5,7 @@ Some convenient visalisation routines.
 from __future__ import absolute_import
 
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d import Axes3D  # noqa F401
 
 
 def embedding_plot(dmap_instance, dim=2, scatter_kwargs=None, show=True):
@@ -40,12 +40,12 @@ def embedding_plot(dmap_instance, dim=2, scatter_kwargs=None, show=True):
     if scatter_kwargs is None:
         scatter_kwargs = {}
     fig = plt.figure(figsize=(6, 6))
-    if (dim==2):
+    if (dim == 2):
         plt.scatter(dmap_instance.dmap[:, 0], dmap_instance.dmap[:, 1], **scatter_kwargs)
         plt.title('Embedding given by first two DCs.')
         plt.xlabel(r'$\psi_1$')
         plt.ylabel(r'$\psi_2$')
-    elif (dim==3):
+    elif (dim == 3):
         ax = fig.add_subplot(111, projection='3d')
         ax.scatter(dmap_instance.dmap[:, 0], dmap_instance.dmap[:, 1], dmap_instance.dmap[:, 2], **scatter_kwargs)
         ax.set_title('Embedding given by first three DCs.')
@@ -87,14 +87,14 @@ def data_plot(dmap_instance, n_evec=1, dim=2, scatter_kwargs=None, show=True):
     if scatter_kwargs is None:
         scatter_kwargs = {}
     fig = plt.figure(figsize=(6, 6))
-    if (dim==2):
+    if (dim == 2):
         plt.scatter(dmap_instance.data[:, 0], dmap_instance.data[:, 1], c=dmap_instance.dmap[:, n_evec-1], **scatter_kwargs)
         plt.title('Data coloured with first DC.')
         plt.xlabel('x')
         plt.ylabel('y')
-    elif (dim==3):
+    elif (dim == 3):
         ax = fig.add_subplot(111, projection='3d')
-        ax.scatter(dmap_instance.data[:, 0], dmap_instance.data[:, 1], dmap_instance.data[:,2], c=dmap_instance.dmap[:, n_evec-1], **scatter_kwargs)
+        ax.scatter(dmap_instance.data[:, 0], dmap_instance.data[:, 1], dmap_instance.data[:, 2], c=dmap_instance.dmap[:, n_evec-1], **scatter_kwargs)
         ax.set_title('Data coloured with first DC.')
         ax.set_xlabel('x')
         ax.set_ylabel('y')
