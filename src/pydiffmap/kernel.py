@@ -29,7 +29,7 @@ class Kernel(object):
         Optional parameters required for the metric given.
     """
 
-    def __init__(self, kernel_type='gaussian', choose_epsilon='fixed', k=64, neighbor_params=None, metric='euclidean', metric_params=None):
+    def __init__(self, kernel_type='gaussian', choose_epsilon='bgh', k=64, neighbor_params=None, metric='euclidean', metric_params=None):
         self.type = kernel_type
         self.choose_epsilon = choose_epsilon
         self.k = k

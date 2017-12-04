@@ -25,7 +25,7 @@ class TestEmbeddingPlot():
         mydmap = dummy_dmap
         scatter_kwargs = {'c': 'r'}
         true_coloring = (1.0, 0., 0., 1)
-        fig = viz.embedding_plot(mydmap, scatter_kwargs, show=False)
+        fig = viz.embedding_plot(mydmap, scatter_kwargs=scatter_kwargs, show=False)
         SC = fig.axes[0].collections[0]
         assert(np.all(SC._facecolors[0] == true_coloring))
 
@@ -33,7 +33,7 @@ class TestEmbeddingPlot():
     def test_size(self, dummy_dmap, size):
         mydmap = dummy_dmap
         scatter_kwargs = {'s': size}
-        fig = viz.embedding_plot(mydmap, scatter_kwargs, show=False)
+        fig = viz.embedding_plot(mydmap, scatter_kwargs=scatter_kwargs, show=False)
         SC = fig.axes[0].collections[0]
         actual_sizes = SC.get_sizes()
         assert(np.all(actual_sizes == size))
@@ -44,7 +44,7 @@ class TestEmbeddingPlot():
         # Replace with something more stringent?
         mydmap = dummy_dmap
         scatter_kwargs = {'c': mydmap.dmap[:, 0], 'cmap': cmap}
-        fig = viz.embedding_plot(mydmap, scatter_kwargs, show=False)
+        fig = viz.embedding_plot(mydmap, scatter_kwargs=scatter_kwargs, show=False)
         assert(fig)
 
 
@@ -58,7 +58,7 @@ class TestDataPlot():
     def test_size(self, dummy_dmap, size):
         mydmap = dummy_dmap
         scatter_kwargs = {'s': size}
-        fig = viz.data_plot(mydmap, 1, scatter_kwargs, show=False)
+        fig = viz.data_plot(mydmap, 1, scatter_kwargs=scatter_kwargs, show=False)
         SC = fig.axes[0].collections[0]
         actual_sizes = SC.get_sizes()
         assert(np.all(actual_sizes == size))

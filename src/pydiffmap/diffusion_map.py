@@ -43,14 +43,14 @@ class DiffusionMap(object):
 
     """
 
-    def __init__(self, alpha=0.5, k=64, kernel_type='gaussian', choose_epsilon='bgh', n_evecs=1, neighbor_params=None, metric='euclidean', metric_params=None):
+    def __init__(self, alpha=0.5, k=64, kernel_type='gaussian', epsilon='bgh', n_evecs=1, neighbor_params=None, metric='euclidean', metric_params=None):
         """
         Initializes Diffusion Map, sets parameters.
         """
         self.alpha = alpha
         self.k = k
         self.kernel_type = kernel_type
-        self.choose_epsilon = choose_epsilon
+        self.choose_epsilon = epsilon
         self.n_evecs = n_evecs
         self.neighbor_params = neighbor_params
         self.metric = metric
