@@ -1,5 +1,5 @@
-kernel
-======
+visualization
+=============
 
 .. automodule:: pydiffmap.visualization
     :members:
