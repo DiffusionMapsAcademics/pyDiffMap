@@ -26,7 +26,7 @@ different observations, is implemented in pydiffmap as::
 Here ``epsilon`` is a scale parameter used to rescale distances between data points. We can also choose ``epsilon``
 automatically due to an an algorithm by Berry, Harlim and Giannakis::
 
-  mydmap = dm.DiffusionMap(alpha = my_alpha, choose_eps = 'bgh')
+  mydmap = dm.DiffusionMap(alpha = my_alpha, epsilon = 'bgh')
 
 For additional optional arguments of the DiffusionMap class, see usage and documentation.
 

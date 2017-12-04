@@ -18,7 +18,7 @@ documentation.
 
 We can also employ automatic epsilon detection due to an algorithm by Berry, Harlim and Giannakis::
 
-	mydmap = dm.DiffusionMap(n_evecs = 1, alpha = 0.5, choose_eps = 'bgh', k=64)
+	mydmap = dm.DiffusionMap(n_evecs = 1, alpha = 0.5, epsilon = 'bgh', k=64)
 
 To fit to a dataset ``X`` (array-like, shape (n_query, n_features))::
 

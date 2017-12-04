@@ -1,6 +1,6 @@
 
-Illustration of the diffusion_map class on the classic swiss roll data set
-==========================================================================
+The classic swiss roll data set
+===============================
 
 author: Ralf Banisch
 
@@ -10,7 +10,6 @@ manifold embedded in :math:`\mathbb{R}^3`.
 .. code:: python
 
     # import some necessary functions for plotting as well as the diffusion_map class from pydiffmap.
-    
     import matplotlib.pyplot as plt
     import numpy as np
     
@@ -63,27 +62,30 @@ Now we initialize the diffusion map object and fit it to the dataset.
 Since we are interested in only the first two diffusion coordinates we
 set n_evecs = 2, and since we want to unbias with respect to the
 non-uniform sampling density we set alpha = 1.0. The epsilon parameter
-controls the scale, we tune it automatically with the bgh algorithm. The
-k parameter controls the neighbour lists, a smaller k will increase
+controls the scale and needs to be adjusted to the data at hand. The k
+parameter controls the neighbour lists, a smaller k will increase
 performance but decrease accuracy.
 
 .. code:: python
 
     # initialize Diffusion map object.
-    mydmap = dm.DiffusionMap(n_evecs = 2, alpha = 1.0, choose_eps = 'bgh', k=200)
+    neighbor_params = {'n_jobs': -1, 'algorithm': 'ball_tree'}
+    
+    mydmap = dm.DiffusionMap(n_evecs=2, k=200, epsilon='bgh', alpha=1.0, neighbor_params=neighbor_params)
     # fit to data and return the diffusion map.
     dmap = mydmap.fit_transform(swiss_roll)
 
-Let’s check which value of epsilon was chosen by the bgh algorithm:
-
 .. code:: python
 
-    print(mydmap.epsilon)
+    mydmap.epsilon
+
+
 
 
 .. parsed-literal::
 
     0.0625
+
 
 
 Visualization
@@ -98,35 +100,21 @@ the diffusion map embedding ‘unwinds’ the swiss roll.
 
 .. code:: python
 
-    from pydiffmap.visualization import embedding_plot
+    from pydiffmap.visualization import embedding_plot, data_plot
     
-    plt.figure(figsize=(16,6))
-    ax = plt.subplot(121)
-    ax.scatter(dmap[:,0],dmap[:,1], c=dmap[:,0], cmap=plt.cm.Spectral)
-    ax.set_title('Embedding of Swiss Roll')
-    ax.set_xlabel(r'$\psi_1$')
-    ax.set_ylabel(r'$\psi_2$')
-    ax.axis('tight')
-    
-    ax2 = plt.subplot(122,projection='3d')
-    ax2.scatter(X,Y,Z, c=dmap[:,0], cmap=plt.cm.Spectral)
-    ax2.view_init(75, 10)
-    ax2.set_title('swiss roll dataset, color according to $\psi_1$')
-    ax2.set_xlabel('X')
-    ax2.set_ylabel('Y')
-    ax2.set_zlabel('Z')
+    embedding_plot(mydmap, scatter_kwargs = {'c': dmap[:,0], 'cmap': 'Spectral'})
+    data_plot(mydmap, dim=3, scatter_kwargs = {'cmap': 'Spectral'})
     
     plt.show()
 
 
 
-.. image:: output_9_0.png
+.. image:: output_8_0.png
 
 
-.. code:: python
 
-    #from pydiffmap.visualization import embedding_plot
-    #embedding_plot(mydmap, color=phi, size=mydmap.q)
+.. image:: output_8_1.png
+
 
 To get a bit more information out of the embedding, we can scale the
 points according to the numerical estimate of the sampling density
@@ -136,27 +124,19 @@ direction. For comparison, we color the original data set according to
 
 .. code:: python
 
-    plt.figure(figsize=(16,6))
-    ax = plt.subplot(121)
-    ax.scatter(dmap[:,0],dmap[:,1], s=mydmap.q, c=phi, cmap=plt.cm.Spectral)
-    ax.set_title('Embedding of Swiss Roll')
-    ax.set_xlabel(r'$\psi_1$')
-    ax.set_ylabel(r'$\psi_2$')
-    ax.axis('tight')
+    from pydiffmap.visualization import embedding_plot, data_plot
     
-    ax2 = plt.subplot(122,projection='3d')
-    ax2.scatter(X,Y,Z, c=phi, cmap=plt.cm.Spectral)
-    ax2.view_init(75, 10)
-    ax2.set_title('swiss roll dataset, color according to $\phi$')
-    ax2.set_xlabel('X')
-    ax2.set_ylabel('Y')
-    ax2.set_zlabel('Z')
-    
+    embedding_plot(mydmap, scatter_kwargs = {'c': phi, 's': mydmap.q, 'cmap': 'Spectral'})
+    data_plot(mydmap, dim=3, scatter_kwargs = {'cmap': 'Spectral'})
     plt.show()
 
 
 
-.. image:: output_12_0.png
+.. image:: output_10_0.png
+
+
+
+.. image:: output_10_1.png
 
 
 We can see that points near the center of the swiss roll, where the
@@ -193,14 +173,14 @@ first two diffusion coordinates correlate with :math:`\phi` and
 .. parsed-literal::
 
     Correlation between \phi and \psi_1
-    [[ 1.         -0.92350082]
-     [-0.92350082  1.        ]]
+    [[ 1.         -0.92060758]
+     [-0.92060758  1.        ]]
     Correlation between Z and \psi_2
-    [[ 1.         -0.98102184]
-     [-0.98102184  1.        ]]
+    [[ 1.         -0.96447642]
+     [-0.96447642  1.        ]]
 
 
 
-.. image:: output_14_1.png
+.. image:: output_12_1.png
 
 

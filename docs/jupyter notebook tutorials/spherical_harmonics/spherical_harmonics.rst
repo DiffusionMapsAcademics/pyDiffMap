@@ -1,6 +1,6 @@
 
-Test if we are able to reproduce spherical harmonics
-====================================================
+Spherical Harmonics
+===================
 
 In this notebook we try to reproduce the eigenfunctions of the Laplacian
 on the 2D sphere embedded in :math:`\mathbb{R}^3`. The eigenfunctions
@@ -35,6 +35,8 @@ measured from the equator).
     Y = np.cos(Theta)*np.sin(Phi)
     Z = np.sin(Theta)
     data = np.array([X, Y, Z]).transpose()
+    
+
 
 run diffusion maps
 ------------------
@@ -51,12 +53,13 @@ accuracy.
     eps = 0.01
     mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=400)
     mydmap.fit_transform(data)
-    print(mydmap.epsilon)
+    test_evals = -4./eps*(mydmap.evals - 1)
+    print(test_evals)
 
 
 .. parsed-literal::
 
-    0.01
+    [ 1.87120055  1.89337561  1.91161358  5.58725164]
 
 
 The true eigenfunctions here are spherical harmonics
@@ -84,32 +87,31 @@ has multiplicity three, this gives the benchmark eigenvalues [2, 2, 2,
 visualisation
 -------------
 
-We check that we get the correct embedding (which is again a sphere). We
-also visualize the eigenfunctions.
+With pydiffmap’s visualization toolbox, we can get a quick look at the
+embedding produced by the first two diffusion coordinates and the data
+colored by the first eigenfunction.
 
 .. code:: python
 
-    plt.figure(figsize=(16,6))
-    ax = plt.subplot(121, projection='3d')
-    ax.scatter(mydmap.dmap[:,0],mydmap.dmap[:,1], mydmap.dmap[:,2], c=Theta, cmap=plt.cm.Spectral)
-    ax.set_title('Embedding of sphere')
-    ax.set_xlabel(r'$\psi_1$')
-    ax.set_ylabel(r'$\psi_2$')
-    ax.axis('tight')
+    from pydiffmap.visualization import embedding_plot, data_plot
     
-    ax2 = plt.subplot(122,projection='3d')
-    ax2.scatter(X,Y,Z, c=mydmap.dmap[:,0], cmap=plt.cm.Spectral)
-    ax2.view_init(45, 60)
-    ax2.set_title('sphere dataset, color according to $\psi_1$')
-    ax2.set_xlabel('X')
-    ax2.set_ylabel('Y')
-    ax2.set_zlabel('Z')
+    embedding_plot(mydmap, dim=3, scatter_kwargs = {'c': mydmap.dmap[:,0], 'cmap': 'Spectral'})
     
     plt.show()
 
 
 
 .. image:: output_9_0.png
+
+
+.. code:: python
+
+    data_plot(mydmap, dim=3, scatter_kwargs = {'cmap': 'Spectral'})
+    plt.show()
+
+
+
+.. image:: output_10_0.png
 
 
 Rotating the dataset
@@ -131,13 +133,16 @@ attains its maximum value.
 
 .. code:: python
 
-    data_rotated = np.dot(R,data.transpose()).transpose()
-    print(data_rotated.shape)
+    data_rotated = np.dot(R,data.transpose())
+    data_rotated.shape
+
+
 
 
 .. parsed-literal::
 
-    (10000, 3)
+    (3, 10000)
+
 
 
 Now that the dataset is rotated, we can check how well the first
@@ -147,18 +152,18 @@ diffusion coordinate approximates the first spherical harmonic
 .. code:: python
 
     print('Correlation between \phi and \psi_1')
-    print(np.corrcoef(mydmap.dmap[:,0], data_rotated[:,2]))
+    print(np.corrcoef(mydmap.dmap[:,0], data_rotated[2,:]))
     
     plt.figure(figsize=(16,6))
     ax = plt.subplot(121)
-    ax.scatter(data_rotated[:,2], mydmap.dmap[:,0])
+    ax.scatter(data_rotated[2,:], mydmap.dmap[:,0])
     ax.set_title('First DC against $Z$')
     ax.set_xlabel(r'$Z$')
     ax.set_ylabel(r'$\psi_1$')
     ax.axis('tight')
     
     ax2 = plt.subplot(122,projection='3d')
-    ax2.scatter(data_rotated[:,0],data_rotated[:,1],data_rotated[:,2], c=mydmap.dmap[:,0], cmap=plt.cm.Spectral)
+    ax2.scatter(data_rotated[0,:],data_rotated[1,:],data_rotated[2,:], c=mydmap.dmap[:,0], cmap=plt.cm.Spectral)
     #ax2.view_init(75, 10)
     ax2.set_title('sphere dataset rotated, color according to $\psi_1$')
     ax2.set_xlabel('X')
@@ -176,6 +181,6 @@ diffusion coordinate approximates the first spherical harmonic
 
 
 
-.. image:: output_14_1.png
+.. image:: output_15_1.png
 
 

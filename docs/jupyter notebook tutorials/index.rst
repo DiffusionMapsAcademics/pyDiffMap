@@ -4,5 +4,7 @@ Jupyter notebook tutorials
 .. toctree::
     :glob:
 
-    swiss_roll/swiss_roll
-    spherical_harmonics/spherical_harmonics
+    Swiss_Roll/Swiss_Roll
+    Spherical_Harmonics/Spherical_Harmonics
+    Four_Wells/Four_Wells
+    Metrics/Metrics
