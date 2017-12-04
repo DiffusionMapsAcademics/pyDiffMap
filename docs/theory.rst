@@ -1,6 +1,6 @@
-=====
+======
 Theory
-=====
+======
 
 Diffusion maps is a dimension reduction technique that can be used to discover low dimensional structure in high
 dimensional data. It assumes that the data points, which are given as points in a high dimensional metric space,

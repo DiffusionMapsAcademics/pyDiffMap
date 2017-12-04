@@ -6,3 +6,4 @@ Reference
 
     diffusion_map
     kernel
+    visualization
