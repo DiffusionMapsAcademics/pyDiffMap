@@ -66,7 +66,7 @@ and y, with higher barrier in y.
 
 
 Compute diffusion map embedding
-===============================
+-------------------------------
 
 .. code:: python
 
@@ -120,7 +120,7 @@ We visualize the data again, colored by the first eigenvector this time.
 
 
 Target measure diffusion map
-============================
+----------------------------
 
 Compute Target Measure Diffusion Map with target distribution pi(q) =
 exp(-beta V(q)) with inverse temperature beta = 1. TMDmap can be seen as
@@ -176,7 +176,7 @@ i.e. pi(q) = exp(-beta V(q)) with beta = 1.
 
 
 Kernel density estimate
-=======================
+-----------------------
 
 We can compute kernel density estimate using kde used in the diffusion
 map computation.

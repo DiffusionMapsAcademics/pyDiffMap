@@ -16,7 +16,7 @@ diffusion maps embedding.
     %matplotlib inline
 
 2D Four-well potential
-======================
+----------------------
 
 Load sampled data: discretized Langevin dynamics at temperature T=1,
 friction 1, and time step size dt=0.01, with double-well potentials in x
@@ -103,7 +103,7 @@ Compute diffusion map embedding
 
 
 Dimer trajectory
-================
+----------------
 
 We import trajectory of two particles connected by a double-well
 potential, which is a function of a radius: V(r) = V_DW(r). The dimer
