@@ -1,5 +1,5 @@
 Jupyter notebook tutorials
-=========
+==========================
 
 .. toctree::
     :glob:
