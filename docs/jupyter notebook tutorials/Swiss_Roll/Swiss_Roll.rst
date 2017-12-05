@@ -77,7 +77,7 @@ performance but decrease accuracy.
 
 .. code:: python
 
-    mydmap.epsilon
+    mydmap.epsilon_fitted
 
 
 
