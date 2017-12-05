@@ -22,7 +22,7 @@ class TestDiffusionMap(object):
         # Setup diffusion map
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=epsilon, alpha=1.0, k=20)
         mydmap.fit(data)
-        test_evals = -4./mydmap.epsilon*(mydmap.evals - 1)
+        test_evals = -4./mydmap.epsilon_fitted*(mydmap.evals - 1)
 
         # Check that relative error values are beneath tolerance.
         errors_eval = abs((test_evals - real_evals)/real_evals)
@@ -70,7 +70,7 @@ class TestDiffusionMap(object):
         # Setup diffusion map
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=epsilon, alpha=1.0, k=40)
         mydmap.fit_transform(data)
-        test_evals = -4./mydmap.epsilon*(mydmap.evals - 1)
+        test_evals = -4./mydmap.epsilon_fitted*(mydmap.evals - 1)
 
         # Check that relative error values are beneath tolerance.
         errors_eval = abs((test_evals - real_evals)/real_evals)
@@ -162,7 +162,7 @@ class TestDiffusionMap(object):
         eps = 0.05
         mydmap = dm.DiffusionMap(n_evecs=4, alpha=1.0, k=400, epsilon=eps)
         mydmap.fit(data)
-        test_evals = -4./mydmap.epsilon*(mydmap.evals - 1)
+        test_evals = -4./mydmap.epsilon_fitted*(mydmap.evals - 1)
 
         # Check eigenvalues pass below error tolerance.
         errors_eval = abs((test_evals - real_evals)/real_evals)
@@ -243,7 +243,7 @@ class TestTMDiffusionMap(object):
         target_distribution = np.exp(-.5*X**2)
         mydmap = dm.DiffusionMap(alpha=1., n_evecs=4, epsilon=epsilon, k=100)
         mydmap.fit_transform(data, weights=target_distribution)
-        test_evals = -4./mydmap.epsilon*(mydmap.evals - 1)
+        test_evals = -4./mydmap.epsilon_fitted*(mydmap.evals - 1)
 
         # Check that relative error values are beneath tolerance.
         errors_eval = abs((test_evals - real_evals)/real_evals)

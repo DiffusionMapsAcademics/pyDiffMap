@@ -35,7 +35,7 @@ class TestKernel(object):
 
         # Construct the kernel and fit to data.
         mykernel = kernel.Kernel(kernel_type='gaussian', metric=metric,
-                                 metric_params=metric_params, choose_epsilon=epsilon,
+                                 metric_params=metric_params, epsilon=epsilon,
                                  k=len(x_values))
         mykernel.fit(x_values)
         K_matrix = mykernel.compute(y_values).toarray()
@@ -56,7 +56,7 @@ class TestKernel(object):
 
         # Construct kernel matrix.
         mykernel = kernel.Kernel(kernel_type='gaussian', metric='euclidean',
-                                 choose_epsilon=1., k=k0, neighbor_params=neighbor_params)
+                                 epsilon=1., k=k0, neighbor_params=neighbor_params)
         mykernel.fit(x_values)
         K_matrix = mykernel.compute(x_values)
 
@@ -67,9 +67,9 @@ class TestKernel(object):
     def test_auto_epsilon_selection(self):
         X = np.arange(100).reshape(-1, 1)
         mykernel = kernel.Kernel(kernel_type='gaussian', metric='euclidean',
-                                 choose_epsilon='bgh', k=10)
+                                 epsilon='bgh', k=10)
         mykernel.fit(X)
-        assert(mykernel.epsilon == 1.0)
+        assert(mykernel.epsilon_fitted == 1.0)
         assert(mykernel.d == 1.0)
 
 

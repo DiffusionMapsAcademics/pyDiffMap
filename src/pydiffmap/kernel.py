@@ -17,7 +17,7 @@ class Kernel(object):
     ----------
     type : string, optional
         Type of kernel to construct. Currently the only option is 'gaussian', but more will be implemented.
-    choose_epsilon : string, optional
+    epsilon : string, optional
         Method for choosing the epsilon.  Currently, the only options are to provide a scalar (epsilon is set to the provided scalar) or 'bgh' (Berry, Giannakis and Harlim).
     k : int, optional
         Number of nearest neighbors over which to construct the kernel.
@@ -29,9 +29,9 @@ class Kernel(object):
         Optional parameters required for the metric given.
     """
 
-    def __init__(self, kernel_type='gaussian', choose_epsilon='bgh', k=64, neighbor_params=None, metric='euclidean', metric_params=None):
+    def __init__(self, kernel_type='gaussian', epsilon='bgh', k=64, neighbor_params=None, metric='euclidean', metric_params=None):
         self.type = kernel_type
-        self.choose_epsilon = choose_epsilon
+        self.epsilon = epsilon
         self.k = k
         self.metric = metric
         self.metric_params = metric_params
@@ -39,7 +39,7 @@ class Kernel(object):
             neighbor_params = {}
         self.neighbor_params = neighbor_params
         self.d = None
-        self.epsilon = None
+        self.epsilon_fitted = None
 
     def fit(self, X):
         """
@@ -89,40 +89,40 @@ class Kernel(object):
         # retrieve all nonzero elements and apply kernel function to it
         v = K.data
         if (self.type == 'gaussian'):
-            K.data = np.exp(-v**2/self.epsilon)
+            K.data = np.exp(-v**2/self.epsilon_fitted)
         else:
             raise("Error: Kernel type not understood.")
         return K
 
-    def choose_optimal_epsilon(self, choose_epsilon=None):
+    def choose_optimal_epsilon(self, epsilon=None):
         """
         Chooses the optimal value of epsilon and automatically detects the
         dimensionality of the data.
 
         Parameters
         ----------
-        choose_epsilon : string or scalar, optional
+        epsilon : string or scalar, optional
             Method for choosing the epsilon.  Currently, the only options are to provide a scalar (epsilon is set to the provided scalar) or 'bgh' (Berry, Giannakis and Harlim).
 
         Returns
         -------
         self : the object itself
         """
-        if choose_epsilon is None:
-            choose_epsilon = self.choose_epsilon
+        if epsilon is None:
+            epsilon = self.epsilon
 
         # Choose Epsilon according to method provided.
-        if isinstance(choose_epsilon, numbers.Number):  # if user provided.
-            self.epsilon = choose_epsilon
+        if isinstance(epsilon, numbers.Number):  # if user provided.
+            self.epsilon_fitted = epsilon
             return self
-        elif choose_epsilon == 'bgh':  # Berry, Giannakis Harlim method.
+        elif epsilon == 'bgh':  # Berry, Giannakis Harlim method.
             dists = self.neigh.kneighbors_graph(self.data, mode='distance').data
             sq_distances = dists**2
             if (self.metric != 'euclidean'):  # TODO : replace with call to scipy metrics.
                 warnings.warn('The BGH method for choosing epsilon assumes a euclidean metric.  However, the metric being used is %s.  Proceed at your own risk...' % self.metric)
-            self.epsilon, self.d = choose_optimal_epsilon_BGH(sq_distances)
+            self.epsilon_fitted, self.d = choose_optimal_epsilon_BGH(sq_distances)
         else:
-            raise ValueError("Method for automatically choosing epsilon was given as %s, but this was not recognized" % choose_epsilon)
+            raise ValueError("Method for automatically choosing epsilon was given as %s, but this was not recognized" % epsilon)
         return self
 
 

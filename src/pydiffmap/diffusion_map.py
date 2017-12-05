@@ -22,7 +22,7 @@ class DiffusionMap(object):
         Number of nearest neighbors over which to construct the kernel.
     kernel_type : string, optional
         Type of kernel to construct. Currently the only option is 'gaussian', but more will be implemented.
-    choose_epsilon : string or scalar, optional
+    epsilon: string or scalar, optional
         Method for choosing the epsilon.  Currently, the only options are to provide a scalar (epsilon is set to the provided scalar) or 'bgh' (Berry, Giannakis and Harlim).
     n_evecs : int, optional
         Number of diffusion map eigenvectors to return
@@ -50,21 +50,20 @@ class DiffusionMap(object):
         self.alpha = alpha
         self.k = k
         self.kernel_type = kernel_type
-        self.choose_epsilon = epsilon
+        self.epsilon = epsilon
         self.n_evecs = n_evecs
         self.neighbor_params = neighbor_params
         self.metric = metric
         self.metric_params = metric_params
-        self.epsilon = None
+        self.epsilon_fitted = None
         self.d = None
 
     def _compute_kernel(self, X):
         my_kernel = kernel.Kernel(kernel_type=self.kernel_type, k=self.k,
-                                  choose_epsilon=self.choose_epsilon, neighbor_params=self.neighbor_params,
+                                  epsilon=self.epsilon, neighbor_params=self.neighbor_params,
                                   metric=self.metric, metric_params=self.metric_params)
         my_kernel.fit(X)
         kernel_matrix = _symmetrize_matrix(my_kernel.compute(X))
-        self.epsilon = my_kernel.epsilon
         return kernel_matrix, my_kernel
 
     def _make_right_norm_vec(self, kernel_matrix, weights=None):
@@ -120,7 +119,7 @@ class DiffusionMap(object):
 
         # Save constructed data.
         self.local_kernel = my_kernel
-        self.epsilon = my_kernel.epsilon
+        self.epsilon_fitted = my_kernel.epsilon_fitted
         self.d = my_kernel.d
         self.data = X
         self.weights = weights
