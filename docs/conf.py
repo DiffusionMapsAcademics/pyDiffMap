@@ -27,7 +27,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 project = u'pydiffmap'
 year = '2017'
-author = u'Ralf Banisch, Lorenzo Boninsegna, Erik Henning Thiede, Zofia Trstanova'
+author = u'Ralf Banisch, Erik Henning Thiede, Zofia Trstanova'
 copyright = '{0}, {1}'.format(year, author)
 version = release = u'0.1.0'
 

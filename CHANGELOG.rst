@@ -2,7 +2,7 @@
 Changelog
 =========
 
-0.1.0 (2017-11-02)
+0.1.0 (2017-12-05)
 ------------------
 
-* Preliminary package setup.
+* Added base functionality to the code.
