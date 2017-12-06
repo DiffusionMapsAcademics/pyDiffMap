@@ -12,11 +12,8 @@ include .coveragerc
 include .cookiecutterrc
 include .editorconfig
 
-include AUTHORS.rst
-include CHANGELOG.rst
-include CONTRIBUTING.rst
+include *.rst
 include LICENSE
-include README.rst
 
 include tox.ini .travis.yml appveyor.yml
 
