@@ -25,6 +25,7 @@ Contents
    reference/index
    contributing
    authors
+   acknowledgements
    changelog
 
 Indices and tables

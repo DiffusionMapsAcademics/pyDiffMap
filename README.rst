@@ -61,14 +61,14 @@ Overview
 
 .. end-badges
 
-Library for constructing diffusion maps
+This is the home of the documentation for pyDiffMap, an open-source project to develop a robust and accessible diffusion map code for public use. Our documentation is currently under construction, please bear with us.
 
 * Free software: GPL
 
 Installation
 ============
 
-Currently, we do not have the package on the python package repository yet.  Once it is, you will be able to install it using
+Pydiffmap is installable using pip.  You can install it using the command
 
 ::
 
