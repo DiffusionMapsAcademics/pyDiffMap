@@ -24,7 +24,7 @@ def read(*names, **kwargs):
 
 setup(
     name='pydiffmap',
-    version='0.1.0',
+    version='0.1.1',
     license='GPL license',
     description='Library for constructing variable bandwidth diffusion maps',
     long_description='%s\n%s' % (
@@ -32,7 +32,8 @@ setup(
         re.sub(':[a-z]+:`~?(.*?)`', r'``\1``', read('CHANGELOG.rst'))
     ),
     author='Ralf Banisch, Erik Henning Thiede, Zofia Trstanova',
-    author_email='ralf.banisch [at symbol] fu-berlin.de, ehthiede [at symbol] gmail.com, zofia.trstanova [at symbol] ed.ac.uk',
+#    author_email='ralf.banisch [at symbol] fu-berlin.de, ehthiede [at symbol] gmail.com, zofia.trstanova [at symbol] ed.ac.uk',
+    author_email='ralf.banisch@fu-berlin.de, ehthiede@gmail.com, zofia.trstanova@ed.ac.uk',
     url='https://github.com/DiffusionMapsAcademics/pyDiffMap',
     packages=find_packages('src'),
     package_dir={'': 'src'},
@@ -42,7 +43,7 @@ setup(
     classifiers=[
         # complete classifier list: http://pypi.python.org/pypi?%3Aaction=list_classifiers
         'Development Status :: 3 - Alpha',
-        'Topic :: Scientific/Engineering'
+        'Topic :: Scientific/Engineering',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: MIT License',
         'Operating System :: Unix',
