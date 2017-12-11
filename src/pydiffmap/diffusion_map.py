@@ -177,6 +177,116 @@ class DiffusionMap(object):
         self.fit(X, weights=weights)
         return self.dmap
 
+class LandmarkDiffusionMap(DiffusionMap):
+
+    def fit(self, X, n_landmarks = 100, method = 'random'):
+        """
+        Fits the data. First reduces the dataset by choosing a number of landmarks, then computes diffusion map
+        eigenfunctions and extends them to the whole dataset with the nystroem method. The kde is also extended
+        with a low-rank factorization of the kernel matrix (experimental).
+        Parameters
+        ----------
+        X : array-like, shape (n_query, n_features)
+            Data upon which to construct the diffusion map.
+        n_landmarks : number of landmarks to be selected.
+        method: method for landmark selection. 'random', 'farthest point' (dev) and 'oasis' (dev) are supported.
+        Returns
+        -------
+        self : the object itself
+        """
+        # ToDo: compute epsilon automatically
+        #if (self.choose_eps == 'fixed'):
+        #    pass
+        #else:
+        #    raise NotImplementedError("We haven't actually implemented any method for automatically choosing epsilon... sorry :-(")
+        # if (choose_eps=='auto'):
+            # self.epsilon = choose_epsilon(X)
+        # choose landmarks
+        landmarks = self.choose_landmarks(X, n_landmarks, method)
+        self.landmarks = landmarks
+        X_l = X[landmarks,:]
+        # non-landmarks
+        m = np.shape(X)[0]
+        mask = np.ones(m,dtype=bool)
+        mask[landmarks] = False
+        # fit diffusion map on the landmarks
+        DiffusionMap.fit(self, X_l)
+        # compute extended evecs with nystroem
+        dmap_extended = self.transform(X[mask,:])
+        # assemble eigenvectors and dmap for the full dataset
+        dmap_assembled = np.ones([m,self.n_evecs], dtype=float)
+        dmap_assembled[landmarks,:] = self.dmap
+        dmap_assembled[mask,:] = dmap_extended
+        self.dmap = dmap_assembled
+        self.evecs = np.dot(self.dmap, np.diag(1.0/self.evals))
+        ###
+        ### EXPERIMENTAL: extended kernel density estimate
+        ###
+        sparse_coeff = 0.02
+        Q_J = _symmetrize_matrix(self.local_kernel.compute(X_l))
+        my_kernel = kernel.Kernel(kernel_type='gaussian', epsilon=self.epsilon, k=np.int(m*sparse_coeff)).fit(X[mask,:])
+        Y = my_kernel.compute(X_l)
+        # compute kde
+        q_landmarks = np.array(Q_J.sum(axis=1)).ravel() + np.array(Y.sum(axis=1)).ravel()
+        q_mask = Y.sum(axis=0) + Y.transpose() * spsl.spsolve(Q_J,Y.sum(axis=1))
+        q_mask = np.array(q_mask).ravel()
+        # prepare output
+        q = np.ones(m,dtype=float)
+        q[landmarks] = q_landmarks
+        q[mask] = q_mask
+        self.q = q
+
+    def choose_landmarks(self, X, n_landmarks, method):
+        """
+        Chooses some landmarks.
+        Parameters
+        ----------
+        X : array-like, shape (n_query, n_features)
+            Data upon which to construct the diffusion map.
+        n_landmarks : number of landmarks to be selected.
+        method: method for landmark selection. 'random', 'farthest point' (dev) and 'oasis' (dev) are supported.
+        Returns
+        -------
+        landmarks : array-like, shape (n_landmarks). A list of landmark indeces.
+        """
+        if (method=='random'):
+            # choose some landmarks at random
+            landmarks = np.random.choice(np.shape(X)[0], size = n_landmarks, replace = False)
+        elif (method=='kmeans'):
+            from sklearn.cluster import KMeans
+            from sklearn.neighbors import NearestNeighbors
+            kmeans = KMeans(n_clusters=n_landmarks, max_iter=10, n_init = 1).fit(X)
+            nbrs = NearestNeighbors(n_neighbors=1).fit(X)
+            distances, indices = nbrs.kneighbors(kmeans.cluster_centers_)
+            landmarks = indices.ravel()
+        elif (method=='poisson_disk'):
+            landmarks = picking(X, n_landmarks)
+        else:
+            raise NotImplementedError('No other method for choosing landmarks implemented yet!')
+        return landmarks
+
+def picking(data, n_samples):
+    from scipy.spatial.distance import cdist
+    # select a random point and compute distances to it
+    m = np.shape(data)[0]
+    idx_corner = np.random.randint(m)
+
+    dist = cdist(data[[idx_corner],:], data)[0]
+
+    # find first cornerstone
+    idx_corner = [np.argmax(dist)]
+    # print('idx_corner ')
+    # print(idx_corner)
+    # iteration to find the other cornerstones
+    for k in np.arange(1, n_samples):
+        # update minimum distance to existing cornerstones
+        if(k>1):
+            dist = np.minimum(dist, cdist(data[[idx_corner[-1]],:], data)[0])
+        else:
+            dist = cdist(data[idx_corner,:], data)[0]
+        # select new cornerstone
+        idx_corner.append(np.argmax(dist))
+    return idx_corner
 
 def _symmetrize_matrix(K, mode='average'):
     """
