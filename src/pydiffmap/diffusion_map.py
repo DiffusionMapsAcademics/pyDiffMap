@@ -204,6 +204,7 @@ class LandmarkDiffusionMap(DiffusionMap):
         # choose landmarks
         landmarks = self.choose_landmarks(X, n_landmarks, method)
         self.landmarks = landmarks
+        self.k = min(n_landmarks, self.k)
         X_l = X[landmarks,:]
         # non-landmarks
         m = np.shape(X)[0]

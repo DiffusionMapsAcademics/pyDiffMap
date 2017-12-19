@@ -278,6 +278,35 @@ class TestTMDiffusionMap(object):
         total_error = 1 - np.min(errors_evec)
         assert(total_error < THRESH)
 
+class TestLandmarkDiffusionMap():
+    @pytest.mark.parametrize('landmark_method', ['kmeans', 'poisson_disk'])
+    def test_2Dstrip_evecs(self, uniform_2d_data, landmark_method):
+        """
+        Test that we compute the correct eigenvectors (cosines) on a 1d strip of length 2*pi.
+        Diffusion map parameters in this test are hand-selected to give good results.
+        Eigenvector approximation will fail if epsilon is set way too small or too large (robust).
+        """
+        # Setup true values to test again.
+        # real_evecs = cos(kx*x)*cos(ky*y) for kx = 0.5*[1 0 2 1] and ky = [0 1 0 1].
+        # Setup data and accuracy threshold
+        data, X, Y = uniform_2d_data
+        THRESH = 0.05
+
+        eps = 0.01
+        # reference diffusion map
+        mydmap = dm.DiffusionMap(n_evecs = 2, epsilon = eps, alpha = 1.0, k=400)
+        dmap = mydmap.fit_transform(data)
+        # landmark diffusion map
+        mydmap_lm = dm.LandmarkDiffusionMap(n_evecs = 2, epsilon = .5, alpha = 1.0, k=100)
+        mydmap_lm.fit(data, method = landmark_method, n_landmarks = 100)
+        # normalize eigenfunction and adjust sign
+        lm_map = mydmap_lm.dmap[:,0] / np.linalg.norm(mydmap_lm.dmap[:,0])
+        ref_map = mydmap.dmap[:,0] / np.linalg.norm(mydmap.dmap[:,0])
+        sgn = np.sign(np.corrcoef(lm_map, ref_map)[0,1])
+        # compute error
+        total_error = np.linalg.norm(lm_map-sgn*ref_map)
+        assert(total_error < THRESH)
+
 
 class TestSymmetrization():
     test_mat = csr_matrix([[0, 2.], [0, 3.]])
