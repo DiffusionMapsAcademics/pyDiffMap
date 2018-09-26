@@ -10,15 +10,16 @@ from pydiffmap import visualization as viz
 def dummy_dmap(uniform_2d_data):
     data, X, Y = uniform_2d_data
     print(data)
-    mydmap = dm.DiffusionMap(n_evecs=2, k=5)
+    mydmap = dm.DiffusionMap(n_evecs=3, k=5)
     mydmap.fit(data)
     return mydmap
 
 
 class TestEmbeddingPlot():
-    def test_no_kwargs(self, dummy_dmap):
+    @pytest.mark.parametrize('dim', [2, 3])
+    def test_no_kwargs(self, dummy_dmap, dim):
         mydmap = dummy_dmap
-        fig = viz.embedding_plot(mydmap, scatter_kwargs=None, show=False)
+        fig = viz.embedding_plot(mydmap, dim=dim, scatter_kwargs=None, show=False)
         assert(fig)
 
     def test_fixed_coloring(self, dummy_dmap):
