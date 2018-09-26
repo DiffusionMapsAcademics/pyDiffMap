@@ -173,11 +173,11 @@ first two diffusion coordinates correlate with :math:`\phi` and
 .. parsed-literal::
 
     Correlation between \phi and \psi_1
-    [[ 1.         -0.92060758]
-     [-0.92060758  1.        ]]
+    [[ 1.          0.92202403]
+     [ 0.92202403  1.        ]]
     Correlation between Z and \psi_2
-    [[ 1.         -0.96447642]
-     [-0.96447642  1.        ]]
+    [[ 1.         -0.96896173]
+     [-0.96896173  1.        ]]
 
 
 

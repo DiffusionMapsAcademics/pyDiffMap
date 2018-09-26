@@ -38,7 +38,7 @@ class TestEmbeddingPlot():
         actual_sizes = SC.get_sizes()
         assert(np.all(actual_sizes == size))
 
-    @pytest.mark.parametrize('cmap', [None, 'Blues', plt.cm.spectral])
+    @pytest.mark.parametrize('cmap', [None, 'Blues', plt.cm.Spectral])
     def test_colormap(self, dummy_dmap, cmap):
         # This just tests if the code runs...
         # Replace with something more stringent?
