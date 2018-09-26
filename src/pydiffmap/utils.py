@@ -28,7 +28,7 @@ def lookup_fxn(x, vals):
         lookup[str(x[i])] = vals[i]
 
     # Define and return lookup function
-    def lf(val):
-        return lookup[val]
+    def lf(xi):
+        return lookup[str(xi)]
 
     return lf
