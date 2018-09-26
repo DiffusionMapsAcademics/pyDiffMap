@@ -61,7 +61,7 @@ Overview
 
 .. end-badges
 
-This is the home of the documentation for pyDiffMap, an open-source project to develop a robust and accessible diffusion map code for public use. Our documentation is currently under construction, please bear with us.
+This is the home of the documentation for pyDiffMap, an open-source project to develop a robust and accessible diffusion map code for public use. Our documentation is currently under construction, please bear with us. 
 
 * Free software: GPL.  If you need to use this software in a non-GPL compatible environment, please contact the authors and we can work something out.
 
