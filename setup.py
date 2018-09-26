@@ -32,7 +32,6 @@ setup(
         re.sub(':[a-z]+:`~?(.*?)`', r'``\1``', read('CHANGELOG.rst'))
     ),
     author='Ralf Banisch, Erik Henning Thiede, Zofia Trstanova',
-#    author_email='ralf.banisch [at symbol] fu-berlin.de, ehthiede [at symbol] gmail.com, zofia.trstanova [at symbol] ed.ac.uk',
     author_email='ralf.banisch@fu-berlin.de, ehthiede@gmail.com, zofia.trstanova@ed.ac.uk',
     url='https://github.com/DiffusionMapsAcademics/pyDiffMap',
     packages=find_packages('src'),

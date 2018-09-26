@@ -1,7 +1,7 @@
 [paths]
 source =
-   src/pydiffmap
-   */site-packages/pydiffmap
+   src/
+   */site-packages/
 
 [run]
 branch = true
