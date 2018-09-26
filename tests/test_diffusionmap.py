@@ -240,9 +240,10 @@ class TestTMDiffusionMap(object):
         THRESH = 0.003
         # Setup diffusion map
 
-        target_distribution = np.exp(-.5*X**2)
-        mydmap = dm.DiffusionMap(alpha=1., n_evecs=4, epsilon=epsilon, k=100)
-        mydmap.fit_transform(data, weights=target_distribution)
+        # target_distribution = np.exp(-.5*X**2)
+        weight_fxn = lambda x_i: np.exp(-.5*x_i**2)
+        mydmap = dm.DiffusionMap(alpha=1., n_evecs=4, epsilon=epsilon, k=100, weight_fxn=weight_fxn)
+        mydmap.fit_transform(data)
         test_evals = -4./mydmap.epsilon_fitted*(mydmap.evals - 1)
 
         # Check that relative error values are beneath tolerance.
@@ -267,9 +268,10 @@ class TestTMDiffusionMap(object):
         # Setup true values to test again.
         real_evecs = [X, X**2-1, X**3-3*X, X**4-6*X**2+3]  # Hermite polynomials
         # Setup diffusion map
-        target_distribution = np.exp(-.5*X**2)
-        mydmap = dm.DiffusionMap(alpha=1., n_evecs=4, epsilon=epsilon, k=100)
-        mydmap.fit_transform(data, weights=target_distribution)
+        # target_distribution = np.exp(-.5*X**2)
+        weight_fxn = lambda x_i: np.exp(-.5*x_i**2)
+        mydmap = dm.DiffusionMap(alpha=1., n_evecs=4, epsilon=epsilon, k=100, weight_fxn=weight_fxn)
+        mydmap.fit_transform(data)
         errors_evec = []
         for k in np.arange(4):
             errors_evec.append(abs(np.corrcoef(real_evecs[k], mydmap.evecs[:, k])[0, 1]))

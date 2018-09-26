@@ -43,7 +43,7 @@ class DiffusionMap(object):
 
     """
 
-    def __init__(self, alpha=0.5, k=64, kernel_type='gaussian', epsilon='bgh', n_evecs=1, neighbor_params=None, metric='euclidean', metric_params=None):
+    def __init__(self, alpha=0.5, k=64, kernel_type='gaussian', epsilon='bgh', n_evecs=1, neighbor_params=None, metric='euclidean', metric_params=None, weight_fxn=None):
         """
         Initializes Diffusion Map, sets parameters.
         """
@@ -57,6 +57,7 @@ class DiffusionMap(object):
         self.metric_params = metric_params
         self.epsilon_fitted = None
         self.d = None
+        self.weight_fxn = weight_fxn
 
     def _compute_kernel(self, X):
         my_kernel = kernel.Kernel(kernel_type=self.kernel_type, k=self.k,
@@ -96,7 +97,7 @@ class DiffusionMap(object):
         dmap = np.dot(evecs, np.diag(evals))
         return dmap, evecs, evals
 
-    def fit(self, X, weights=None):
+    def fit(self, X):
         """
         Fits the data.
 
@@ -104,14 +105,17 @@ class DiffusionMap(object):
         ----------
         X : array-like, shape (n_query, n_features)
             Data upon which to construct the diffusion map.
-        weights : array-like, optional, shape(n_query)
-            Values of a weight function for the data.  This effectively adds a drift term equivalent to the gradient of the log of weighting function to the final operator.
 
         Returns
         -------
         self : the object itself
         """
+        N = np.shape(X)[0]
         kernel_matrix, my_kernel = self._compute_kernel(X)
+        if self.weight_fxn is not None:
+            weights = np.array([self.weight_fxn(Xi) for Xi in X]).reshape(N)
+        else:
+            weights = None
 
         q, right_norm_vec = self._make_right_norm_vec(kernel_matrix, weights)
         P = self._apply_normalizations(kernel_matrix, right_norm_vec)
@@ -158,7 +162,7 @@ class DiffusionMap(object):
             P = self._apply_normalizations(kernel_extended, self.right_norm_vec)
             return P * self.evecs
 
-    def fit_transform(self, X, weights=None):
+    def fit_transform(self, X):
         """
         Fits the data and returns diffusion coordinates.  equivalent to calling dmap.fit(X).transform(x).
 
@@ -166,15 +170,13 @@ class DiffusionMap(object):
         ----------
         X : array-like, shape (n_query, n_features)
             Data upon which to construct the diffusion map.
-        weights : array-like, optional, shape (n_query)
-            Values of a weight function for the data.  This effectively adds a drift term equivalent to the gradient of the log of weighting function to the final operator.
 
         Returns
         -------
         phi : numpy array, shape (n_query, n_eigenvectors)
             Transformed value of the given values.
         """
-        self.fit(X, weights=weights)
+        self.fit(X)
         return self.dmap
 
 
