@@ -8,6 +8,7 @@ import numpy as np
 import scipy.sparse as sps
 import scipy.sparse.linalg as spsl
 from . import kernel
+from . import utils
 
 
 class DiffusionMap(object):
@@ -67,20 +68,18 @@ class DiffusionMap(object):
         kernel_matrix = _symmetrize_matrix(my_kernel.compute(X))
         return kernel_matrix, my_kernel
 
-    def _make_right_norm_vec(self, kernel_matrix, weights=None):
-        # perform kde
+    def _make_right_norm_vec(self, kernel_matrix):
         q = np.array(kernel_matrix.sum(axis=1)).ravel()
-        # Apply right normalization
         right_norm_vec = np.power(q, -self.alpha)
-        if weights is not None:
-            right_norm_vec *= np.sqrt(weights)
         return q, right_norm_vec
 
-    def _apply_normalizations(self, kernel_matrix, right_norm_vec):
+    def _apply_normalizations(self, kernel_matrix, right_norm_vec, weights=None):
         # Perform right normalization
         m = right_norm_vec.shape[0]
         Dalpha = sps.spdiags(right_norm_vec, 0, m, m)
         kernel_matrix = kernel_matrix * Dalpha
+        if weights is not None:
+            kernel_matrix = kernel_matrix.multiply(weights)
 
         # Perform  row (or left) normalization
         row_sum = kernel_matrix.sum(axis=1).transpose()
@@ -110,15 +109,14 @@ class DiffusionMap(object):
         -------
         self : the object itself
         """
-        N = np.shape(X)[0]
         kernel_matrix, my_kernel = self._compute_kernel(X)
         if self.weight_fxn is not None:
-            weights = np.array([self.weight_fxn(Xi) for Xi in X]).reshape(N)
+            weights = utils.sparse_from_fxn(my_kernel.neigh, self.weight_fxn, X)
         else:
             weights = None
 
-        q, right_norm_vec = self._make_right_norm_vec(kernel_matrix, weights)
-        P = self._apply_normalizations(kernel_matrix, right_norm_vec)
+        q, right_norm_vec = self._make_right_norm_vec(kernel_matrix)
+        P = self._apply_normalizations(kernel_matrix, right_norm_vec, weights)
         dmap, evecs, evals = self._make_diffusion_coords(P)
 
         # Save constructed data.
@@ -157,9 +155,13 @@ class DiffusionMap(object):
             # turn x into array if needed
             if (Y.ndim == 1):
                 Y = Y[np.newaxis, :]
-            # compute the values of the kernel matrix
+
+            if self.weight_fxn is not None:
+                weights = utils.sparse_from_fxn(self.local_kernel.neigh, self.weight_fxn, Y)
+            else:
+                weights = None
             kernel_extended = self.local_kernel.compute(Y)
-            P = self._apply_normalizations(kernel_extended, self.right_norm_vec)
+            P = self._apply_normalizations(kernel_extended, self.right_norm_vec, weights)
             return P * self.evecs
 
     def fit_transform(self, X):

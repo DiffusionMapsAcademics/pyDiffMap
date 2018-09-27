@@ -5,6 +5,7 @@ Utilities for constructing diffusion maps.
 import numpy as np
 import scipy.sparse as sps
 
+
 def lookup_fxn(x, vals):
     """
     Builds a simple function that acts as a lookup table.  Useful for
@@ -70,5 +71,4 @@ def sparse_from_fxn(neighbors, function, Y=None):
     for i, j in zip(row, col):
         fxn_vals.append(function(Y[i], X[j]))
     fxn_vals = np.array(fxn_vals)
-
     return sps.csr_matrix((fxn_vals, (row, col)), shape=knn_graph.shape)

@@ -241,7 +241,7 @@ class TestTMDiffusionMap(object):
         # Setup diffusion map
 
         # target_distribution = np.exp(-.5*X**2)
-        weight_fxn = lambda x_i: np.exp(-.5*x_i**2)
+        weight_fxn = lambda x_i, y_i: np.exp(-.5*np.dot(x_i, x_i))
         mydmap = dm.DiffusionMap(alpha=1., n_evecs=4, epsilon=epsilon, k=100, weight_fxn=weight_fxn)
         mydmap.fit_transform(data)
         test_evals = -4./mydmap.epsilon_fitted*(mydmap.evals - 1)
@@ -268,8 +268,7 @@ class TestTMDiffusionMap(object):
         # Setup true values to test again.
         real_evecs = [X, X**2-1, X**3-3*X, X**4-6*X**2+3]  # Hermite polynomials
         # Setup diffusion map
-        # target_distribution = np.exp(-.5*X**2)
-        weight_fxn = lambda x_i: np.exp(-.5*x_i**2)
+        weight_fxn = lambda x_i, y_j: np.exp(-.5*np.dot(y_j, y_j))
         mydmap = dm.DiffusionMap(alpha=1., n_evecs=4, epsilon=epsilon, k=100, weight_fxn=weight_fxn)
         mydmap.fit_transform(data)
         errors_evec = []
