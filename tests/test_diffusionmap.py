@@ -103,7 +103,7 @@ class TestDiffusionMap(object):
 
     def test_2Dstrip_evals(self, uniform_2d_data):
         """
-        Test that we compute the correct eigenvalues on a 1d strip of length 2*pi.
+        Test that we compute the correct eigenvalues on a 2d strip of length 2*pi.
         Diffusion map parameters in this test are hand-selected to give good results.
         Eigenvalue approximation will fail if k is set too small, or epsilon not optimal (sensitive).
         """
@@ -126,7 +126,7 @@ class TestDiffusionMap(object):
 
     def test_2Dstrip_evecs(self, uniform_2d_data):
         """
-        Test that we compute the correct eigenvectors (cosines) on a 1d strip of length 2*pi.
+        Test that we compute the correct eigenvectors (cosines) on a 2d strip of length 2*pi.
         Diffusion map parameters in this test are hand-selected to give good results.
         Eigenvector approximation will fail if epsilon is set way too small or too large (robust).
         """
@@ -221,10 +221,8 @@ class TestNystroem(object):
         assert(error < THRESH)
 
 
-class TestTMDiffusionMap(object):
-    X = np.linspace(-5., 5., 201)
-    Y = np.linspace(-5., 5., 151)
-    
+class TestWeighting(object):
+
     @pytest.mark.parametrize('epsilon', [0.005, 'bgh'])
     def test_1Dstrip_evals(self, epsilon):
         """
@@ -238,14 +236,15 @@ class TestTMDiffusionMap(object):
         # Setup true values to test again.
         real_evals = np.arange(1, 5)
         # Setup data and accuracy threshold
-        data = np.array([self.X]).transpose()
+        X = np.linspace(-5., 5., 201)
+        data_x = np.array([X]).transpose()
         THRESH = 0.003
         # Setup diffusion map
 
         # target_distribution = np.exp(-.5*X**2)
         weight_fxn = lambda x_i, y_j: np.exp(-.25*np.dot(y_j, y_j))
         mydmap = dm.DiffusionMap(alpha=1., n_evecs=4, epsilon=epsilon, k=100, weight_fxn=weight_fxn)
-        mydmap.fit_transform(data)
+        mydmap.fit_transform(data_x)
         test_evals = -4./mydmap.epsilon_fitted*(mydmap.evals - 1)
 
         # Check that relative error values are beneath tolerance.
@@ -254,7 +253,8 @@ class TestTMDiffusionMap(object):
         assert(total_error < THRESH)
 
     @pytest.mark.parametrize('epsilon', [0.005, 'bgh'])
-    def test_1Dstrip_evecs(self, epsilon):
+    @pytest.mark.parametrize('oos', [True, False])
+    def test_1Dstrip_evecs(self, epsilon, oos):
         """
         Test measure reweighting.  We reweight the uniform distribution to
         approximate a Gaussian distribution.  For numerical reasons, we truncate
@@ -264,18 +264,25 @@ class TestTMDiffusionMap(object):
         probabalists Hermite polynomials.
         """
         # Setup data and accuracy threshold
-        data = np.array([self.X]).transpose()
+        X = np.linspace(-5., 5., 201)
+        if oos:
+            Y = np.linspace(-5., 5., 151)
+        else:
+            Y = X
+        data_x = np.array([X]).transpose()
+        data_y = np.array([Y]).transpose()
         THRESH = 0.005
         # Setup true values to test again.
-        real_evecs = [self.X, self.X**2-1, self.X**3-3*self.X,
-                      self.X**4-6*self.X**2+3]  # Hermite polynomials
+        real_evecs = [Y, Y**2-1, Y**3-3*Y,
+                      Y**4-6*Y**2+3]  # Hermite polynomials
         # Setup diffusion map
         weight_fxn = lambda x_i, y_j: np.exp(-.25*np.dot(y_j, y_j))
         mydmap = dm.DiffusionMap(alpha=1., n_evecs=4, epsilon=epsilon, k=100, weight_fxn=weight_fxn)
-        mydmap.fit_transform(data)
+        mydmap.fit(data_x)
+        evecs = mydmap.transform(data_y)
         errors_evec = []
         for k in np.arange(4):
-            errors_evec.append(abs(np.corrcoef(real_evecs[k], mydmap.evecs[:, k])[0, 1]))
+            errors_evec.append(abs(np.corrcoef(real_evecs[k], evecs[:, k])[0, 1]))
 
         # Check that relative error values are beneath tolerance.
         total_error = 1 - np.min(errors_evec)
