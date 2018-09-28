@@ -111,7 +111,7 @@ class DiffusionMap(object):
         """
         kernel_matrix, my_kernel = self._compute_kernel(X)
         if self.weight_fxn is not None:
-            weights = utils.sparse_from_fxn(my_kernel.neigh, self.weight_fxn, X)
+            weights = utils.sparse_from_fxn(X, kernel_matrix, self.weight_fxn, X)
         else:
             weights = None
 
@@ -156,11 +156,11 @@ class DiffusionMap(object):
             if (Y.ndim == 1):
                 Y = Y[np.newaxis, :]
 
+            kernel_extended = self.local_kernel.compute(Y)
             if self.weight_fxn is not None:
-                weights = utils.sparse_from_fxn(self.local_kernel.neigh, self.weight_fxn, Y)
+                weights = utils.sparse_from_fxn(self.local_kernel.data, kernel_extended, self.weight_fxn, Y)
             else:
                 weights = None
-            kernel_extended = self.local_kernel.compute(Y)
             P = self._apply_normalizations(kernel_extended, self.right_norm_vec, weights)
             return P * self.evecs
 

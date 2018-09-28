@@ -36,10 +36,10 @@ def lookup_fxn(x, vals):
     return lf
 
 
-def sparse_from_fxn(neighbors, function, Y=None):
+def sparse_from_fxn(X, K, function, Y=None):
     """
     For a function f, constructs a sparse matrix where each element is
-    f(Y_i, X_j) if Y_i is a k-nearest neighbor to X_j, and zero otherwise.
+    f(Y_i, X_j) with the same sparsity structure as the matrix K.
 
     Parameters
     ----------
@@ -60,10 +60,9 @@ def sparse_from_fxn(neighbors, function, Y=None):
         otherwise.  Here Y_i is the i'th datapoint in Y, and X_j is the
         j'th datapoint in the NearestNeighbors object.
     """
-    X = neighbors._fit_X
     if Y is None:
         Y = X
-    knn_graph = neighbors.kneighbors_graph(Y, mode='connectivity').tocoo()
+    knn_graph = K.tocoo()
     row = knn_graph.row
     col = knn_graph.col
 

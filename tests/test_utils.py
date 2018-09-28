@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 from pydiffmap import utils
+from pydiffmap.diffusion_map import _symmetrize_matrix
 from sklearn.neighbors import NearestNeighbors
 
 x_1d = np.arange(10)
@@ -30,7 +31,8 @@ class TestSparseFromFxn(object):
         Y2 = Y
         if Y2 is None:
             Y2 = x_2d
+        K = nneighbors.kneighbors_graph(Y2, mode='connectivity')
         ref_mat = nneighbors.kneighbors_graph(Y2, mode='distance')
         dist_fxn = lambda Y, X: np.linalg.norm(Y - X)
-        dist_mat = utils.sparse_from_fxn(nneighbors, dist_fxn, Y)
+        dist_mat = utils.sparse_from_fxn(x_2d, K, dist_fxn, Y)
         assert(np.linalg.norm((dist_mat - ref_mat).data) < 1e-10)
