@@ -206,7 +206,19 @@ class TargetMeasureDiffusionMap(DiffusionMap):
         Optional parameters required for the metric given.
     """
     def __init__(self, alpha=0.5, k=64, kernel_type='gaussian', epsilon='bgh', n_evecs=1, neighbor_params=None, metric='euclidean', metric_params=None, change_of_measure=None):
-        super(DiffusionMap, self).__init__(alpha=alpha, k=k, kernel_type=kernel_type, epsilon=epsilon, n_evecs=n_evecs, neighbor_params=neighbor_params, metric=metric, metric_params=metric_params, weight_fxn=None)
+        # super(DiffusionMap, self).__init__(alpha=alpha, k=k, kernel_type=kernel_type, epsilon=epsilon, n_evecs=n_evecs, neighbor_params=neighbor_params, metric=metric, metric_params=metric_params, weight_fxn=weight_fxn)
+        super(DiffusionMap, self).__init__()
+        self.alpha = alpha
+        self.k = k
+        self.kernel_type = kernel_type
+        self.epsilon = epsilon
+        self.n_evecs = n_evecs
+        self.neighbor_params = neighbor_params
+        self.metric = metric
+        self.metric_params = metric_params
+        self.epsilon_fitted = None
+        self.d = None
+        self.weight_fxn = lambda x_i, y_i: np.sqrt(change_of_measure(y_i))
 
 
 def _symmetrize_matrix(K, mode='average'):
