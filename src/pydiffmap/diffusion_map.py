@@ -182,6 +182,33 @@ class DiffusionMap(object):
         return self.dmap
 
 
+class TargetMeasureDiffusionMap(DiffusionMap):
+    """
+    Implementation of the TargetMeasure diffusion map.  This provides a more convenient interface for some hyperparameter selection for the general diffusion object.
+:
+    Parameters
+    ----------
+    alpha : scalar, optional
+        Exponent to be used for the left normalization in constructing the diffusion map.
+    k : int, optional
+        Number of nearest neighbors over which to construct the kernel.
+    kernel_type : string, optional
+        Type of kernel to construct. Currently the only option is 'gaussian', but more will be implemented.
+    epsilon: string or scalar, optional
+        Method for choosing the epsilon.  Currently, the only options are to provide a scalar (epsilon is set to the provided scalar) or 'bgh' (Berry, Giannakis and Harlim).
+    n_evecs : int, optional
+        Number of diffusion map eigenvectors to return
+    neighbor_params : dict or None, optional
+        Optional parameters for the nearest Neighbor search. See scikit-learn NearestNeighbors class for details.
+    metric : string, optional
+        Metric for distances in the kernel. Default is 'euclidean'. The callable should take two arrays as input and return one value indicating the distance between them.
+    metric_params : dict or None, optional
+        Optional parameters required for the metric given.
+    """
+    def __init__(self, alpha=0.5, k=64, kernel_type='gaussian', epsilon='bgh', n_evecs=1, neighbor_params=None, metric='euclidean', metric_params=None, change_of_measure=None):
+        super(DiffusionMap, self).__init__(alpha=alpha, k=k, kernel_type=kernel_type, epsilon=epsilon, n_evecs=n_evecs, neighbor_params=neighbor_params, metric=metric, metric_params=metric_params, weight_fxn=None)
+
+
 def _symmetrize_matrix(K, mode='average'):
     """
     Symmetrizes a sparse kernel matrix.
