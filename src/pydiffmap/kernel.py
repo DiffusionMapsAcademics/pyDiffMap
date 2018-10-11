@@ -15,8 +15,8 @@ class Kernel(object):
 
     Parameters
     ----------
-    type : string, optional
-        Type of kernel to construct. Currently the only option is 'gaussian', but more will be implemented.
+    kernel_type : string or callable, optional
+        Type of kernel to construct. Currently the only option is 'gaussian' (the default), but more will be implemented.
     epsilon : string, optional
         Method for choosing the epsilon.  Currently, the only options are to provide a scalar (epsilon is set to the provided scalar) or 'bgh' (Berry, Giannakis and Harlim).
     k : int, optional
@@ -30,7 +30,7 @@ class Kernel(object):
     """
 
     def __init__(self, kernel_type='gaussian', epsilon='bgh', k=64, neighbor_params=None, metric='euclidean', metric_params=None):
-        self.type = kernel_type
+        self.kernel_function = _parse_kernel_type(kernel_type)
         self.epsilon = epsilon
         self.k = k
         self.metric = metric
@@ -88,10 +88,7 @@ class Kernel(object):
         K = self.neigh.kneighbors_graph(Y, mode='distance')
         # retrieve all nonzero elements and apply kernel function to it
         v = K.data
-        if (self.type == 'gaussian'):
-            K.data = np.exp(-v**2/self.epsilon_fitted)
-        else:
-            raise("Error: Kernel type not understood.")
+        K.data = self.kernel_function(v, self.epsilon_fitted)
         return K
 
     def choose_optimal_epsilon(self, epsilon=None):
@@ -170,3 +167,29 @@ def choose_optimal_epsilon_BGH(scaled_distsq, epsilons=None):
     epsilon = np.exp(log_eps[max_loc])
     d = np.round(2.*log_deriv[max_loc])
     return epsilon, d
+
+
+def _parse_kernel_type(kernel_type):
+    """
+    Parses an input string or function specifying the kernel.
+
+    Parameters
+    ----------
+    kernel_type : string or callable
+        Type of kernel to construct. Currently the only option is 'gaussian' or
+        a user provided function.  If set to a user defined function, it should
+        take in two arguments: in order, a vector of distances between two
+        samples, and a length-scale parameter epsilon.  The units on epsilon
+        should be distance squared.
+
+    Returns
+    -------
+    kernel_function : callable
+        Function that takes in the distance and length-scale parameter, and outputs the value of the kernel.
+    """
+    if kernel_type.lower() == 'gaussian':
+        return lambda d, epsilon: np.exp(-d**2 / (epsilon))
+    elif callable(kernel_type):
+        return kernel_type
+    else:
+        raise("Error: Kernel type not understood.")
