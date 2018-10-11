@@ -144,10 +144,7 @@ def choose_optimal_epsilon_BGH(scaled_distsq, epsilons=None):
 
     Notes
     -----
-    Erik sez : I have a suspicion that the derivation here explicitly assumes that
-    the kernel is Gaussian.  However, I'm not sure.  Also, we should perhaps replace
-    this with some more intelligent optimization routine.  Here, I'm just
-    picking from several values and choosin the best.
+    This code explicitly assumes the kernel is gaussian, for now.
 
     References
     ----------
@@ -160,7 +157,7 @@ def choose_optimal_epsilon_BGH(scaled_distsq, epsilons=None):
         epsilons = 2**np.arange(-40., 41., 1.)
 
     epsilons = np.sort(epsilons).astype('float')
-    log_T = [logsumexp(-scaled_distsq/eps) for eps in epsilons]
+    log_T = [logsumexp(-scaled_distsq/(4. * eps)) for eps in epsilons]
     log_eps = np.log(epsilons)
     log_deriv = np.diff(log_T)/np.diff(log_eps)
     max_loc = np.argmax(log_deriv)
@@ -188,7 +185,7 @@ def _parse_kernel_type(kernel_type):
         Function that takes in the distance and length-scale parameter, and outputs the value of the kernel.
     """
     if kernel_type.lower() == 'gaussian':
-        return lambda d, epsilon: np.exp(-d**2 / (epsilon))
+        return lambda d, epsilon: np.exp(-d**2 / (4. * epsilon))
     elif callable(kernel_type):
         return kernel_type
     else:

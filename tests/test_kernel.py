@@ -31,7 +31,7 @@ class TestKernel(object):
             pw_distance = cdist(y_values_ref, x_values, metric='minkowski', p=metric_params['p'])
         else:
             pw_distance = cdist(y_values_ref, x_values, metric=metric)
-        true_values = np.exp(-1.*pw_distance**2/epsilon)
+        true_values = np.exp(-1.*pw_distance**2/(4. * epsilon))
 
         # Construct the kernel and fit to data.
         mykernel = kernel.Kernel(kernel_type='gaussian', metric=metric,
@@ -69,7 +69,7 @@ class TestKernel(object):
         mykernel = kernel.Kernel(kernel_type='gaussian', metric='euclidean',
                                  epsilon='bgh', k=10)
         mykernel.fit(X)
-        assert(mykernel.epsilon_fitted == 1.0)
+        assert(mykernel.epsilon_fitted == 0.25)
         assert(mykernel.d == 1.0)
 
 
@@ -81,5 +81,5 @@ class TestBGHEpsilonSelection(object):
         sq_dist = neigh.fit(X).kneighbors_graph(X, mode='distance').data**2.
         epsilons = 2**np.arange(-20., 20.)
         eps, d = kernel.choose_optimal_epsilon_BGH(sq_dist, epsilons)
-        assert(eps == 1.0)
+        assert(eps == 0.25)
         assert(d == 1.0)

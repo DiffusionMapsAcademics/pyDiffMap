@@ -15,6 +15,7 @@ New Features
 
 Tweaks and Modifications
 ~~~~~~~~~~~~~~~~~~~~~~~~
+* Changed from exp^(-d^2) to exp^(-d^2/4) convention.
 * Moved weight functionality into a function provided on initialization, 
   rather than input values, and added a helper function that allows values to
   be read from a lookup table.

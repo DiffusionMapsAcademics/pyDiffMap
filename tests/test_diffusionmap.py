@@ -6,7 +6,7 @@ from scipy.sparse import csr_matrix
 
 
 class TestDiffusionMap(object):
-    @pytest.mark.parametrize('epsilon', [0.005, 'bgh'])
+    @pytest.mark.parametrize('epsilon', [0.002, 'bgh'])
     def test_1Dstrip_evals(self, epsilon):
         """
         Test that we compute the correct eigenvalues on a 1d strip of length 2*pi.
@@ -22,14 +22,14 @@ class TestDiffusionMap(object):
         # Setup diffusion map
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=epsilon, alpha=1.0, k=20)
         mydmap.fit(data)
-        test_evals = -4./mydmap.epsilon_fitted*(mydmap.evals - 1)
+        test_evals = -1./mydmap.epsilon_fitted*(mydmap.evals - 1)
 
         # Check that relative error values are beneath tolerance.
         errors_eval = abs((test_evals - real_evals)/real_evals)
         total_error = np.max(errors_eval)
         assert(total_error < THRESH)
 
-    @pytest.mark.parametrize('epsilon', [0.005, 'bgh'])
+    @pytest.mark.parametrize('epsilon', [0.002, 'bgh'])
     def test_1Dstrip_evecs(self, epsilon):
         """
         Test that we compute the correct eigenvectors (cosines) on a 1d strip of length 2*pi.
@@ -53,7 +53,7 @@ class TestDiffusionMap(object):
         total_error = 1 - np.min(errors_evec)
         assert(total_error < THRESH)
 
-    @pytest.mark.parametrize('epsilon', [0.02, 'bgh'])
+    @pytest.mark.parametrize('epsilon', [0.005, 'bgh'])
     def test_1Dstrip_nonunif_evals(self, epsilon):
         """
         Test that we compute the correct eigenvalues on a 1d strip of length 2*pi with nonuniform sampling.
@@ -70,14 +70,15 @@ class TestDiffusionMap(object):
         # Setup diffusion map
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=epsilon, alpha=1.0, k=40)
         mydmap.fit_transform(data)
-        test_evals = -4./mydmap.epsilon_fitted*(mydmap.evals - 1)
+        test_evals = -1./mydmap.epsilon_fitted*(mydmap.evals - 1)
+        print(test_evals, real_evals, mydmap.epsilon_fitted)
 
         # Check that relative error values are beneath tolerance.
         errors_eval = abs((test_evals - real_evals)/real_evals)
         total_error = np.max(errors_eval)
         assert(total_error < THRESH)
 
-    @pytest.mark.parametrize('epsilon', [0.02, 'bgh'])
+    @pytest.mark.parametrize('epsilon', [0.005, 'bgh'])
     def test_1Dstrip_nonunif_evecs(self, epsilon):
         """
         Test that we compute the correct eigenvectors (cosines) on a 1d strip of length 2*pi with nonuniform sampling.
@@ -114,10 +115,10 @@ class TestDiffusionMap(object):
         data, X, Y = uniform_2d_data
         THRESH = 0.2
 
-        eps = 0.01
+        eps = 0.0025
         mydmap = dm.DiffusionMap(n_evecs=4, alpha=1.0, k=100, epsilon=eps)
         mydmap.fit(data)
-        test_evals = -4./mydmap.epsilon*(mydmap.evals - 1)
+        test_evals = -1./mydmap.epsilon*(mydmap.evals - 1)
 
         # Check that relative error values are beneath tolerance.
         errors_eval = abs((test_evals - real_evals)/real_evals)
@@ -136,7 +137,7 @@ class TestDiffusionMap(object):
         data, X, Y = uniform_2d_data
         THRESH = 0.01
 
-        eps = 0.01
+        eps = 0.0025
         mydmap = dm.DiffusionMap(n_evecs=4, alpha=1.0, k=100, epsilon=eps)
         mydmap.fit(data)
         errors_evec = []
@@ -159,10 +160,10 @@ class TestDiffusionMap(object):
         # Setup true values to test against.
         real_evals = np.array([2, 2, 2, 6])  # =l(l+1)
         THRESH = 0.1
-        eps = 0.05
+        eps = 0.015
         mydmap = dm.DiffusionMap(n_evecs=4, alpha=1.0, k=400, epsilon=eps)
         mydmap.fit(data)
-        test_evals = -4./mydmap.epsilon_fitted*(mydmap.evals - 1)
+        test_evals = -1./mydmap.epsilon_fitted*(mydmap.evals - 1)
 
         # Check eigenvalues pass below error tolerance.
         errors_eval = abs((test_evals - real_evals)/real_evals)
@@ -177,7 +178,7 @@ class TestDiffusionMap(object):
         """
         data, Phi, Theta = spherical_data
         THRESH = 0.001
-        eps = 0.05
+        eps = 0.015
         mydmap = dm.DiffusionMap(n_evecs=4, alpha=1.0, k=400, epsilon=eps)
         mydmap.fit(data)
         # rotate sphere so that maximum of first DC is at the north pole
@@ -222,7 +223,7 @@ class TestNystroem(object):
 
 
 class TestWeighting(object):
-    @pytest.mark.parametrize('epsilon', [0.005, 'bgh'])
+    @pytest.mark.parametrize('epsilon', [0.002, 'bgh'])
     @pytest.mark.parametrize('oos', [True, False])
     @pytest.mark.parametrize('dmap_method', ['base', 'TMDmap'])
     def test_1Dstrip_evecs(self, epsilon, oos, dmap_method):
@@ -260,14 +261,14 @@ class TestWeighting(object):
         mydmap.fit(data_x)
         evecs = mydmap.transform(data_y)
         errors_evec = []
-        for k in np.arange(4):
+        for k in range(4):
             errors_evec.append(abs(np.corrcoef(real_evecs[k], evecs[:, k])[0, 1]))
 
         # Check that relative evec error values are beneath tolerance.
         total_evec_error = 1 - np.min(errors_evec)
         assert(total_evec_error < EVEC_THRESH)
         # Check that relative eval error values are beneath tolerance.
-        test_evals = -4./mydmap.epsilon_fitted*(mydmap.evals - 1)
+        test_evals = -1./mydmap.epsilon_fitted*(mydmap.evals - 1)
         errors_eval = abs((test_evals - real_evals)/real_evals)
         total_eval_error = np.min(errors_eval)
         assert(total_eval_error < EVAL_THRESH)
