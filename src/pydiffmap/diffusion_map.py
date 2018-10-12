@@ -68,6 +68,12 @@ class DiffusionMap(object):
         kernel_matrix = _symmetrize_matrix(my_kernel.compute(X))
         return kernel_matrix, my_kernel
 
+    def _compute_weights(self, X, kernel_matrix, Y):
+        if self.weight_fxn is not None:
+            return utils.sparse_from_fxn(X, kernel_matrix, self.weight_fxn, Y)
+        else:
+            return None
+
     def _make_right_norm_vec(self, kernel_matrix):
         q = np.array(kernel_matrix.sum(axis=1)).ravel()
         right_norm_vec = np.power(q, -self.alpha)
@@ -110,10 +116,7 @@ class DiffusionMap(object):
         self : the object itself
         """
         kernel_matrix, my_kernel = self._compute_kernel(X)
-        if self.weight_fxn is not None:
-            weights = utils.sparse_from_fxn(X, kernel_matrix, self.weight_fxn, X)
-        else:
-            weights = None
+        weights = self._compute_weights(X, kernel_matrix, X)
 
         q, right_norm_vec = self._make_right_norm_vec(kernel_matrix)
         P = self._apply_normalizations(kernel_matrix, right_norm_vec, weights)
@@ -134,6 +137,15 @@ class DiffusionMap(object):
         self.dmap = dmap
         return self
 
+    def _build_oos_kmat(self, Y):
+        m = Y.shape[0]
+        kernel_yx = self.local_kernel.compute(Y)  # Evaluate on ref points
+        self_val = self.local_kernel.kernel_fxn(0, self.epsilon_fitted)
+        kernel_yy_diag = np.ones(m) * self_val
+        kernel_yy = sps.spdiags(kernel_yy_diag, 0, m, m)
+        print(kernel_yx.shape)
+        return sps.hstack([kernel_yx, kernel_yy])
+
     def transform(self, Y):
         """
         Performs Nystroem out-of-sample extension to calculate the values of the diffusion coordinates at each given point.
@@ -152,17 +164,29 @@ class DiffusionMap(object):
         if np.array_equal(self.data, Y):
             return self.dmap
         else:
-            # turn x into array if needed
+            # reformat Y if needed.
             if (Y.ndim == 1):
                 Y = Y[np.newaxis, :]
+            m = Y.shape[0]
 
-            kernel_extended = self.local_kernel.compute(Y)
-            if self.weight_fxn is not None:
-                weights = utils.sparse_from_fxn(self.local_kernel.data, kernel_extended, self.weight_fxn, Y)
-            else:
-                weights = None
-            P = self._apply_normalizations(kernel_extended, self.right_norm_vec, weights)
-            return P * self.evecs
+            # FIX THIS INCORRIGIBLE MESS
+            kernel_yx = self.local_kernel.compute(Y)  # Evaluate on ref points
+            right_norm_vec = self._make_right_norm_vec(kernel_extended)[1]
+
+            self_val = self.local_kernel.kernel_fxn(0, self.epsilon_fitted)
+            data_extended = np.vstack([self.local_kernel.data, Y])
+            weights = self._compute_weights(data_extended, kernel_extended, Y)
+            print(kernel_extended.shape, 'rnvs')
+            right_norm_vec = self._make_right_norm_vec(kernel_extended)[1]
+            print(right_norm_vec.shape, 'rnvs')
+            P = self._apply_normalizations(kernel_extended, right_norm_vec, weights)
+            print(P.sum(axis=1))
+            P_yx = P[:, :-m]
+            P_yy = np.array(P[:, -m:].diagonal())
+            print(P_yy.shape, 'P_yy shape')
+            adj_evals = self.evals - P_yy
+            dot_part = np.array(P_yx.dot(self.evecs))
+            return (1. / adj_evals) * dot_part
 
     def fit_transform(self, X):
         """

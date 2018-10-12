@@ -30,7 +30,7 @@ class Kernel(object):
     """
 
     def __init__(self, kernel_type='gaussian', epsilon='bgh', k=64, neighbor_params=None, metric='euclidean', metric_params=None):
-        self.kernel_function = _parse_kernel_type(kernel_type)
+        self.kernel_fxn = _parse_kernel_type(kernel_type)
         self.epsilon = epsilon
         self.k = k
         self.metric = metric
@@ -88,7 +88,7 @@ class Kernel(object):
         K = self.neigh.kneighbors_graph(Y, mode='distance')
         # retrieve all nonzero elements and apply kernel function to it
         v = K.data
-        K.data = self.kernel_function(v, self.epsilon_fitted)
+        K.data = self.kernel_fxn(v, self.epsilon_fitted)
         return K
 
     def choose_optimal_epsilon(self, epsilon=None):
@@ -181,7 +181,7 @@ def _parse_kernel_type(kernel_type):
 
     Returns
     -------
-    kernel_function : callable
+    kernel_fxn : callable
         Function that takes in the distance and length-scale parameter, and outputs the value of the kernel.
     """
     if kernel_type.lower() == 'gaussian':
