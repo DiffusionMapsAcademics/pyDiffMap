@@ -12,6 +12,7 @@ New Features
 * Added a utility for building a sparse matrix from a function on the data.
 * (Re)added separate TMDmap class wrapping base diffusion map class to 
   allow for easier construction of TMDmaps. 
+* Added a new out-of-sample extension method that should work for variable bandwidth methods.
 
 Tweaks and Modifications
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -19,6 +20,8 @@ Tweaks and Modifications
 * Moved weight functionality into a function provided on initialization, 
   rather than input values, and added a helper function that allows values to
   be read from a lookup table.
+* Improved the Diffusion Map test suite.
+* Moved out-of-sample routines into separate functions.
 
 Bugfixes
 ~~~~~~~~
