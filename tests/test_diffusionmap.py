@@ -225,7 +225,7 @@ class TestNystroem(object):
 
 class TestWeighting(object):
     @pytest.mark.parametrize('epsilon', [0.002, 'bgh'])
-    @pytest.mark.parametrize('oos', [True, False])
+    @pytest.mark.parametrize('oos', ['power', 'nystroem', False])
     @pytest.mark.parametrize('dmap_method', ['base', 'TMDmap'])
     def test_1Dstrip_evecs(self, epsilon, oos, dmap_method):
         """
@@ -237,11 +237,14 @@ class TestWeighting(object):
         probabalists Hermite polynomials.
         """
         # Setup data and accuracy threshold
-        X = np.linspace(-5., 5., 201)
-        if oos:
-            Y = np.linspace(-5., 5., 151)
-        else:
+        # X = np.linspace(-5., 5., 201)
+        X = np.linspace(0, 2.5, 101)**2
+        X = np.hstack([-1 * np.copy(X[1:][::-1]), X])
+        if not oos:
             Y = X
+            oos = 'nystroem'
+        else:
+            Y = np.linspace(-5., 5., 101)
         data_x = np.array([X]).transpose()
         data_y = np.array([Y]).transpose()
         EVEC_THRESH = 0.005
@@ -253,10 +256,10 @@ class TestWeighting(object):
         # Setup diffusion map
         if dmap_method == 'TMDmap':
             com_fxn = lambda y_j: np.exp(-.5*np.dot(y_j, y_j))
-            mydmap = dm.TargetMeasureDiffusionMap(alpha=1., n_evecs=4, epsilon=epsilon, k=100, change_of_measure=com_fxn)
+            mydmap = dm.TargetMeasureDiffusionMap(alpha=1., n_evecs=4, epsilon=epsilon, k=100, change_of_measure=com_fxn, oos=oos)
         else:
             weight_fxn = lambda x_i, y_j: np.exp(-.25*np.dot(y_j, y_j))
-            mydmap = dm.DiffusionMap(alpha=1., n_evecs=4, epsilon=epsilon, k=100, weight_fxn=weight_fxn)
+            mydmap = dm.DiffusionMap(alpha=1., n_evecs=4, epsilon=epsilon, k=100, weight_fxn=weight_fxn, oos=oos)
 
         # Fit data and build dmap
         mydmap.fit(data_x)
