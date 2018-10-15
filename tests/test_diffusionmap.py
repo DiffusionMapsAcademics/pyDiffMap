@@ -195,7 +195,8 @@ class TestDiffusionMap(object):
 
 
 class TestNystroem(object):
-    def test_2Dstrip_nystroem(self, uniform_2d_data):
+    @pytest.mark.parametrize('method', ['nystroem', 'power'])
+    def test_2Dstrip_nystroem(self, uniform_2d_data, method):
         """
         Test the nystroem extension in the transform() function.
         """
@@ -204,7 +205,7 @@ class TestNystroem(object):
         THRESH = 0.01
         # Setup diffusion map
         eps = 0.01
-        mydmap = dm.DiffusionMap(n_evecs=1, alpha=1.0, k=100, epsilon=eps)
+        mydmap = dm.DiffusionMap(n_evecs=1, alpha=1.0, k=100, epsilon=eps, oos=method)
         mydmap.fit(data)
         # Setup values to test against (regular grid)
         x_test, y_test = np.meshgrid(np.linspace(0, 2*np.pi, 80), np.linspace(0, np.pi, 40))

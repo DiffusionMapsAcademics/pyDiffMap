@@ -33,6 +33,10 @@ class DiffusionMap(object):
         Metric for distances in the kernel. Default is 'euclidean'. The callable should take two arrays as input and return one value indicating the distance between them.
     metric_params : dict or None, optional
         Optional parameters required for the metric given.
+    weight_fxn : callable or None, optional
+        Callable function that take in two points (X_i and X_j), and outputs the value of the weight matrix at those points.
+    oos : 'nystroem' or 'power', optional
+        Method to use for out-of-sample extension.
 
     Examples
     --------
@@ -44,7 +48,7 @@ class DiffusionMap(object):
 
     """
 
-    def __init__(self, alpha=0.5, k=64, kernel_type='gaussian', epsilon='bgh', n_evecs=1, neighbor_params=None, metric='euclidean', metric_params=None, weight_fxn=None):
+    def __init__(self, alpha=0.5, k=64, kernel_type='gaussian', epsilon='bgh', n_evecs=1, neighbor_params=None, metric='euclidean', metric_params=None, weight_fxn=None, oos='nystroem'):
         """
         Initializes Diffusion Map, sets parameters.
         """
@@ -59,6 +63,7 @@ class DiffusionMap(object):
         self.epsilon_fitted = None
         self.d = None
         self.weight_fxn = weight_fxn
+        self.oos = oos
 
     def _compute_kernel(self, X):
         my_kernel = kernel.Kernel(kernel_type=self.kernel_type, k=self.k,
@@ -137,15 +142,6 @@ class DiffusionMap(object):
         self.dmap = dmap
         return self
 
-    def _build_oos_kmat(self, Y):
-        m = Y.shape[0]
-        kernel_yx = self.local_kernel.compute(Y)  # Evaluate on ref points
-        self_val = self.local_kernel.kernel_fxn(0, self.epsilon_fitted)
-        kernel_yy_diag = np.ones(m) * self_val
-        kernel_yy = sps.spdiags(kernel_yy_diag, 0, m, m)
-        print(kernel_yx.shape)
-        return sps.hstack([kernel_yx, kernel_yy])
-
     def transform(self, Y):
         """
         Performs Nystroem out-of-sample extension to calculate the values of the diffusion coordinates at each given point.
@@ -160,33 +156,19 @@ class DiffusionMap(object):
         phi : numpy array, shape (n_query, n_eigenvectors)
             Transformed value of the given values.
         """
-        # check if Y is equal to data. If yes, no computation needed.
         if np.array_equal(self.data, Y):
             return self.dmap
         else:
-            # reformat Y if needed.
+            # turn Y into 2D array if needed
             if (Y.ndim == 1):
                 Y = Y[np.newaxis, :]
-            m = Y.shape[0]
 
-            # FIX THIS INCORRIGIBLE MESS
-            kernel_yx = self.local_kernel.compute(Y)  # Evaluate on ref points
-            right_norm_vec = self._make_right_norm_vec(kernel_extended)[1]
-
-            self_val = self.local_kernel.kernel_fxn(0, self.epsilon_fitted)
-            data_extended = np.vstack([self.local_kernel.data, Y])
-            weights = self._compute_weights(data_extended, kernel_extended, Y)
-            print(kernel_extended.shape, 'rnvs')
-            right_norm_vec = self._make_right_norm_vec(kernel_extended)[1]
-            print(right_norm_vec.shape, 'rnvs')
-            P = self._apply_normalizations(kernel_extended, right_norm_vec, weights)
-            print(P.sum(axis=1))
-            P_yx = P[:, :-m]
-            P_yy = np.array(P[:, -m:].diagonal())
-            print(P_yy.shape, 'P_yy shape')
-            adj_evals = self.evals - P_yy
-            dot_part = np.array(P_yx.dot(self.evecs))
-            return (1. / adj_evals) * dot_part
+            if self.oos == "nystroem":
+                return nystroem_oos(self, Y)
+            elif self.oos == "power":
+                return power_oos(self, Y)
+            else:
+                raise ValueError('Did not understand the OOS algorithm specified')
 
     def fit_transform(self, X):
         """
@@ -228,21 +210,25 @@ class TargetMeasureDiffusionMap(DiffusionMap):
         Metric for distances in the kernel. Default is 'euclidean'. The callable should take two arrays as input and return one value indicating the distance between them.
     metric_params : dict or None, optional
         Optional parameters required for the metric given.
+    change_of_measure : callable, optional
+        Function that takes in a point and evaluates the change-of-measure between the density otherwise stationary to the diffusion map and the desired density.
+    oos : 'nystroem' or 'power', optional
+        Method to use for out-of-sample extension.
     """
-    def __init__(self, alpha=0.5, k=64, kernel_type='gaussian', epsilon='bgh', n_evecs=1, neighbor_params=None, metric='euclidean', metric_params=None, change_of_measure=None):
-        # super(DiffusionMap, self).__init__(alpha=alpha, k=k, kernel_type=kernel_type, epsilon=epsilon, n_evecs=n_evecs, neighbor_params=neighbor_params, metric=metric, metric_params=metric_params, weight_fxn=weight_fxn)
-        super(DiffusionMap, self).__init__()
-        self.alpha = alpha
-        self.k = k
-        self.kernel_type = kernel_type
-        self.epsilon = epsilon
-        self.n_evecs = n_evecs
-        self.neighbor_params = neighbor_params
-        self.metric = metric
-        self.metric_params = metric_params
-        self.epsilon_fitted = None
-        self.d = None
-        self.weight_fxn = lambda x_i, y_i: np.sqrt(change_of_measure(y_i))
+    def __init__(self, alpha=0.5, k=64, kernel_type='gaussian', epsilon='bgh', n_evecs=1, neighbor_params=None, metric='euclidean', metric_params=None, change_of_measure=None, oos='nystroem'):
+        weight_fxn = lambda x_i, y_i: np.sqrt(change_of_measure(y_i))
+        super(TargetMeasureDiffusionMap, self).__init__(alpha=alpha, k=k, kernel_type=kernel_type, epsilon=epsilon, n_evecs=n_evecs, neighbor_params=neighbor_params, metric=metric, metric_params=metric_params, weight_fxn=weight_fxn)
+        # super(DiffusionMap, self).__init__()
+        # self.alpha = alpha
+        # self.k = k
+        # self.kernel_type = kernel_type
+        # self.epsilon = epsilon
+        # self.n_evecs = n_evecs
+        # self.neighbor_params = neighbor_params
+        # self.metric = metric
+        # self.metric_params = metric_params
+        # self.epsilon_fitted = None
+        # self.d = None
 
 
 def _symmetrize_matrix(K, mode='average'):
@@ -278,3 +264,60 @@ def _symmetrize_matrix(K, mode='average'):
         return 0.5*K
     else:
         raise ValueError('Did not understand symmetrization method')
+
+
+def nystroem_oos(dmap_object, Y):
+    """
+    Performs Nystroem out-of-sample extension to calculate the values of the diffusion coordinates at each given point.
+
+    Parameters
+    ----------
+    dmap_object : DiffusionMap object
+        Diffusion map upon which to perform the out-of-sample extension.
+    Y : array-like, shape (n_query, n_features)
+        Data for which to perform the out-of-sample extension.
+
+    Returns
+    -------
+    phi : numpy array, shape (n_query, n_eigenvectors)
+        Transformed value of the given values.
+    """
+    # check if Y is equal to data. If yes, no computation needed.
+    # compute the values of the kernel matrix
+    kernel_extended = dmap_object.local_kernel.compute(Y)
+    P = dmap_object._apply_normalizations(kernel_extended, dmap_object.right_norm_vec)
+    return P * dmap_object.evecs
+
+
+def power_oos(dmap_object, Y):
+    """
+    Performs out-of-sample extension to calculate the values of the diffusion coordinates at each given point using the power-like method.
+
+    Parameters
+    ----------
+    dmap_object : DiffusionMap object
+        Diffusion map upon which to perform the out-of-sample extension.
+    Y : array-like, shape (n_query, n_features)
+        Data for which to perform the out-of-sample extension.
+
+    Returns
+    -------
+    phi : numpy array, shape (n_query, n_eigenvectors)
+        Transformed value of the given values.
+    """
+    m = int(Y.shape[0])
+    k_yx = dmap_object.local_kernel.compute(Y)  # Evaluate on ref points
+    yy_right_norm_vec = dmap_object._make_right_norm_vec(k_yx)[1]
+
+    k_yy_diag = dmap_object.local_kernel.kernel_fxn(0, dmap_object.epsilon_fitted)
+    data_full = np.vstack([dmap_object.local_kernel.data, Y])
+    k_full = sps.hstack([k_yx, sps.eye(m) * k_yy_diag])
+    right_norm_full = np.hstack([dmap_object.right_norm_vec, yy_right_norm_vec])
+    weights = dmap_object._compute_weights(data_full, k_full, Y)
+
+    P = dmap_object._apply_normalizations(k_full, right_norm_full, weights)
+    P_yx = P[:, :-m]
+    P_yy = np.array(P[:, -m:].diagonal())
+    adj_evals = dmap_object.evals - P_yy.reshape(-1, 1)
+    dot_part = np.array(P_yx.dot(dmap_object.evecs))
+    return (1. / adj_evals) * dot_part
