@@ -35,6 +35,8 @@ class DiffusionMap(object):
         Optional parameters required for the metric given.
     weight_fxn : callable or None, optional
         Callable function that take in two points (X_i and X_j), and outputs the value of the weight matrix at those points.
+    density_fxn : callable or None, optional
+        Callable function that take in X, and outputs the value of the density of X. Used instead of kernel density estimation in the normalisation.
     oos : 'nystroem' or 'power', optional
         Method to use for out-of-sample extension.
 
@@ -48,7 +50,8 @@ class DiffusionMap(object):
 
     """
 
-    def __init__(self, alpha=0.5, k=64, kernel_type='gaussian', epsilon='bgh', n_evecs=1, neighbor_params=None, metric='euclidean', metric_params=None, weight_fxn=None, oos='nystroem'):
+    def __init__(self, alpha=0.5, k=64, kernel_type='gaussian', epsilon='bgh', n_evecs=1, neighbor_params=None, \
+    metric='euclidean', metric_params=None, weight_fxn=None, density_fxn=None, oos='nystroem'):
         """
         Initializes Diffusion Map, sets parameters.
         """
@@ -64,6 +67,7 @@ class DiffusionMap(object):
         self.d = None
         self.weight_fxn = weight_fxn
         self.oos = oos
+        self.density_fxn = density_fxn
 
     def _compute_kernel(self, X):
         my_kernel = kernel.Kernel(kernel_type=self.kernel_type, k=self.k,
@@ -79,8 +83,12 @@ class DiffusionMap(object):
         else:
             return None
 
-    def _make_right_norm_vec(self, kernel_matrix):
-        q = np.array(kernel_matrix.sum(axis=1)).ravel()
+    def _make_right_norm_vec(self, kernel_matrix, q=None):
+        if q is None:
+            # perform kde
+            q = np.array(kernel_matrix.sum(axis=1)).ravel()
+
+        # Right normalization
         right_norm_vec = np.power(q, -self.alpha)
         return q, right_norm_vec
 
@@ -123,7 +131,11 @@ class DiffusionMap(object):
         kernel_matrix, my_kernel = self._compute_kernel(X)
         weights = self._compute_weights(X, kernel_matrix, X)
 
-        q, right_norm_vec = self._make_right_norm_vec(kernel_matrix)
+        if self.density_fxn is not None:
+            density = self.density_fxn(X)
+        else:
+            density = None
+        q, right_norm_vec = self._make_right_norm_vec(kernel_matrix, q=density)
         P = self._apply_normalizations(kernel_matrix, right_norm_vec, weights)
         dmap, evecs, evals = self._make_diffusion_coords(P)
 
@@ -212,12 +224,14 @@ class TargetMeasureDiffusionMap(DiffusionMap):
         Optional parameters required for the metric given.
     change_of_measure : callable, optional
         Function that takes in a point and evaluates the change-of-measure between the density otherwise stationary to the diffusion map and the desired density.
+    density_fxn : callable or None, optional
+        Callable function that take in X, and outputs the value of the density of X. Used instead of kernel density estimation in the normalisation.
     oos : 'nystroem' or 'power', optional
         Method to use for out-of-sample extension.
     """
-    def __init__(self, alpha=0.5, k=64, kernel_type='gaussian', epsilon='bgh', n_evecs=1, neighbor_params=None, metric='euclidean', metric_params=None, change_of_measure=None, oos='nystroem'):
+    def __init__(self, alpha=0.5, k=64, kernel_type='gaussian', epsilon='bgh', n_evecs=1, neighbor_params=None, metric='euclidean', metric_params=None, change_of_measure=None, density_fxn=None, oos='nystroem'):
         weight_fxn = lambda x_i, y_i: np.sqrt(change_of_measure(y_i))
-        super(TargetMeasureDiffusionMap, self).__init__(alpha=alpha, k=k, kernel_type=kernel_type, epsilon=epsilon, n_evecs=n_evecs, neighbor_params=neighbor_params, metric=metric, metric_params=metric_params, weight_fxn=weight_fxn)
+        super(TargetMeasureDiffusionMap, self).__init__(alpha=alpha, k=k, kernel_type=kernel_type, epsilon=epsilon, n_evecs=n_evecs, neighbor_params=neighbor_params, metric=metric, metric_params=metric_params, weight_fxn=weight_fxn, density_fxn=density_fxn)
         # super(DiffusionMap, self).__init__()
         # self.alpha = alpha
         # self.k = k
