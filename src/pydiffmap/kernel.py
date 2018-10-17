@@ -4,10 +4,12 @@ A class to implement diffusion kernels.
 
 import numbers
 import numpy as np
+import numexpr as ne
 import scipy.sparse as sps
 import warnings
 from scipy.special import logsumexp
 from sklearn.neighbors import NearestNeighbors
+from six import string_types
 from . import utils
 
 
@@ -31,7 +33,7 @@ class Kernel(object):
         Optional parameters required for the metric given.
     """
 
-    def __init__(self, kernel_type='gaussian', epsilon='bgh', k=64, neighbor_params=None, metric='euclidean', metric_params=None, bandwidth_fxn=None):
+    def __init__(self, kernel_type='gaussian', epsilon='bgh', k=64, neighbor_params=None, metric='euclidean', metric_params=None, bandwidth_type=None):
         self.kernel_fxn = _parse_kernel_type(kernel_type)
         self.epsilon = epsilon
         self.k = k
@@ -40,9 +42,46 @@ class Kernel(object):
         if neighbor_params is None:
             neighbor_params = {}
         self.neighbor_params = neighbor_params
-        self.bandwidth_fxn = bandwidth_fxn
+        self.bandwidth_type = bandwidth_type
         self.d = None
         self.epsilon_fitted = None
+
+    def build_bandwidth_fxn(self, bandwidth_type):
+        """
+        Parses an input string or function specifying the bandwidth.
+
+        Parameters
+        ----------
+        bandwidth_fxn : string or number or callable
+            Bandwidth to use.  If a number, taken to be the beta parameter in [2]_.
+            If a string, taken to again be beta, but with an evaluatable
+            expression as a function of the intrinsic dimension d, e.g. '1/(d+2)'.
+            If a function, taken to be a function that outputs the bandwidth.
+
+        References
+        ----------
+        .. [1] T. Berry, and J. Harlim, Applied and Computational Harmonic Analysis 40, 68-96
+           (2016).
+        """
+        if callable(self.bandwidth_type):
+            return self.bandwidth_type
+        else:
+            is_string = isinstance(self.bandwidth_type, string_types)
+            is_number = isinstance(self.bandwidth_type, numbers.Number)
+            if (is_string or is_number):
+                kde_function, d = self._build_nn_kde(self.neigh)
+                if is_string:
+                    beta = ne.evaluate(self.bandwidth_type)
+                bandwidth_fxn = lambda x: kde_function(x)**beta
+                return bandwidth_fxn
+            else:
+                raise ValueError("Bandwidth Type was not a callable, string, or number.  Don't know what to make of it.")
+
+    def _build_nn_kde(self, num_nearest_neighbors=8):
+        my_nnkde = NNKDE(kernel_type=self.kernel_type, k=num_nearest_neighbors)
+        my_nnkde.fit(self.data)
+        bandwidth_fxn = lambda x: my_nnkde.compute(x)
+        return bandwidth_fxn
 
     def _compute_bandwidths(self, X):
         if self.bandwidth_fxn is not None:
@@ -73,6 +112,7 @@ class Kernel(object):
                                           metric_params=self.metric_params,
                                           **self.neighbor_params)
         self.neigh.fit(X)
+        self._build_bandwidth_fxn()
         self.bandwidths = self._compute_bandwidths(X)
         self.choose_optimal_epsilon()
         return self
@@ -108,20 +148,10 @@ class Kernel(object):
         # Scales distance matrix by (rho(x) rho(y))^1/2, where rho is the
         # bandwidth.
         dists = self.neigh.kneighbors_graph(Y, mode='distance')
-        m, n = dists.shape
         if y_bandwidths is not None:
-            x_bw_diag = sps.spdiags(np.power(self.bandwidths, -0.5), 0, n, n).tocsr()
-            y_bw_diag = sps.spdiags(np.power(y_bandwidths, -0.5), 0, m, m).tocsr()
-
-            # Scale distances by bandwidth. This complement procedure is needed
-            # to ensure that explicit zeros are preserved, which doesn't happen
-            # with regular sparse matrix multiplication.
-            row, col = utils._get_sparse_row_col(dists)
-            inv_bw = sps.csr_matrix((np.ones(dists.data.shape), (row, col)), shape=dists.shape)
-            inv_bw = y_bw_diag * inv_bw * x_bw_diag
-            dists.sort_indices()
-            inv_bw.sort_indices()
-            dists.data = dists.data * inv_bw.data
+            bw_x = np.power(self.bandwidths, 0.5)
+            bw_y = np.power(y_bandwidths, 0.5)
+            dists = _scale_by_bw(dists, bw_x, bw_y)
         return dists
 
     def choose_optimal_epsilon(self, epsilon=None):
@@ -153,6 +183,45 @@ class Kernel(object):
         else:
             raise ValueError("Method for automatically choosing epsilon was given as %s, but this was not recognized" % epsilon)
         return self
+
+
+class NNKDE(object):
+    """
+    Class building a kernel density estimate with a bandwidth build from the k nearest neighbors.
+
+    """
+
+    def __init__(self, neighbors, epsilon='bgh', k=8):
+        self.neigh = neighbors
+        self.kernel_fxn = _parse_kernel_type('gaussian')
+        self.epsilon = epsilon
+        self.k = k
+
+    def fit(self):
+        """
+        Fits the kde object to the data provided in the nearest neighbor object.
+        """
+        dist_graph_sq = self.neigh.kneighbors_graph(n_neighbors=self.k+1, mode='distance')
+        n = dist_graph_sq.shape[0]
+        dist_graph_sq.data = dist_graph_sq.data**2
+        # self.bandwidths = np.sqrt(np.array(dist_graph_sq.sum(axis=1))/(self.k+1)).ravel()
+        self.bandwidths = np.ones(n)
+        dist_graph_sq = _scale_by_bw(dist_graph_sq, self.bandwidths, self.bandwidths)
+        sq_dists = np.hstack([dist_graph_sq.data, np.zeros(n)])
+        self.epsilon, self.d = choose_optimal_epsilon_BGH(sq_dists)
+
+    def compute(self, Y):
+        dist_bw = self.neigh.kneighbors_graph(Y, mode='distance', n_neighbors=self.k+1)
+        # y_bandwidths = np.sqrt(np.array(dist_bw.sum(axis=1))/self.neigh.n_neighbors).ravel()
+        y_bandwidths = np.ones(Y.shape[0])
+        K = self.neigh.kneighbors_graph(Y, mode='distance')
+        K.data = K.data**2
+        K = _scale_by_bw(K, self.bandwidths, y_bandwidths)
+        K.data = np.exp(-0.5 * K.data / self.epsilon)
+        density = np.array(K.sum(axis=1)).ravel()
+        density /= (2 * np.pi * self.epsilon)**(self.d / 2.)
+        density /= y_bandwidths**self.d * self.neigh.n_neighbors
+        return density
 
 
 def choose_optimal_epsilon_BGH(scaled_distsq, epsilons=None):
@@ -222,3 +291,34 @@ def _parse_kernel_type(kernel_type):
         return kernel_type
     else:
         raise("Error: Kernel type not understood.")
+
+
+def _scale_by_bw(d_yx, bw_x, bw_y):
+    """
+    Scale a distance matrix with the bandwidth functions while retaining explicit zeros.
+    Note that this reorders the indices in d_yx.
+
+    Parameters
+    ----------
+    d_yx : scipy sparse matrix
+        Sparse matrix whose i,j'th element corresponds to f(y_i, x_j)
+    dw_x : numpy array
+        Array of bandwidth values evaluated at each x_i
+    dw_y : numpy array
+        Array of bandwidth values evaluated at each y_i
+
+    Returns
+    ------
+    scaled_d_yx : scipy sparse matrix
+        Sparse matrix whose i,j'th element corresponds to f(y_i, x_j)/ bw[y_i] bw[x_j]
+    """
+    m, n = d_yx.shape
+    x_bw_diag = sps.spdiags(np.power(bw_x, -1), 0, n, n)
+    y_bw_diag = sps.spdiags(np.power(bw_y, -1), 0, m, m)
+    row, col = utils._get_sparse_row_col(d_yx)
+    inv_bw = sps.csr_matrix((np.ones(d_yx.data.shape), (row, col)), shape=d_yx.shape)
+    inv_bw = y_bw_diag * inv_bw * x_bw_diag
+    d_yx.sort_indices()
+    inv_bw.sort_indices()
+    d_yx.data = d_yx.data * inv_bw.data
+    return d_yx

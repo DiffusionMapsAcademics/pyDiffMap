@@ -23,6 +23,7 @@ Tweaks and Modifications
   be read from a lookup table.
 * Improved the Diffusion Map test suite.
 * Moved out-of-sample routines into separate functions.
+* Moved matrix symmetrization into newly made utility file.
 
 Bugfixes
 ~~~~~~~~

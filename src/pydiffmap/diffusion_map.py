@@ -76,7 +76,7 @@ class DiffusionMap(object):
                                   metric=self.metric, metric_params=self.metric_params,
                                   bandwidth_fxn=self.bandwidth_fxn)
         my_kernel.fit(X)
-        kernel_matrix = _symmetrize_matrix(my_kernel.compute(X))
+        kernel_matrix = utils._symmetrize_matrix(my_kernel.compute(X))
         return kernel_matrix, my_kernel
 
     def _compute_weights(self, X, kernel_matrix, Y):
@@ -237,52 +237,6 @@ class TargetMeasureDiffusionMap(DiffusionMap):
     def __init__(self, alpha=0.5, k=64, kernel_type='gaussian', epsilon='bgh', n_evecs=1, neighbor_params=None, metric='euclidean', metric_params=None, change_of_measure=None, bandwidth_fxn=None, bandwidth_normalize=False, oos='nystroem'):
         weight_fxn = lambda x_i, y_i: np.sqrt(change_of_measure(y_i))
         super(TargetMeasureDiffusionMap, self).__init__(alpha=alpha, k=k, kernel_type=kernel_type, epsilon=epsilon, n_evecs=n_evecs, neighbor_params=neighbor_params, metric=metric, metric_params=metric_params, weight_fxn=weight_fxn)
-        # super(DiffusionMap, self).__init__()
-        # self.alpha = alpha
-        # self.k = k
-        # self.kernel_type = kernel_type
-        # self.epsilon = epsilon
-        # self.n_evecs = n_evecs
-        # self.neighbor_params = neighbor_params
-        # self.metric = metric
-        # self.metric_params = metric_params
-        # self.epsilon_fitted = None
-        # self.d = None
-
-
-def _symmetrize_matrix(K, mode='average'):
-    """
-    Symmetrizes a sparse kernel matrix.
-
-    Parameters
-    ----------
-    K : scipy sparse matrix
-        The sparse matrix to be symmetrized, with positive elements on the nearest neighbors.
-    mode : string
-        The method of symmetrization to be implemented.  Current options are 'average', 'and', and 'or'.
-
-    Returns
-    -------
-    K_sym : scipy sparse matrix
-        Symmetrized kernel matrix.
-    """
-
-    if mode == 'average':
-        return 0.5*(K + K.transpose())
-    elif mode == 'or':
-        Ktrans = K.transpose()
-        dK = abs(K - Ktrans)
-        K = K + Ktrans
-        K = K + dK
-        return 0.5*K
-    elif mode == 'and':
-        Ktrans = K.transpose()
-        dK = abs(K - Ktrans)
-        K = K + Ktrans
-        K = K - dK
-        return 0.5*K
-    else:
-        raise ValueError('Did not understand symmetrization method')
 
 
 def nystroem_oos(dmap_object, Y):

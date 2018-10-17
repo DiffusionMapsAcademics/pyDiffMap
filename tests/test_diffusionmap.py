@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 
 from pydiffmap import diffusion_map as dm
-from scipy.sparse import csr_matrix
 
 
 class TestDiffusionMap(object):
@@ -318,25 +317,3 @@ class TestBandwidths(object):
         # Check that relative error values are beneath tolerance.
         total_error = 1 - np.array(errors_evec)
         assert((total_error < THRESHS).all())
-
-
-class TestSymmetrization():
-    test_mat = csr_matrix([[0, 2.], [0, 3.]])
-
-    def test_and_symmetrization(self):
-        ref_mat = np.array([[0, 0], [0, 3.]])
-        symmetrized = dm._symmetrize_matrix(self.test_mat, mode='and')
-        symmetrized = symmetrized.toarray()
-        assert (np.linalg.norm(ref_mat - symmetrized) == 0.)
-
-    def test_or_symmetrization(self):
-        ref_mat = np.array([[0, 2.], [2., 3.]])
-        symmetrized = dm._symmetrize_matrix(self.test_mat, mode='or')
-        symmetrized = symmetrized.toarray()
-        assert (np.linalg.norm(ref_mat - symmetrized) == 0.)
-
-    def test_avg_symmetrization(self):
-        ref_mat = np.array([[0, 1.], [1., 3.]])
-        symmetrized = dm._symmetrize_matrix(self.test_mat, mode='average')
-        symmetrized = symmetrized.toarray()
-        assert (np.linalg.norm(ref_mat - symmetrized) == 0.)
