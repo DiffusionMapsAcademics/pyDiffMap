@@ -62,12 +62,15 @@ def sparse_from_fxn(X, K, function, Y=None):
     """
     if Y is None:
         Y = X
-    knn_graph = K.tocoo()
-    row = knn_graph.row
-    col = knn_graph.col
+    row, col = _get_sparse_row_col(K)
 
     fxn_vals = []
     for i, j in zip(row, col):
         fxn_vals.append(function(Y[i], X[j]))
     fxn_vals = np.array(fxn_vals)
-    return sps.csr_matrix((fxn_vals, (row, col)), shape=knn_graph.shape)
+    return sps.csr_matrix((fxn_vals, (row, col)), shape=K.shape)
+
+
+def _get_sparse_row_col(sparse_mat):
+    sparse_mat = sparse_mat.tocoo()
+    return sparse_mat.row, sparse_mat.col

@@ -71,7 +71,6 @@ class TestDiffusionMap(object):
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=epsilon, alpha=1.0, k=40)
         mydmap.fit_transform(data)
         test_evals = -1./mydmap.epsilon_fitted*(mydmap.evals - 1)
-        print(test_evals, real_evals, mydmap.epsilon_fitted)
 
         # Check that relative error values are beneath tolerance.
         errors_eval = abs((test_evals - real_evals)/real_evals)
@@ -276,6 +275,49 @@ class TestWeighting(object):
         errors_eval = abs((test_evals - real_evals)/real_evals)
         total_eval_error = np.min(errors_eval)
         assert(total_eval_error < EVAL_THRESH)
+
+
+class TestBandwidths(object):
+    @pytest.mark.parametrize('alpha_beta', [(0., -1./3), (-1./4, -1./2)])
+    def test_bandwidth_norm(self, harmonic_1d_data, alpha_beta):
+        data = harmonic_1d_data
+        alpha, beta = alpha_beta
+        X = data[:, 0]
+        THRESHS = np.array([0.01, 0.01, 0.1])
+        ref_evecs = [X, X**2, (X**3 - 3 * X)/np.sqrt(6)]
+
+        bandwidth_fxn = lambda x: np.exp(-1. * x[:, 0]**2 * (beta / 2.))  # bandwidth is density^beta
+        mydmap = dm.DiffusionMap(n_evecs=3, epsilon='bgh', alpha=alpha,
+                                 k=50, bandwidth_fxn=bandwidth_fxn, bandwidth_normalize=True)
+        mydmap.fit_transform(data)
+        errors_evec = []
+        for k in np.arange(3):
+            errors_evec.append(abs(np.corrcoef(ref_evecs[k], mydmap.evecs[:, k])[0, 1]))
+        # Check that relative error values are beneath tolerance.
+        total_error = 1 - np.array(errors_evec)
+        assert((total_error < THRESHS).all())
+
+    @pytest.mark.parametrize('alpha_beta', [(0., -1./3), (-1./4, -1./2)])
+    def test_bandwidth_norm_oos(self, harmonic_1d_data, alpha_beta):
+        data = harmonic_1d_data
+        alpha, beta = alpha_beta
+        oos_data = np.linspace(-1.5, 1.5, 51).reshape(-1, 1)
+        Y = oos_data.ravel()
+        THRESHS = np.array([0.01, 0.01, 0.1])
+        ref_evecs = [Y, Y**2, (Y**3 - 3 * Y)/np.sqrt(6)]
+
+        bandwidth_fxn = lambda x: np.exp(-1. * x[:, 0]**2 * (beta / 2.))  # bandwidth is density^beta
+        mydmap = dm.DiffusionMap(n_evecs=3, epsilon='bgh', alpha=alpha,
+                                 k=50, bandwidth_fxn=bandwidth_fxn, bandwidth_normalize=True,
+                                 oos='power')
+        mydmap.fit(data)
+        oos_evecs = mydmap.transform(oos_data)
+        errors_evec = []
+        for k in np.arange(3):
+            errors_evec.append(abs(np.corrcoef(ref_evecs[k], oos_evecs[:, k])[0, 1]))
+        # Check that relative error values are beneath tolerance.
+        total_error = 1 - np.array(errors_evec)
+        assert((total_error < THRESHS).all())
 
 
 class TestSymmetrization():

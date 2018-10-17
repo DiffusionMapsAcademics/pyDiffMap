@@ -4,9 +4,11 @@ A class to implement diffusion kernels.
 
 import numbers
 import numpy as np
+import scipy.sparse as sps
 import warnings
 from scipy.special import logsumexp
 from sklearn.neighbors import NearestNeighbors
+from . import utils
 
 
 class Kernel(object):
@@ -29,7 +31,7 @@ class Kernel(object):
         Optional parameters required for the metric given.
     """
 
-    def __init__(self, kernel_type='gaussian', epsilon='bgh', k=64, neighbor_params=None, metric='euclidean', metric_params=None):
+    def __init__(self, kernel_type='gaussian', epsilon='bgh', k=64, neighbor_params=None, metric='euclidean', metric_params=None, bandwidth_fxn=None):
         self.kernel_fxn = _parse_kernel_type(kernel_type)
         self.epsilon = epsilon
         self.k = k
@@ -38,8 +40,15 @@ class Kernel(object):
         if neighbor_params is None:
             neighbor_params = {}
         self.neighbor_params = neighbor_params
+        self.bandwidth_fxn = bandwidth_fxn
         self.d = None
         self.epsilon_fitted = None
+
+    def _compute_bandwidths(self, X):
+        if self.bandwidth_fxn is not None:
+            return self.bandwidth_fxn(X)
+        else:
+            return None
 
     def fit(self, X):
         """
@@ -64,10 +73,11 @@ class Kernel(object):
                                           metric_params=self.metric_params,
                                           **self.neighbor_params)
         self.neigh.fit(X)
+        self.bandwidths = self._compute_bandwidths(X)
         self.choose_optimal_epsilon()
         return self
 
-    def compute(self, Y=None):
+    def compute(self, Y=None, return_bandwidths=False):
         """
         Computes the sparse kernel matrix.
 
@@ -84,12 +94,35 @@ class Kernel(object):
         """
         if Y is None:
             Y = self.data
-        # perform k nearest neighbour search on X and Y and construct sparse matrix
-        K = self.neigh.kneighbors_graph(Y, mode='distance')
-        # retrieve all nonzero elements and apply kernel function to it
-        v = K.data
-        K.data = self.kernel_fxn(v, self.epsilon_fitted)
-        return K
+        # # perform k nearest neighbour search on X and Y and construct sparse matrix
+        # # retrieve all nonzero elements and apply kernel function to it
+        y_bandwidths = self._compute_bandwidths(Y)
+        K = self._get_scaled_distance_mat(Y, y_bandwidths=y_bandwidths)
+        K.data = self.kernel_fxn(K.data, self.epsilon_fitted)
+        if return_bandwidths:
+            return K, y_bandwidths
+        else:
+            return K
+
+    def _get_scaled_distance_mat(self, Y, y_bandwidths=None):
+        # Scales distance matrix by (rho(x) rho(y))^1/2, where rho is the
+        # bandwidth.
+        dists = self.neigh.kneighbors_graph(Y, mode='distance')
+        m, n = dists.shape
+        if y_bandwidths is not None:
+            x_bw_diag = sps.spdiags(np.power(self.bandwidths, -0.5), 0, n, n).tocsr()
+            y_bw_diag = sps.spdiags(np.power(y_bandwidths, -0.5), 0, m, m).tocsr()
+
+            # Scale distances by bandwidth. This complement procedure is needed
+            # to ensure that explicit zeros are preserved, which doesn't happen
+            # with regular sparse matrix multiplication.
+            row, col = utils._get_sparse_row_col(dists)
+            inv_bw = sps.csr_matrix((np.ones(dists.data.shape), (row, col)), shape=dists.shape)
+            inv_bw = y_bw_diag * inv_bw * x_bw_diag
+            dists.sort_indices()
+            inv_bw.sort_indices()
+            dists.data = dists.data * inv_bw.data
+        return dists
 
     def choose_optimal_epsilon(self, epsilon=None):
         """
@@ -113,11 +146,10 @@ class Kernel(object):
             self.epsilon_fitted = epsilon
             return self
         elif epsilon == 'bgh':  # Berry, Giannakis Harlim method.
-            dists = self.neigh.kneighbors_graph(self.data, mode='distance').data
-            sq_distances = dists**2
+            scaled_dists = self._get_scaled_distance_mat(self.data, self.bandwidths)
             if (self.metric != 'euclidean'):  # TODO : replace with call to scipy metrics.
                 warnings.warn('The BGH method for choosing epsilon assumes a euclidean metric.  However, the metric being used is %s.  Proceed at your own risk...' % self.metric)
-            self.epsilon_fitted, self.d = choose_optimal_epsilon_BGH(sq_distances)
+            self.epsilon_fitted, self.d = choose_optimal_epsilon_BGH(scaled_dists.data**2)
         else:
             raise ValueError("Method for automatically choosing epsilon was given as %s, but this was not recognized" % epsilon)
         return self
