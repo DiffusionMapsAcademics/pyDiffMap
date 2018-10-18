@@ -89,6 +89,7 @@ class DiffusionMap(object):
         q = np.array(kernel_matrix.sum(axis=1)).ravel()
         if bandwidths is not None:
             q /= bandwidths**2
+            # CHECK THIS CODE!
         right_norm_vec = np.power(q, -self.alpha)
         return q, right_norm_vec
 
@@ -112,7 +113,7 @@ class DiffusionMap(object):
         L = P - sps.eye(m, n, k=(n - m))
         scaled_bw = bandwidths / np.min(bandwidths)
         bw_diag = sps.spdiags(np.power(scaled_bw, -2), 0, m, m)
-        P = sps.eye(m, n, k=(n - m)) + bw_diag * L * 3000.
+        P = sps.eye(m, n, k=(n - m)) + bw_diag * L
         return P
 
     def _make_diffusion_coords(self, P):
@@ -140,7 +141,8 @@ class DiffusionMap(object):
         weights = self._compute_weights(X, kernel_matrix, X)
 
         q, right_norm_vec = self._make_right_norm_vec(kernel_matrix, my_kernel.bandwidths)
-        P = self._left_normalize(self._right_normalize(kernel_matrix, right_norm_vec, weights))
+        P = self._right_normalize(kernel_matrix, right_norm_vec, weights)
+        P = self._left_normalize(P)
         if self.bandwidth_normalize:
             P = self._bandwidth_normalize(P, self.epsilon_fitted, my_kernel.bandwidths)
         dmap, evecs, evals = self._make_diffusion_coords(P)

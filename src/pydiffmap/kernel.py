@@ -121,6 +121,7 @@ class Kernel(object):
         self.neigh.fit(X)
         self.bandwidth_fxn = self.build_bandwidth_fxn(self.bandwidth_type)
         self.bandwidths = self._compute_bandwidths(X)
+        # print(self.bandwidths[:5])
         self.choose_optimal_epsilon()
         return self
 
@@ -145,6 +146,8 @@ class Kernel(object):
         # # retrieve all nonzero elements and apply kernel function to it
         y_bandwidths = self._compute_bandwidths(Y)
         K = self._get_scaled_distance_mat(Y, y_bandwidths=y_bandwidths)
+        K_test = K[0].toarray()
+        K_test = K_test[K_test > 0]
         K.data = self.kernel_fxn(K.data, self.epsilon_fitted)
         if return_bandwidths:
             return K, y_bandwidths
@@ -203,31 +206,34 @@ class NNKDE(object):
         self.kernel_fxn = _parse_kernel_type('gaussian')
         self.epsilon = epsilon
         self.k = k
-        print(self.k, self.neigh)
 
     def fit(self):
         """
         Fits the kde object to the data provided in the nearest neighbor object.
         """
-        dist_graph_sq = self.neigh.kneighbors_graph(n_neighbors=self.k+1, mode='distance')
+        dist_graph_sq = self.neigh.kneighbors_graph(n_neighbors=self.k-1, mode='distance')
         n = dist_graph_sq.shape[0]
         dist_graph_sq.data = dist_graph_sq.data**2
-        self.bandwidths = np.sqrt(np.array(dist_graph_sq.sum(axis=1))/(self.k+1)).ravel()
+        self.bandwidths = np.sqrt(np.array(dist_graph_sq.sum(axis=1))/(self.k-1)).ravel()
         # self.bandwidths = np.ones(n)
         dist_graph_sq = _scale_by_bw(dist_graph_sq, self.bandwidths, self.bandwidths)
         sq_dists = np.hstack([dist_graph_sq.data, np.zeros(n)])
         self.epsilon, self.d = choose_optimal_epsilon_BGH(sq_dists)
-        self.epsilon = 1.
 
     def compute(self, Y):
-        dist_bw = self.neigh.kneighbors_graph(Y, mode='distance', n_neighbors=self.k+1)
+        dist_bw = self.neigh.kneighbors_graph(Y, mode='distance', n_neighbors=self.k)
         dist_bw.data = dist_bw.data**2
-        y_bandwidths = np.sqrt(np.array(dist_bw.sum(axis=1))/self.neigh.n_neighbors).ravel()
+        avg_sq_dist = np.array(dist_bw.sum(axis=1)).ravel()
+        y_bandwidths = np.sqrt(avg_sq_dist/(self.k-1)).ravel()
+        # print(y_bandwidths[:5], 'y bandwidths')
+        # print(self.bandwidths[:5], 'y bandwidths')
+        # print(self.epsilon, 'epsilon')
         K = self.neigh.kneighbors_graph(Y, mode='distance')
         K.data = K.data**2
         K = _scale_by_bw(K, self.bandwidths, y_bandwidths)
         K.data = np.exp(-0.5 * K.data / self.epsilon)
         density = np.array(K.sum(axis=1)).ravel()
+        # print(density, 'density in bw fxn')
         density /= (2 * np.pi * self.epsilon)**(self.d / 2.)
         density /= y_bandwidths**self.d
         density /= self.neigh.n_neighbors
