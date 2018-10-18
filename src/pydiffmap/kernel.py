@@ -71,19 +71,24 @@ class Kernel(object):
             is_string = isinstance(self.bandwidth_type, string_types)
             is_number = isinstance(self.bandwidth_type, numbers.Number)
             if (is_string or is_number):
-                kde_function, d = self._build_nn_kde(self.neigh)
+                kde_function, d = self._build_nn_kde()
                 if is_string:
                     beta = ne.evaluate(self.bandwidth_type)
+                elif is_number:
+                    beta = self.bandwidth_type
+                else:
+                    raise Exception("Honestly, we shouldn't have gotten to this point in the code")
                 bandwidth_fxn = lambda x: kde_function(x)**beta
                 return bandwidth_fxn
             else:
                 raise ValueError("Bandwidth Type was not a callable, string, or number.  Don't know what to make of it.")
 
     def _build_nn_kde(self, num_nearest_neighbors=8):
-        my_nnkde = NNKDE(kernel_type=self.kernel_type, k=num_nearest_neighbors)
-        my_nnkde.fit(self.data)
+        my_nnkde = NNKDE(self.neigh, k=num_nearest_neighbors)
+        my_nnkde.fit()
         bandwidth_fxn = lambda x: my_nnkde.compute(x)
-        return bandwidth_fxn
+        self.kde = my_nnkde
+        return bandwidth_fxn, my_nnkde.d
 
     def _compute_bandwidths(self, X):
         if self.bandwidth_fxn is not None:
@@ -198,6 +203,7 @@ class NNKDE(object):
         self.kernel_fxn = _parse_kernel_type('gaussian')
         self.epsilon = epsilon
         self.k = k
+        print(self.k, self.neigh)
 
     def fit(self):
         """

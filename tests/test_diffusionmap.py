@@ -278,16 +278,21 @@ class TestWeighting(object):
 
 class TestBandwidths(object):
     @pytest.mark.parametrize('alpha_beta', [(0., -1./3), (-1./4, -1./2)])
-    def test_bandwidth_norm(self, harmonic_1d_data, alpha_beta):
+    @pytest.mark.parametrize('explicit_bandwidth', [False, True])
+    def test_bandwidth_norm(self, harmonic_1d_data, alpha_beta, explicit_bandwidth):
         data = harmonic_1d_data
         alpha, beta = alpha_beta
         X = data[:, 0]
         THRESHS = np.array([0.01, 0.01, 0.1])
         ref_evecs = [X, X**2, (X**3 - 3 * X)/np.sqrt(6)]
 
-        bandwidth_fxn = lambda x: np.exp(-1. * x[:, 0]**2 * (beta / 2.))  # bandwidth is density^beta
+        if explicit_bandwidth:
+            bandwidth_type = lambda x: np.exp(-1. * x[:, 0]**2 * (beta / 2.))  # bandwidth is density^beta
+        else:
+            bandwidth_type = beta
+
         mydmap = dm.DiffusionMap(n_evecs=3, epsilon='bgh', alpha=alpha,
-                                 k=50, bandwidth_type=bandwidth_fxn, bandwidth_normalize=True)
+                                 k=50, bandwidth_type=bandwidth_type, bandwidth_normalize=True)
         mydmap.fit_transform(data)
         errors_evec = []
         for k in np.arange(3):
@@ -297,7 +302,8 @@ class TestBandwidths(object):
         assert((total_error < THRESHS).all())
 
     @pytest.mark.parametrize('alpha_beta', [(0., -1./3), (-1./4, -1./2)])
-    def test_bandwidth_norm_oos(self, harmonic_1d_data, alpha_beta):
+    @pytest.mark.parametrize('explicit_bandwidth', [False, True])
+    def test_bandwidth_norm_oos(self, harmonic_1d_data, alpha_beta, explicit_bandwidth):
         data = harmonic_1d_data
         alpha, beta = alpha_beta
         oos_data = np.linspace(-1.5, 1.5, 51).reshape(-1, 1)
@@ -305,9 +311,12 @@ class TestBandwidths(object):
         THRESHS = np.array([0.01, 0.01, 0.1])
         ref_evecs = [Y, Y**2, (Y**3 - 3 * Y)/np.sqrt(6)]
 
-        bandwidth_fxn = lambda x: np.exp(-1. * x[:, 0]**2 * (beta / 2.))  # bandwidth is density^beta
+        if explicit_bandwidth:
+            bandwidth_type = lambda x: np.exp(-1. * x[:, 0]**2 * (beta / 2.))  # bandwidth is density^beta
+        else:
+            bandwidth_type = beta
         mydmap = dm.DiffusionMap(n_evecs=3, epsilon='bgh', alpha=alpha,
-                                 k=50, bandwidth_type=bandwidth_fxn, bandwidth_normalize=True,
+                                 k=50, bandwidth_type=bandwidth_type, bandwidth_normalize=True,
                                  oos='power')
         mydmap.fit(data)
         oos_evecs = mydmap.transform(oos_data)
