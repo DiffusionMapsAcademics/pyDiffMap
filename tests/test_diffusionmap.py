@@ -287,7 +287,7 @@ class TestBandwidths(object):
 
         bandwidth_fxn = lambda x: np.exp(-1. * x[:, 0]**2 * (beta / 2.))  # bandwidth is density^beta
         mydmap = dm.DiffusionMap(n_evecs=3, epsilon='bgh', alpha=alpha,
-                                 k=50, bandwidth_fxn=bandwidth_fxn, bandwidth_normalize=True)
+                                 k=50, bandwidth_type=bandwidth_fxn, bandwidth_normalize=True)
         mydmap.fit_transform(data)
         errors_evec = []
         for k in np.arange(3):
@@ -307,7 +307,7 @@ class TestBandwidths(object):
 
         bandwidth_fxn = lambda x: np.exp(-1. * x[:, 0]**2 * (beta / 2.))  # bandwidth is density^beta
         mydmap = dm.DiffusionMap(n_evecs=3, epsilon='bgh', alpha=alpha,
-                                 k=50, bandwidth_fxn=bandwidth_fxn, bandwidth_normalize=True,
+                                 k=50, bandwidth_type=bandwidth_fxn, bandwidth_normalize=True,
                                  oos='power')
         mydmap.fit(data)
         oos_evecs = mydmap.transform(oos_data)

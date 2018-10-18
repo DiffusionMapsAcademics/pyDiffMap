@@ -31,7 +31,7 @@ def uniform_2d_data():
 
 @pytest.fixture(scope='module')
 def harmonic_1d_data():
-    N = 1001
+    N = 201
     delta = 1. / (N+1)
     xgrid = 2 * np.arange(1, N+1) * delta - 1.
     x = np.sqrt(2) * erfinv(xgrid)

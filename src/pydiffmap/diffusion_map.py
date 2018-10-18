@@ -49,7 +49,7 @@ class DiffusionMap(object):
 
     """
 
-    def __init__(self, alpha=0.5, k=64, kernel_type='gaussian', epsilon='bgh', n_evecs=1, neighbor_params=None, metric='euclidean', metric_params=None, weight_fxn=None, bandwidth_fxn=None, bandwidth_normalize=False, oos='nystroem'):
+    def __init__(self, alpha=0.5, k=64, kernel_type='gaussian', epsilon='bgh', n_evecs=1, neighbor_params=None, metric='euclidean', metric_params=None, weight_fxn=None, bandwidth_type=None, bandwidth_normalize=False, oos='nystroem'):
         """
         Initializes Diffusion Map, sets parameters.
         """
@@ -65,8 +65,8 @@ class DiffusionMap(object):
         self.d = None
         self.weight_fxn = weight_fxn
         self.bandwidth_normalize = bandwidth_normalize
-        self.bandwidth_fxn = bandwidth_fxn
-        if ((self.bandwidth_fxn is None) and (bandwidth_normalize is True)):
+        self.bandwidth_type = bandwidth_type
+        if ((self.bandwidth_type is None) and (bandwidth_normalize is True)):
             warnings.warn('Bandwith normalization set to true, but no bandwidth function provided.  Setting to False.')
         self.oos = oos
 
@@ -74,7 +74,7 @@ class DiffusionMap(object):
         my_kernel = kernel.Kernel(kernel_type=self.kernel_type, k=self.k,
                                   epsilon=self.epsilon, neighbor_params=self.neighbor_params,
                                   metric=self.metric, metric_params=self.metric_params,
-                                  bandwidth_fxn=self.bandwidth_fxn)
+                                  bandwidth_type=self.bandwidth_type)
         my_kernel.fit(X)
         kernel_matrix = utils._symmetrize_matrix(my_kernel.compute(X))
         return kernel_matrix, my_kernel
@@ -234,7 +234,7 @@ class TargetMeasureDiffusionMap(DiffusionMap):
         Method to use for out-of-sample extension.
     """
 
-    def __init__(self, alpha=0.5, k=64, kernel_type='gaussian', epsilon='bgh', n_evecs=1, neighbor_params=None, metric='euclidean', metric_params=None, change_of_measure=None, bandwidth_fxn=None, bandwidth_normalize=False, oos='nystroem'):
+    def __init__(self, alpha=0.5, k=64, kernel_type='gaussian', epsilon='bgh', n_evecs=1, neighbor_params=None, metric='euclidean', metric_params=None, change_of_measure=None, bandwidth_type=None, bandwidth_normalize=False, oos='nystroem'):
         weight_fxn = lambda x_i, y_i: np.sqrt(change_of_measure(y_i))
         super(TargetMeasureDiffusionMap, self).__init__(alpha=alpha, k=k, kernel_type=kernel_type, epsilon=epsilon, n_evecs=n_evecs, neighbor_params=neighbor_params, metric=metric, metric_params=metric_params, weight_fxn=weight_fxn)
 

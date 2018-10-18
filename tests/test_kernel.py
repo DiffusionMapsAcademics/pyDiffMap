@@ -86,27 +86,22 @@ class TestKNN(object):
     def test_harmonic_kde(self, harmonic_1d_data):
         # Setup Data
         data = harmonic_1d_data
-        Y = np.linspace(-2.5, 2.5, 51)
+        Y = np.linspace(-1.5, 1.5, 51)
         oos_data = Y.reshape(-1, 1)
         ref_density = np.exp(-Y**2 / 2.) / np.sqrt(2 * np.pi)
         THRESH = 0.01
         # Build kde object
         nneighbs = NearestNeighbors(n_neighbors=100)
         nneighbs.fit(data)
-        my_kde = kernel.NNKDE(nneighbs, k=200)
+        my_kde = kernel.NNKDE(nneighbs, k=16)
         my_kde.fit()
-        my_kde.epsilon = 0.00003
         density = my_kde.compute(oos_data)
         density /= np.max(density)
         ref_density /= np.max(ref_density)
 
-        import matplotlib.pyplot as plt
-        plt.plot(Y, density, label='kde')
-        plt.plot(Y, ref_density, label='true')
-        plt.show()
+        error = np.linalg.norm(density - ref_density)
+        assert(error < THRESH)
 
-        assert(np.linalg.norm(density - ref_density) < THRESH)
-        raise Exception
 
 class TestBGHEpsilonSelection(object):
     @pytest.mark.parametrize('k', [10, 30, 100])
