@@ -76,7 +76,7 @@ def _get_sparse_row_col(sparse_mat):
     return sparse_mat.row, sparse_mat.col
 
 
-def _symmetrize_matrix(K, mode='average'):
+def _symmetrize_matrix(K, mode='or'):
     """
     Symmetrizes a sparse kernel matrix.
 

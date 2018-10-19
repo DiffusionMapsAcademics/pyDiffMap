@@ -110,6 +110,7 @@ class DiffusionMap(object):
 
     def _bandwidth_normalize(self, P, epsilon_fitted, bandwidths):
         m, n = P.shape
+        print(P[:5, :5].toarray(), 'P in dmap')
         L = P - sps.eye(m, n, k=(n - m))
         scaled_bw = bandwidths / np.min(bandwidths)
         bw_diag = sps.spdiags(np.power(scaled_bw, -2), 0, m, m)

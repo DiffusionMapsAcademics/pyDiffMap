@@ -142,12 +142,10 @@ class Kernel(object):
         """
         if Y is None:
             Y = self.data
-        # # perform k nearest neighbour search on X and Y and construct sparse matrix
-        # # retrieve all nonzero elements and apply kernel function to it
+        # perform k nearest neighbour search on X and Y and construct sparse matrix
+        # retrieve all nonzero elements and apply kernel function to it
         y_bandwidths = self._compute_bandwidths(Y)
         K = self._get_scaled_distance_mat(Y, y_bandwidths=y_bandwidths)
-        K_test = K[0].toarray()
-        K_test = K_test[K_test > 0]
         K.data = self.kernel_fxn(K.data, self.epsilon_fitted)
         if return_bandwidths:
             return K, y_bandwidths
@@ -162,6 +160,12 @@ class Kernel(object):
             bw_x = np.power(self.bandwidths, 0.5)
             bw_y = np.power(y_bandwidths, 0.5)
             dists = _scale_by_bw(dists, bw_x, bw_y)
+        print(self.bandwidths[:5], 'self bandwidths')
+        print(y_bandwidths[:5])
+        dists_test = dists[0].toarray()**2
+        print(dists_test.min(), dists_test.max())
+        dists_test = np.sort(dists_test[dists_test > 0])
+        print(dists_test[:5])
         return dists
 
     def choose_optimal_epsilon(self, epsilon=None):
@@ -201,10 +205,9 @@ class NNKDE(object):
 
     """
 
-    def __init__(self, neighbors, epsilon='bgh', k=8):
+    def __init__(self, neighbors, k=8):
         self.neigh = neighbors
         self.kernel_fxn = _parse_kernel_type('gaussian')
-        self.epsilon = epsilon
         self.k = k
 
     def fit(self):
@@ -215,28 +218,32 @@ class NNKDE(object):
         n = dist_graph_sq.shape[0]
         dist_graph_sq.data = dist_graph_sq.data**2
         self.bandwidths = np.sqrt(np.array(dist_graph_sq.sum(axis=1))/(self.k-1)).ravel()
-        # self.bandwidths = np.ones(n)
+        # now choose epsilon, d base on the full nearest neighbor graph.
+        dist_graph_sq = self.neigh.kneighbors_graph(n_neighbors=self.neigh.n_neighbors-1, mode='distance')
+        dist_graph_sq.data = dist_graph_sq.data**2
         dist_graph_sq = _scale_by_bw(dist_graph_sq, self.bandwidths, self.bandwidths)
         sq_dists = np.hstack([dist_graph_sq.data, np.zeros(n)])
-        self.epsilon, self.d = choose_optimal_epsilon_BGH(sq_dists)
+        self.epsilon_fitted, self.d = choose_optimal_epsilon_BGH(sq_dists)
 
     def compute(self, Y):
         dist_bw = self.neigh.kneighbors_graph(Y, mode='distance', n_neighbors=self.k)
         dist_bw.data = dist_bw.data**2
         avg_sq_dist = np.array(dist_bw.sum(axis=1)).ravel()
         y_bandwidths = np.sqrt(avg_sq_dist/(self.k-1)).ravel()
-        # print(y_bandwidths[:5], 'y bandwidths')
-        # print(self.bandwidths[:5], 'y bandwidths')
-        # print(self.epsilon, 'epsilon')
         K = self.neigh.kneighbors_graph(Y, mode='distance')
         K.data = K.data**2
         K = _scale_by_bw(K, self.bandwidths, y_bandwidths)
-        K.data = np.exp(-0.5 * K.data / self.epsilon)
+        print(self.epsilon_fitted, self.d, 'self.epsilon fitted')
+        K.data /= 4. * self.epsilon_fitted
+        print(np.sort(K[0].toarray())[::-1][:5], 'scaled dists check')
+        K.data = np.exp(-K.data)
         density = np.array(K.sum(axis=1)).ravel()
-        # print(density, 'density in bw fxn')
-        density /= (2 * np.pi * self.epsilon)**(self.d / 2.)
-        density /= y_bandwidths**self.d
         density /= self.neigh.n_neighbors
+        density /= y_bandwidths**self.d
+        print(density[:5], 'kde output')
+        #  CHECK NORMALIZATION
+        density /= (2 * np.pi * self.epsilon_fitted)**(self.d / 2.)
+        print(density[:5], 'kde output')
         return density
 
 
@@ -278,7 +285,7 @@ def choose_optimal_epsilon_BGH(scaled_distsq, epsilons=None):
     log_eps = np.log(epsilons)
     log_deriv = np.diff(log_T)/np.diff(log_eps)
     max_loc = np.argmax(log_deriv)
-    epsilon = np.exp(log_eps[max_loc])
+    epsilon = np.max([np.exp(log_eps[max_loc]), np.exp(log_eps[max_loc+1])])
     d = np.round(2.*log_deriv[max_loc])
     return epsilon, d
 
