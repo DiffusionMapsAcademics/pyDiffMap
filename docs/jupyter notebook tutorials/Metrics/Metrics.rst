@@ -15,98 +15,8 @@ diffusion maps embedding.
     
     %matplotlib inline
 
-2D Four-well potential
-----------------------
-
-Load sampled data: discretized Langevin dynamics at temperature T=1,
-friction 1, and time step size dt=0.01, with double-well potentials in x
-and y, with higher barrier in y.
-
-.. code:: python
-
-    X=np.load('Data/4wells_traj.npy')
-
-.. code:: python
-
-    def DW1(x):
-            return 2.0*(np.linalg.norm(x)**2-1.0)**2
-    
-    def DW2(x):
-            return 4.0*(np.linalg.norm(x)**2-1.0)**2
-    
-    def DW(x):
-        return DW1(x[0]) + DW1(x[1])
-    
-    from matplotlib import cm
-    
-    mx=5
-    
-    xe=np.linspace(-mx, mx, 100)
-    ye=np.linspace(-mx, mx, 100)
-    energyContours=np.zeros((100, 100))
-    for i in range(0,len(xe)):
-                for j in range(0,len(ye)):
-                    xtmp=np.array([xe[i], ye[j]] )
-                    energyContours[j,i]=DW(xtmp)
-    
-    levels = np.arange(0, 10, 0.5)
-    plt.contour(xe, ye, energyContours, levels, cmap=cm.coolwarm)
-    plt.scatter(X[:,0], X[:,1], s=5, c='k')
-    plt.xlabel('X')
-    plt.ylabel('Y')
-    plt.xlim([-2,2])
-    plt.ylim([-2,2])
-    plt.show()
-
-
-
-
-.. image:: output_6_0.png
-
-
-.. code:: python
-
-    
-    def periodicMetric(v1, v2):
-        
-        upperLimitPBC=1
-        lowerLimitPBC=-1
-        
-        BoxLength = upperLimitPBC - lowerLimitPBC
-            
-        v = v1 - v2
-        
-        v = v - BoxLength*np.floor(v / BoxLength)
-        
-            
-        return np.linalg.norm(v)
-
-
-Compute diffusion map embedding
-
-.. code:: python
-
-    mydmap = dm.DiffusionMap(n_evecs = 2, epsilon = .2, alpha = 0.5, k=200, metric=periodicMetric)
-    
-    dmap = mydmap.fit_transform(X)
-
-.. code:: python
-
-    from pydiffmap.visualization import embedding_plot, data_plot
-    
-    embedding_plot(mydmap, scatter_kwargs = {'s': 5, 'c': X[:,0], 'cmap': 'coolwarm'})
-    plt.show()
-
-
-
-.. image:: output_10_0.png
-
-
-Dimer trajectory
-----------------
-
 We import trajectory of two particles connected by a double-well
-potential, which is a function of a radius: V(r) = V_DW(r). The dimer
+potential, which is a function of a radius: V(r) = V\_DW(r). The dimer
 was simulated at 300K with Langevin dynamics using OpenMM. The obvious
 collective variable is the radius case and we demonstrate how the first
 dominant eigenvector obtained from the diffusion map clearly correlates
@@ -164,7 +74,7 @@ https://pypi.python.org/pypi/rmsd/1.2.5.
 
 
 
-.. image:: output_14_0.png
+.. image:: Metrics_files/Metrics_5_0.png
 
 
 .. code:: python
@@ -199,13 +109,11 @@ Compute diffusion map embedding using the rmsd metric from above.
 
 .. code:: python
 
-    epsilon=0.1
+    epsilon=0.05
     
     Xresh=traj.reshape(traj.shape[0], traj.shape[1]*traj.shape[2])
     mydmap = dm.DiffusionMap(n_evecs = 1, epsilon = epsilon, alpha = 0.5, k=1000, metric=myRMSDmetric)
     dmap = mydmap.fit_transform(Xresh)
-    
-
 
 Plot the dominant eigenvector over radius, to show the correlation with
 this collective variable.
@@ -227,11 +135,10 @@ this collective variable.
     ax2.set_xlabel('Radius')
     ax2.set_ylabel('Potential Energy')
     cbar = fig.colorbar(cax2)
-    cbar.set_label('Domninant eigenvector')
+    cbar.set_label('Dominant eigenvector')
     plt.show()
 
 
 
-.. image:: output_19_0.png
-
+.. image:: Metrics_files/Metrics_10_0.png
 
