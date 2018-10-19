@@ -12,6 +12,7 @@ New Features
 * Added a utility for building a sparse matrix from a function on the data.
 * (Re)added separate TMDmap class wrapping base diffusion map class to 
   allow for easier construction of TMDmaps. 
+* Added ability to explicitly provide the sampled density for q^alpha normalization.
 * Added Variable Bandwidth Diffusion Maps.
 * Added a new out-of-sample extension method that should work for variable bandwidth methods.
 
