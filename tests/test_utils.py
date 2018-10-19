@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from pydiffmap import utils
-from pydiffmap.diffusion_map import _symmetrize_matrix
+from scipy.sparse import csr_matrix
 from sklearn.neighbors import NearestNeighbors
 
 x_1d = np.arange(10)
@@ -36,3 +36,25 @@ class TestSparseFromFxn(object):
         dist_fxn = lambda Y, X: np.linalg.norm(Y - X)
         dist_mat = utils.sparse_from_fxn(x_2d, K, dist_fxn, Y)
         assert(np.linalg.norm((dist_mat - ref_mat).data) < 1e-10)
+
+
+class TestSymmetrization():
+    test_mat = csr_matrix([[0, 2.], [0, 3.]])
+
+    def test_and_symmetrization(self):
+        ref_mat = np.array([[0, 0], [0, 3.]])
+        symmetrized = utils._symmetrize_matrix(self.test_mat, mode='and')
+        symmetrized = symmetrized.toarray()
+        assert (np.linalg.norm(ref_mat - symmetrized) == 0.)
+
+    def test_or_symmetrization(self):
+        ref_mat = np.array([[0, 2.], [2., 3.]])
+        symmetrized = utils._symmetrize_matrix(self.test_mat, mode='or')
+        symmetrized = symmetrized.toarray()
+        assert (np.linalg.norm(ref_mat - symmetrized) == 0.)
+
+    def test_avg_symmetrization(self):
+        ref_mat = np.array([[0, 1.], [1., 3.]])
+        symmetrized = utils._symmetrize_matrix(self.test_mat, mode='average')
+        symmetrized = symmetrized.toarray()
+        assert (np.linalg.norm(ref_mat - symmetrized) == 0.)

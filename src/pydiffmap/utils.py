@@ -62,12 +62,50 @@ def sparse_from_fxn(X, K, function, Y=None):
     """
     if Y is None:
         Y = X
-    knn_graph = K.tocoo()
-    row = knn_graph.row
-    col = knn_graph.col
+    row, col = _get_sparse_row_col(K)
 
     fxn_vals = []
     for i, j in zip(row, col):
         fxn_vals.append(function(Y[i], X[j]))
     fxn_vals = np.array(fxn_vals)
-    return sps.csr_matrix((fxn_vals, (row, col)), shape=knn_graph.shape)
+    return sps.csr_matrix((fxn_vals, (row, col)), shape=K.shape)
+
+
+def _get_sparse_row_col(sparse_mat):
+    sparse_mat = sparse_mat.tocoo()
+    return sparse_mat.row, sparse_mat.col
+
+
+def _symmetrize_matrix(K, mode='or'):
+    """
+    Symmetrizes a sparse kernel matrix.
+
+    Parameters
+    ----------
+    K : scipy sparse matrix
+        The sparse matrix to be symmetrized, with positive elements on the nearest neighbors.
+    mode : string
+        The method of symmetrization to be implemented.  Current options are 'average', 'and', and 'or'.
+
+    Returns
+    -------
+    K_sym : scipy sparse matrix
+        Symmetrized kernel matrix.
+    """
+
+    if mode == 'average':
+        return 0.5*(K + K.transpose())
+    elif mode == 'or':
+        Ktrans = K.transpose()
+        dK = abs(K - Ktrans)
+        K = K + Ktrans
+        K = K + dK
+        return 0.5*K
+    elif mode == 'and':
+        Ktrans = K.transpose()
+        dK = abs(K - Ktrans)
+        K = K + Ktrans
+        K = K - dK
+        return 0.5*K
+    else:
+        raise ValueError('Did not understand symmetrization method')

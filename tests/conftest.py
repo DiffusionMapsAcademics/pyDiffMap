@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from scipy.special import erfinv
 
 
 @pytest.fixture(scope='module')
@@ -26,3 +27,12 @@ def uniform_2d_data():
     Y = Y.ravel()
     data = np.array([X, Y]).transpose()
     return data, X, Y
+
+
+@pytest.fixture(scope='module')
+def harmonic_1d_data():
+    N = 201
+    delta = 1. / (N+1)
+    xgrid = 2 * np.arange(1, N+1) * delta - 1.
+    x = np.sqrt(2) * erfinv(xgrid)
+    return x.reshape(-1, 1)

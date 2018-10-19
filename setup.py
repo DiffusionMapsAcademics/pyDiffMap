@@ -63,7 +63,7 @@ setup(
         # eg: 'keyword1', 'keyword2', 'keyword3',
     ],
     install_requires=[
-        'numpy', 'scipy', 'scikit-learn', 'matplotlib'
+        'numpy', 'scipy', 'scikit-learn', 'matplotlib', 'six', 'numexpr'
     ],
     extras_require={
         # eg:

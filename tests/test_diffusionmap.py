@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 
 from pydiffmap import diffusion_map as dm
-from scipy.sparse import csr_matrix
 
 
 class TestDiffusionMap(object):
@@ -27,6 +26,7 @@ class TestDiffusionMap(object):
         # Check that relative error values are beneath tolerance.
         errors_eval = abs((test_evals - real_evals)/real_evals)
         total_error = np.max(errors_eval)
+
         assert(total_error < THRESH)
 
     @pytest.mark.parametrize('epsilon', [0.002, 'bgh'])
@@ -71,7 +71,6 @@ class TestDiffusionMap(object):
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=epsilon, alpha=1.0, k=40)
         mydmap.fit_transform(data)
         test_evals = -1./mydmap.epsilon_fitted*(mydmap.evals - 1)
-        print(test_evals, real_evals, mydmap.epsilon_fitted)
 
         # Check that relative error values are beneath tolerance.
         errors_eval = abs((test_evals - real_evals)/real_evals)
@@ -225,7 +224,7 @@ class TestNystroem(object):
 
 class TestWeighting(object):
     @pytest.mark.parametrize('epsilon', [0.002, 'bgh'])
-    @pytest.mark.parametrize('oos', [True, False])
+    @pytest.mark.parametrize('oos', ['power', 'nystroem', False])
     @pytest.mark.parametrize('dmap_method', ['base', 'TMDmap'])
     def test_1Dstrip_evecs(self, epsilon, oos, dmap_method):
         """
@@ -237,11 +236,14 @@ class TestWeighting(object):
         probabalists Hermite polynomials.
         """
         # Setup data and accuracy threshold
-        X = np.linspace(-5., 5., 201)
-        if oos:
-            Y = np.linspace(-5., 5., 151)
-        else:
+        # X = np.linspace(-5., 5., 201)
+        X = np.linspace(0, 2.5, 101)**2
+        X = np.hstack([-1 * np.copy(X[1:][::-1]), X])
+        if not oos:
             Y = X
+            oos = 'nystroem'
+        else:
+            Y = np.linspace(-5., 5., 101)
         data_x = np.array([X]).transpose()
         data_y = np.array([Y]).transpose()
         EVEC_THRESH = 0.005
@@ -253,10 +255,10 @@ class TestWeighting(object):
         # Setup diffusion map
         if dmap_method == 'TMDmap':
             com_fxn = lambda y_j: np.exp(-.5*np.dot(y_j, y_j))
-            mydmap = dm.TargetMeasureDiffusionMap(alpha=1., n_evecs=4, epsilon=epsilon, k=100, change_of_measure=com_fxn)
+            mydmap = dm.TMDmap(alpha=1., n_evecs=4, epsilon=epsilon, k=100, change_of_measure=com_fxn, oos=oos)
         else:
             weight_fxn = lambda x_i, y_j: np.exp(-.25*np.dot(y_j, y_j))
-            mydmap = dm.DiffusionMap(alpha=1., n_evecs=4, epsilon=epsilon, k=100, weight_fxn=weight_fxn)
+            mydmap = dm.DiffusionMap(alpha=1., n_evecs=4, epsilon=epsilon, k=100, weight_fxn=weight_fxn, oos=oos)
 
         # Fit data and build dmap
         mydmap.fit(data_x)
@@ -275,23 +277,53 @@ class TestWeighting(object):
         assert(total_eval_error < EVAL_THRESH)
 
 
-class TestSymmetrization():
-    test_mat = csr_matrix([[0, 2.], [0, 3.]])
+class TestBandwidths(object):
+    @pytest.mark.parametrize('alpha_beta', [(0., -1./3), (-1./4, -1./2)])
+    @pytest.mark.parametrize('explicit_bandwidth', [False, True])
+    def test_bandwidth_norm(self, harmonic_1d_data, alpha_beta, explicit_bandwidth):
+        data = harmonic_1d_data
+        alpha, beta = alpha_beta
+        X = data[:, 0]
+        THRESHS = np.array([0.01, 0.01, 0.1])
+        ref_evecs = [X, X**2, (X**3 - 3 * X)/np.sqrt(6)]
 
-    def test_and_symmetrization(self):
-        ref_mat = np.array([[0, 0], [0, 3.]])
-        symmetrized = dm._symmetrize_matrix(self.test_mat, mode='and')
-        symmetrized = symmetrized.toarray()
-        assert (np.linalg.norm(ref_mat - symmetrized) == 0.)
+        if explicit_bandwidth:
+            bandwidth_type = lambda x: np.exp(-1. * x[:, 0]**2 * (beta / 2.))  # bandwidth is density^beta
+        else:
+            bandwidth_type = beta
 
-    def test_or_symmetrization(self):
-        ref_mat = np.array([[0, 2.], [2., 3.]])
-        symmetrized = dm._symmetrize_matrix(self.test_mat, mode='or')
-        symmetrized = symmetrized.toarray()
-        assert (np.linalg.norm(ref_mat - symmetrized) == 0.)
+        mydmap = dm.DiffusionMap(n_evecs=3, epsilon='bgh', alpha=alpha,
+                                 k=50, bandwidth_type=bandwidth_type, bandwidth_normalize=True)
+        mydmap.fit_transform(data)
+        errors_evec = []
+        for k in np.arange(3):
+            errors_evec.append(abs(np.corrcoef(ref_evecs[k], mydmap.evecs[:, k])[0, 1]))
+        # Check that relative error values are beneath tolerance.
+        total_error = 1 - np.array(errors_evec)
+        assert((total_error < THRESHS).all())
 
-    def test_avg_symmetrization(self):
-        ref_mat = np.array([[0, 1.], [1., 3.]])
-        symmetrized = dm._symmetrize_matrix(self.test_mat, mode='average')
-        symmetrized = symmetrized.toarray()
-        assert (np.linalg.norm(ref_mat - symmetrized) == 0.)
+    @pytest.mark.parametrize('alpha_beta', [(0., -1./3), (-1./4, -1./2)])
+    @pytest.mark.parametrize('explicit_bandwidth', [False, True])
+    def test_bandwidth_norm_oos(self, harmonic_1d_data, alpha_beta, explicit_bandwidth):
+        data = harmonic_1d_data
+        alpha, beta = alpha_beta
+        oos_data = np.linspace(-1.5, 1.5, 51).reshape(-1, 1)
+        Y = oos_data.ravel()
+        THRESHS = np.array([0.01, 0.01, 0.1])
+        ref_evecs = [Y, Y**2, (Y**3 - 3 * Y)/np.sqrt(6)]
+
+        if explicit_bandwidth:
+            bandwidth_type = lambda x: np.exp(-1. * x[:, 0]**2 * (beta / 2.))  # bandwidth is density^beta
+        else:
+            bandwidth_type = beta
+        mydmap = dm.DiffusionMap(n_evecs=3, epsilon='bgh', alpha=alpha,
+                                 k=50, bandwidth_type=bandwidth_type, bandwidth_normalize=True,
+                                 oos='power')
+        mydmap.fit(data)
+        oos_evecs = mydmap.transform(oos_data)
+        errors_evec = []
+        for k in np.arange(3):
+            errors_evec.append(abs(np.corrcoef(ref_evecs[k], oos_evecs[:, k])[0, 1]))
+        # Check that relative error values are beneath tolerance.
+        total_error = 1 - np.array(errors_evec)
+        assert((total_error < THRESHS).all())
