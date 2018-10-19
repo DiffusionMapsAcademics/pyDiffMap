@@ -94,8 +94,8 @@ class DiffusionMap(object):
         if q is None:
             # perform kde
             q = np.array(kernel_matrix.sum(axis=1)).ravel()
-        if bandwidths is not None:
-            q /= bandwidths**2
+            if bandwidths is not None:
+                q /= bandwidths**2
         right_norm_vec = np.power(q, -self.alpha)
         return q, right_norm_vec
 
