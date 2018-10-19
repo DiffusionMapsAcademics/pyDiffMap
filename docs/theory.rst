@@ -39,8 +39,7 @@ A variant of diffusion maps, 'TMDmap', unbiases with respect to :math:`q` and ap
 where :math:`\pi` is a 'target distribution' that defines the drift term and has to be known up to a normalization
 constant. TMDmap is implemented in pydiffmap as::
 
-  mydmap = diffusion_map.DiffusionMap(epsilon = my_epsilon, alpha = 1.0)
-  mydmap.fit(X, weights = myDistribution)
+  mydmap = diffusion_map.TMDmap(epsilon = my_epsilon, alpha = 1.0, change_of_measure=com_fxn)
+  mydmap.fit(X)
 
-where ``myDistribution`` is an array that represents the target distribution :math:`\pi` evaluated at the data
-points ``X``.
+where ``com_fxn`` is function that takes in a coordinate and outputs the value of the target distribution :math:`\pi` .

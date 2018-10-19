@@ -74,7 +74,7 @@ Pydiffmap is installable using pip.  You can install it using the command
 
     pip install pyDiffMap
 
-In the meantime, you can install the package directly from the source directly by downloading the package from github and running the command below, optionally with the "-e" flag for an editable install.
+You can also install the package directly from the source directly by downloading the package from github and running the command below, optionally with the "-e" flag for an editable install.
 
 ::
     
