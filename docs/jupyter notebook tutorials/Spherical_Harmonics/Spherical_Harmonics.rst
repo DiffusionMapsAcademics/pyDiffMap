@@ -42,7 +42,7 @@ run diffusion maps
 ------------------
 
 Now we initialize the diffusion map object and fit it to the dataset. We
-set n_evecs = 4, and since we want to unbias with respect to the
+set n\_evecs = 4, and since we want to unbias with respect to the
 non-uniform sampling density we set alpha = 1.0. The epsilon parameter
 controls the scale and is set here by hand. The k parameter controls the
 neighbour lists, a smaller k will increase performance but decrease
@@ -87,7 +87,7 @@ has multiplicity three, this gives the benchmark eigenvalues [2, 2, 2,
 visualisation
 -------------
 
-With pydiffmap’s visualization toolbox, we can get a quick look at the
+With pydiffmap's visualization toolbox, we can get a quick look at the
 embedding produced by the first two diffusion coordinates and the data
 colored by the first eigenfunction.
 
@@ -101,7 +101,7 @@ colored by the first eigenfunction.
 
 
 
-.. image:: output_9_0.png
+.. image:: Spherical_Harmonics_files/Spherical_Harmonics_9_0.png
 
 
 .. code:: python
@@ -111,14 +111,14 @@ colored by the first eigenfunction.
 
 
 
-.. image:: output_10_0.png
+.. image:: Spherical_Harmonics_files/Spherical_Harmonics_10_0.png
 
 
 Rotating the dataset
 --------------------
 
 There is rotational symmetry in this dataset. To remove it, we define
-the ‘north pole’ to be the point where the first diffusion coordinate
+the 'north pole' to be the point where the first diffusion coordinate
 attains its maximum value.
 
 .. code:: python
@@ -181,6 +181,5 @@ diffusion coordinate approximates the first spherical harmonic
 
 
 
-.. image:: output_15_1.png
-
+.. image:: Spherical_Harmonics_files/Spherical_Harmonics_15_1.png
 

@@ -4,8 +4,8 @@ The classic swiss roll data set
 
 author: Ralf Banisch
 
-We demonstrate the usage of the diffusion_map class on a two-dimensional
-manifold embedded in :math:`\mathbb{R}^3`.
+We demonstrate the usage of the diffusion\_map class on a
+two-dimensional manifold embedded in :math:`\mathbb{R}^3`.
 
 .. code:: python
 
@@ -21,13 +21,13 @@ manifold embedded in :math:`\mathbb{R}^3`.
 Create Data
 -----------
 
-We create the dataset: A noisy sampling of the twodimensional “swiss
-roll” embedded in :math:`\mathbb{R}^3`. The sampling is such that the
+We create the dataset: A noisy sampling of the twodimensional "swiss
+roll" embedded in :math:`\mathbb{R}^3`. The sampling is such that the
 density of samples decreases with the distance from the origin
 (non-uniform sampling).
 
-In order to be handled correctly by the diffusion_map class, we must
-ensure the data is a numpy array of shape (n_points, n_features).
+In order to be handled correctly by the diffusion\_map class, we must
+ensure the data is a numpy array of shape (n\_points, n\_features).
 
 .. code:: python
 
@@ -60,7 +60,7 @@ Run pydiffmap
 
 Now we initialize the diffusion map object and fit it to the dataset.
 Since we are interested in only the first two diffusion coordinates we
-set n_evecs = 2, and since we want to unbias with respect to the
+set n\_evecs = 2, and since we want to unbias with respect to the
 non-uniform sampling density we set alpha = 1.0. The epsilon parameter
 controls the scale and needs to be adjusted to the data at hand. The k
 parameter controls the neighbour lists, a smaller k will increase
@@ -96,7 +96,7 @@ according to the first diffusion coordinate. On the left, we show the
 diffusion map embedding given by the first two diffusion coordinates.
 Points are again colored according to the first diffusion coordinate,
 which seems to parameterize the :math:`\phi` direction. We can see that
-the diffusion map embedding ‘unwinds’ the swiss roll.
+the diffusion map embedding 'unwinds' the swiss roll.
 
 .. code:: python
 
@@ -109,11 +109,11 @@ the diffusion map embedding ‘unwinds’ the swiss roll.
 
 
 
-.. image:: output_8_0.png
+.. image:: Swiss_Roll_files/Swiss_Roll_8_0.png
 
 
 
-.. image:: output_8_1.png
+.. image:: Swiss_Roll_files/Swiss_Roll_8_1.png
 
 
 To get a bit more information out of the embedding, we can scale the
@@ -132,16 +132,16 @@ direction. For comparison, we color the original data set according to
 
 
 
-.. image:: output_10_0.png
+.. image:: Swiss_Roll_files/Swiss_Roll_10_0.png
 
 
 
-.. image:: output_10_1.png
+.. image:: Swiss_Roll_files/Swiss_Roll_10_1.png
 
 
 We can see that points near the center of the swiss roll, where the
 winding is tight, are closer together in the embedding, while points
-further away from the center are more spaced out. Let’s check how the
+further away from the center are more spaced out. Let's check how the
 first two diffusion coordinates correlate with :math:`\phi` and
 :math:`Z`.
 
@@ -181,6 +181,5 @@ first two diffusion coordinates correlate with :math:`\phi` and
 
 
 
-.. image:: output_12_1.png
-
+.. image:: Swiss_Roll_files/Swiss_Roll_12_1.png
 
