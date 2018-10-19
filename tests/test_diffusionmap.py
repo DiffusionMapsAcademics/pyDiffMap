@@ -26,6 +26,7 @@ class TestDiffusionMap(object):
         # Check that relative error values are beneath tolerance.
         errors_eval = abs((test_evals - real_evals)/real_evals)
         total_error = np.max(errors_eval)
+
         assert(total_error < THRESH)
 
     @pytest.mark.parametrize('epsilon', [0.002, 'bgh'])

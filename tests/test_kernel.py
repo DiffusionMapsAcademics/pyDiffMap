@@ -86,20 +86,17 @@ class TestKNN(object):
     def test_harmonic_kde(self, harmonic_1d_data):
         # Setup Data
         data = harmonic_1d_data
-        Y = np.linspace(-1.5, 1.5, 51)
+        Y = np.linspace(-2.5, 2.5, 201)
         oos_data = Y.reshape(-1, 1)
         ref_density = np.exp(-Y**2 / 2.) / np.sqrt(2 * np.pi)
-        THRESH = 0.01
+        THRESH = 0.003
         # Build kde object
-        nneighbs = NearestNeighbors(n_neighbors=100)
+        nneighbs = NearestNeighbors(n_neighbors=120)
         nneighbs.fit(data)
         my_kde = kernel.NNKDE(nneighbs, k=16)
         my_kde.fit()
         density = my_kde.compute(oos_data)
-        density /= np.max(density)
-        ref_density /= np.max(ref_density)
-
-        error = np.linalg.norm(density - ref_density)
+        error = np.sqrt(np.mean((density - ref_density)**2))
         assert(error < THRESH)
 
 

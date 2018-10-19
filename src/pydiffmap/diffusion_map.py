@@ -89,7 +89,6 @@ class DiffusionMap(object):
         q = np.array(kernel_matrix.sum(axis=1)).ravel()
         if bandwidths is not None:
             q /= bandwidths**2
-            # CHECK THIS CODE!
         right_norm_vec = np.power(q, -self.alpha)
         return q, right_norm_vec
 
@@ -110,7 +109,6 @@ class DiffusionMap(object):
 
     def _bandwidth_normalize(self, P, epsilon_fitted, bandwidths):
         m, n = P.shape
-        print(P[:5, :5].toarray(), 'P in dmap')
         L = P - sps.eye(m, n, k=(n - m))
         scaled_bw = bandwidths / np.min(bandwidths)
         bw_diag = sps.spdiags(np.power(scaled_bw, -2), 0, m, m)

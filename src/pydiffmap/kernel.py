@@ -121,7 +121,6 @@ class Kernel(object):
         self.neigh.fit(X)
         self.bandwidth_fxn = self.build_bandwidth_fxn(self.bandwidth_type)
         self.bandwidths = self._compute_bandwidths(X)
-        # print(self.bandwidths[:5])
         self.choose_optimal_epsilon()
         return self
 
@@ -160,12 +159,6 @@ class Kernel(object):
             bw_x = np.power(self.bandwidths, 0.5)
             bw_y = np.power(y_bandwidths, 0.5)
             dists = _scale_by_bw(dists, bw_x, bw_y)
-        print(self.bandwidths[:5], 'self bandwidths')
-        print(y_bandwidths[:5])
-        dists_test = dists[0].toarray()**2
-        print(dists_test.min(), dists_test.max())
-        dists_test = np.sort(dists_test[dists_test > 0])
-        print(dists_test[:5])
         return dists
 
     def choose_optimal_epsilon(self, epsilon=None):
@@ -217,7 +210,8 @@ class NNKDE(object):
         dist_graph_sq = self.neigh.kneighbors_graph(n_neighbors=self.k-1, mode='distance')
         n = dist_graph_sq.shape[0]
         dist_graph_sq.data = dist_graph_sq.data**2
-        self.bandwidths = np.sqrt(np.array(dist_graph_sq.sum(axis=1))/(self.k-1)).ravel()
+        avg_sq_dist = np.array(dist_graph_sq.sum(axis=1)).ravel()
+        self.bandwidths = np.sqrt(avg_sq_dist/(self.k-1)).ravel()
         # now choose epsilon, d base on the full nearest neighbor graph.
         dist_graph_sq = self.neigh.kneighbors_graph(n_neighbors=self.neigh.n_neighbors-1, mode='distance')
         dist_graph_sq.data = dist_graph_sq.data**2
@@ -233,17 +227,11 @@ class NNKDE(object):
         K = self.neigh.kneighbors_graph(Y, mode='distance')
         K.data = K.data**2
         K = _scale_by_bw(K, self.bandwidths, y_bandwidths)
-        print(self.epsilon_fitted, self.d, 'self.epsilon fitted')
         K.data /= 4. * self.epsilon_fitted
-        print(np.sort(K[0].toarray())[::-1][:5], 'scaled dists check')
         K.data = np.exp(-K.data)
-        density = np.array(K.sum(axis=1)).ravel()
-        density /= self.neigh.n_neighbors
+        density = np.array(K.mean(axis=1)).ravel()
         density /= y_bandwidths**self.d
-        print(density[:5], 'kde output')
-        #  CHECK NORMALIZATION
-        density /= (2 * np.pi * self.epsilon_fitted)**(self.d / 2.)
-        print(density[:5], 'kde output')
+        density /= (4 * np.pi * self.epsilon_fitted)**(self.d / 2.)
         return density
 
 
@@ -285,7 +273,8 @@ def choose_optimal_epsilon_BGH(scaled_distsq, epsilons=None):
     log_eps = np.log(epsilons)
     log_deriv = np.diff(log_T)/np.diff(log_eps)
     max_loc = np.argmax(log_deriv)
-    epsilon = np.max([np.exp(log_eps[max_loc]), np.exp(log_eps[max_loc+1])])
+    # epsilon = np.max([np.exp(log_eps[max_loc]), np.exp(log_eps[max_loc+1])])
+    epsilon = np.exp(log_eps[max_loc])
     d = np.round(2.*log_deriv[max_loc])
     return epsilon, d
 
