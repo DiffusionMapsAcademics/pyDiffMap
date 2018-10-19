@@ -31,6 +31,8 @@ class Kernel(object):
         Distance metric to use in constructing the kernel.  This can be selected from any of the scipy.spatial.distance metrics, or a callable function returning the distance.
     metric_params : dict or None, optional
         Optional parameters required for the metric given.
+    bandwidth_type: callable, number, string, or None, optional
+        Type of bandwidth to use in the kernel.  If None (default), a fixed bandwidth kernel is used.  If a callable function, the data is passed to the function, and the bandwidth is output (note that the function must take in an entire dataset, not the points 1-by-1).  If a number, e.g. -.25, a kernel density estimate is performed, and the bandwidth is taken to be q**(input_number).  For a string input, the input is assumed to be an evaluatable expression in terms of the dimension d, e.g. "-1/(d+2)".  The dimension is then estimated, and the bandwidth is set to q**(evaluated input string).
     """
 
     def __init__(self, kernel_type='gaussian', epsilon='bgh', k=64, neighbor_params=None, metric='euclidean', metric_params=None, bandwidth_type=None):
@@ -53,7 +55,7 @@ class Kernel(object):
         Parameters
         ----------
         bandwidth_fxn : string or number or callable
-            Bandwidth to use.  If a number, taken to be the beta parameter in [2]_.
+            Bandwidth to use.  If a number, taken to be the beta parameter in [1]_.
             If a string, taken to again be beta, but with an evaluatable
             expression as a function of the intrinsic dimension d, e.g. '1/(d+2)'.
             If a function, taken to be a function that outputs the bandwidth.
@@ -132,11 +134,15 @@ class Kernel(object):
         ----------
         Y : array-like, shape (n_query, n_features), optional.
             Data against which to calculate the kernel values.  If not provided, calculates against the data provided in the fit.
+        return_bandwidths : boolean, optional
+            If True, also returns the computed bandwidth for each y point.
 
         Returns
         -------
         K : array-like, shape (n_query_X, n_query_Y)
             Values of the kernel matrix.
+        y_bandwidths : array-like, shape (n_query_y)
+            Bandwidth evaluated at each point Y.  Only returned if return_bandwidths is True.
 
         """
         if Y is None:
@@ -194,8 +200,14 @@ class Kernel(object):
 
 class NNKDE(object):
     """
-    Class building a kernel density estimate with a bandwidth build from the k nearest neighbors.
+    Class building a kernel density estimate with a variable bandwidth built from the k nearest neighbors.
 
+    Parameters
+    ----------
+    neighbors : scikit-learn NearestNeighbors object
+        NearestNeighbors object to use in constructing the KDE.
+    k : int, optional
+        Number of nearest neighbors to use in the construction of the bandwidth.  This must be less or equal to the number of nearest neighbors used by the nearest neighbor object.
     """
 
     def __init__(self, neighbors, k=8):
@@ -220,6 +232,20 @@ class NNKDE(object):
         self.epsilon_fitted, self.d = choose_optimal_epsilon_BGH(sq_dists)
 
     def compute(self, Y):
+        """
+        Computes the density at each query point in Y.
+
+        Parameters
+        ----------
+        Y : array-like, shape (n_query, n_features)
+            Data against which to calculate the kernel values.  If not provided, calculates against the data provided in the fit.
+
+
+        Returns
+        -------
+        q : array-like, shape (n_query)
+            Density evaluated at each point Y.
+        """
         dist_bw = self.neigh.kneighbors_graph(Y, mode='distance', n_neighbors=self.k)
         dist_bw.data = dist_bw.data**2
         avg_sq_dist = np.array(dist_bw.sum(axis=1)).ravel()

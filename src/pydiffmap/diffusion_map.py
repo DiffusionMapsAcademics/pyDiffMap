@@ -38,6 +38,10 @@ class DiffusionMap(object):
         Callable function that take in two points (X_i and X_j), and outputs the value of the weight matrix at those points.
     density_fxn : callable or None, optional
         Callable function that take in X, and outputs the value of the density of X. Used instead of kernel density estimation in the normalisation.
+    bandwidth_type: callable, number, string, or None, optional
+        Type of bandwidth to use in the kernel.  If None (default), a fixed bandwidth kernel is used.  If a callable function, the data is passed to the function, and the bandwidth is output (note that the function must take in an entire dataset, not the points 1-by-1).  If a number, e.g. -.25, a kernel density estimate is performed, and the bandwidth is taken to be q**(input_number).  For a string input, the input is assumed to be an evaluatable expression in terms of the dimension d, e.g. "-1/(d+2)".  The dimension is then estimated, and the bandwidth is set to q**(evaluated input string).
+    bandwidth_normalize: boolean, optional
+        If true, normalize the final constructed transition matrix by the bandwidth as described in Berry and Harlim. [1]_
     oos : 'nystroem' or 'power', optional
         Method to use for out-of-sample extension.
 
@@ -49,6 +53,10 @@ class DiffusionMap(object):
     # and alpha set to 1.0.
     >>> mydmap = DiffusionMap(n_evecs = 2, epsilon = .1, alpha = 1.0, neighbor_params = neighbor_params)
 
+    References
+    ----------
+    .. [1] T. Berry, and J. Harlim, Applied and Computational Harmonic Analysis 40, 68-96
+       (2016).
     """
 
     def __init__(self, alpha=0.5, k=64, kernel_type='gaussian', epsilon='bgh', n_evecs=1, neighbor_params=None,
@@ -220,32 +228,12 @@ class DiffusionMap(object):
 
 class TMDmap(DiffusionMap):
     """
-    Implementation of the TargetMeasure diffusion map.  This provides a more convenient interface for some hyperparameter selection for the general diffusion object.
-:
+    Implementation of the TargetMeasure diffusion map.  This provides a more convenient interface for some hyperparameter selection for the general diffusion object.  It takes the same parameters as the base Diffusion Map object.  However, rather than taking a weight function, it takes as input a change of measure function.
+
     Parameters
     ----------
-    alpha : scalar, optional
-        Exponent to be used for the left normalization in constructing the diffusion map.
-    k : int, optional
-        Number of nearest neighbors over which to construct the kernel.
-    kernel_type : string, optional
-        Type of kernel to construct. Currently the only option is 'gaussian', but more will be implemented.
-    epsilon: string or scalar, optional
-        Method for choosing the epsilon.  Currently, the only options are to provide a scalar (epsilon is set to the provided scalar) or 'bgh' (Berry, Giannakis and Harlim).
-    n_evecs : int, optional
-        Number of diffusion map eigenvectors to return
-    neighbor_params : dict or None, optional
-        Optional parameters for the nearest Neighbor search. See scikit-learn NearestNeighbors class for details.
-    metric : string, optional
-        Metric for distances in the kernel. Default is 'euclidean'. The callable should take two arrays as input and return one value indicating the distance between them.
-    metric_params : dict or None, optional
-        Optional parameters required for the metric given.
     change_of_measure : callable, optional
         Function that takes in a point and evaluates the change-of-measure between the density otherwise stationary to the diffusion map and the desired density.
-    density_fxn : callable or None, optional
-        Callable function that take in X, and outputs the value of the density of X. Used instead of kernel density estimation in the normalisation.
-    oos : 'nystroem' or 'power', optional
-        Method to use for out-of-sample extension.
     """
 
     def __init__(self, alpha=0.5, k=64, kernel_type='gaussian', epsilon='bgh',
