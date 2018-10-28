@@ -87,6 +87,7 @@ class Kernel(object):
 
     def _build_nn_kde(self, num_nearest_neighbors=8):
         my_nnkde = NNKDE(self.neigh, k=num_nearest_neighbors)
+        my_nnkde.fit()
         bandwidth_fxn = lambda x: my_nnkde.compute(x)
         self.kde = my_nnkde
         return bandwidth_fxn, my_nnkde.d
