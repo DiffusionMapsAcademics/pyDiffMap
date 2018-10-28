@@ -138,9 +138,9 @@ class DiffusionMap(object):
         dmap = np.dot(evecs, np.diag(evals))
         return dmap, evecs, evals
 
-    def fit(self, X):
+    def construct_Pmat(self, X):
         """
-        Fits the data.
+        Builds the transition matrix, but does NOT compute the eigenvectors.  This is useful for applications where the transition matrix itself is the object of interest.
 
         Parameters
         ----------
@@ -163,9 +163,8 @@ class DiffusionMap(object):
         P = self._left_normalize(P)
         if self.bandwidth_normalize:
             P = self._bandwidth_normalize(P, self.epsilon_fitted, my_kernel.bandwidths)
-        dmap, evecs, evals = self._make_diffusion_coords(P)
 
-        # Save constructed data.
+        # Save data
         self.local_kernel = my_kernel
         self.epsilon_fitted = my_kernel.epsilon_fitted
         self.d = my_kernel.d
@@ -175,6 +174,25 @@ class DiffusionMap(object):
         self.P = P
         self.q = q
         self.right_norm_vec = right_norm_vec
+        return self
+
+    def fit(self, X):
+        """
+        Fits the data.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_query, n_features)
+            Data upon which to construct the diffusion map.
+
+        Returns
+        -------
+        self : the object itself
+        """
+        self.construct_Pmat(X)
+        dmap, evecs, evals = self._make_diffusion_coords(self.P)
+
+        # Save constructed data.
         self.evals = evals
         self.evecs = evecs
         self.dmap = dmap
