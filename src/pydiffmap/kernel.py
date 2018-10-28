@@ -87,7 +87,6 @@ class Kernel(object):
 
     def _build_nn_kde(self, num_nearest_neighbors=8):
         my_nnkde = NNKDE(self.neigh, k=num_nearest_neighbors)
-        my_nnkde.fit()
         bandwidth_fxn = lambda x: my_nnkde.compute(x)
         self.kde = my_nnkde
         return bandwidth_fxn, my_nnkde.d
@@ -123,6 +122,7 @@ class Kernel(object):
         self.neigh.fit(X)
         self.bandwidth_fxn = self.build_bandwidth_fxn(self.bandwidth_type)
         self.bandwidths = self._compute_bandwidths(X)
+        self.scaled_dists = self._get_scaled_distance_mat(self.data, self.bandwidths)
         self.choose_optimal_epsilon()
         return self
 
@@ -147,10 +147,14 @@ class Kernel(object):
         """
         if Y is None:
             Y = self.data
-        # perform k nearest neighbour search on X and Y and construct sparse matrix
-        # retrieve all nonzero elements and apply kernel function to it
-        y_bandwidths = self._compute_bandwidths(Y)
-        K = self._get_scaled_distance_mat(Y, y_bandwidths=y_bandwidths)
+        if np.array_equal(Y, self.data): # Avoid recomputing nearest neighbors unless needed.
+            y_bandwidths = self.bandwidths
+            K = self.scaled_dists
+        else:
+            # perform k nearest neighbour search on X and Y and construct sparse matrix
+            # retrieve all nonzero elements and apply kernel function to it
+            y_bandwidths = self._compute_bandwidths(Y)
+            K = self._get_scaled_distance_mat(Y, y_bandwidths=y_bandwidths)
         K.data = self.kernel_fxn(K.data, self.epsilon_fitted)
         if return_bandwidths:
             return K, y_bandwidths
@@ -189,10 +193,11 @@ class Kernel(object):
             self.epsilon_fitted = epsilon
             return self
         elif epsilon == 'bgh':  # Berry, Giannakis Harlim method.
-            scaled_dists = self._get_scaled_distance_mat(self.data, self.bandwidths)
             if (self.metric != 'euclidean'):  # TODO : replace with call to scipy metrics.
                 warnings.warn('The BGH method for choosing epsilon assumes a euclidean metric.  However, the metric being used is %s.  Proceed at your own risk...' % self.metric)
-            self.epsilon_fitted, self.d = choose_optimal_epsilon_BGH(scaled_dists.data**2)
+            if self.scaled_dists is not None:
+                self.scaled_dists = self._get_scaled_distance_mat(self.data, self.bandwidths)
+            self.epsilon_fitted, self.d = choose_optimal_epsilon_BGH(self.scaled_dists.data**2)
         else:
             raise ValueError("Method for automatically choosing epsilon was given as %s, but this was not recognized" % epsilon)
         return self
@@ -215,21 +220,42 @@ class NNKDE(object):
         self.kernel_fxn = _parse_kernel_type('gaussian')
         self.k = k
 
+    def _reduce_nn(self, nn_graph, k):
+        # gets the k nearest neighbors of an m nearest nearest graph,
+        # where m >n
+        sub_neighbors = []
+        for row in nn_graph:
+            dense_row = np.array(row[row.nonzero()]).ravel()
+            sorted_ndxs = np.argpartition(dense_row, k-1)
+            # print(sorted_ndxs)
+            # print(sorted_ndxs[:k])
+            sorted_row = dense_row[sorted_ndxs[:k]]
+            print(sorted_row)
+            sub_neighbors.append(sorted_row)
+        return np.array(sub_neighbors)
+
+    def _build_bandwidth(self):
+        dist_graph_vals = self._reduce_nn(self.dist_graph_sq, k=self.k-1)
+        avg_sq_dist = np.array(dist_graph_vals.sum(axis=1)).ravel()
+        self.bandwidths = np.sqrt(avg_sq_dist/(self.k-1)).ravel()
+
+    def _choose_epsilon(self):
+        # dist_graph_sq = self.neigh.kneighbors_graph(n_neighbors=self.neigh.n_neighbors-1, mode='distance')
+        dist_graph_sq = self.dist_graph_sq.copy()
+        n = dist_graph_sq.shape[0]
+        dist_graph_sq = _scale_by_bw(dist_graph_sq, self.bandwidths, self.bandwidths)
+        sq_dists = np.hstack([dist_graph_sq.data, np.zeros(n)])
+        self.epsilon_fitted, self.d = choose_optimal_epsilon_BGH(sq_dists)
+
     def fit(self):
         """
         Fits the kde object to the data provided in the nearest neighbor object.
         """
-        dist_graph_sq = self.neigh.kneighbors_graph(n_neighbors=self.k-1, mode='distance')
-        n = dist_graph_sq.shape[0]
-        dist_graph_sq.data = dist_graph_sq.data**2
-        avg_sq_dist = np.array(dist_graph_sq.sum(axis=1)).ravel()
-        self.bandwidths = np.sqrt(avg_sq_dist/(self.k-1)).ravel()
-        # now choose epsilon, d base on the full nearest neighbor graph.
-        dist_graph_sq = self.neigh.kneighbors_graph(n_neighbors=self.neigh.n_neighbors-1, mode='distance')
-        dist_graph_sq.data = dist_graph_sq.data**2
-        dist_graph_sq = _scale_by_bw(dist_graph_sq, self.bandwidths, self.bandwidths)
-        sq_dists = np.hstack([dist_graph_sq.data, np.zeros(n)])
-        self.epsilon_fitted, self.d = choose_optimal_epsilon_BGH(sq_dists)
+        self.dist_graph_sq = self.neigh.kneighbors_graph(n_neighbors=self.neigh.n_neighbors-1,
+                                                         mode='distance')
+        self.dist_graph_sq.data = self.dist_graph_sq.data**2
+        self._build_bandwidth()
+        self._choose_epsilon()
 
     def compute(self, Y):
         """
@@ -324,7 +350,9 @@ def _parse_kernel_type(kernel_type):
         Function that takes in the distance and length-scale parameter, and outputs the value of the kernel.
     """
     if kernel_type.lower() == 'gaussian':
-        return lambda d, epsilon: np.exp(-d**2 / (4. * epsilon))
+        def gaussian_kfxn(d, epsilon):
+            return np.exp(-d**2 / (4. * epsilon))
+        return gaussian_kfxn
     elif callable(kernel_type):
         return kernel_type
     else:

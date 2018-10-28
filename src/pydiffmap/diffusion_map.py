@@ -258,7 +258,10 @@ class TMDmap(DiffusionMap):
                  n_evecs=1, neighbor_params=None, metric='euclidean',
                  metric_params=None, change_of_measure=None, density_fxn=None,
                  bandwidth_type=None, bandwidth_normalize=False, oos='nystroem'):
-        weight_fxn = lambda x_i, y_i: np.sqrt(change_of_measure(y_i))
+
+        def weight_fxn(x_i, y_i):
+            return np.sqrt(change_of_measure(y_i))
+
         super(TMDmap, self).__init__(alpha=alpha, k=k, kernel_type=kernel_type,
                                      epsilon=epsilon, n_evecs=n_evecs,
                                      neighbor_params=neighbor_params,
