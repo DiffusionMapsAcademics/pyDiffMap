@@ -14,17 +14,16 @@ class TestDiffusionMap(object):
         """
         # Setup true values to test again.
         # real_evals = k^2 for k in 0.5*[1 2 3 4]
-        real_evals = 0.25*np.array([1, 4, 9, 16])
+        real_evals = -0.25*np.array([1, 4, 9, 16])
         X = np.linspace(0., 1., 81)*2.*np.pi
         data = np.array([X]).transpose()
         THRESH = 0.05
         # Setup diffusion map
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=epsilon, alpha=1.0, k=20)
         mydmap.fit(data)
-        test_evals = -1./mydmap.epsilon_fitted*(mydmap.evals - 1)
 
         # Check that relative error values are beneath tolerance.
-        errors_eval = abs((test_evals - real_evals)/real_evals)
+        errors_eval = abs((mydmap.evals- real_evals)/real_evals)
         total_error = np.max(errors_eval)
 
         assert(total_error < THRESH)
@@ -62,7 +61,7 @@ class TestDiffusionMap(object):
         """
         # Setup true values to test again.
         # real_evals = k^2 for k in 0.5*[1 2 3 4]
-        real_evals = 0.25*np.array([1, 4, 9, 16])
+        real_evals = -0.25*np.array([1, 4, 9, 16])
         # Setup data and accuracy threshold
         X = (np.linspace(0., 1., 81)**2)*2.*np.pi
         data = np.array([X]).transpose()
@@ -70,10 +69,9 @@ class TestDiffusionMap(object):
         # Setup diffusion map
         mydmap = dm.DiffusionMap(n_evecs=4, epsilon=epsilon, alpha=1.0, k=40)
         mydmap.fit_transform(data)
-        test_evals = -1./mydmap.epsilon_fitted*(mydmap.evals - 1)
 
         # Check that relative error values are beneath tolerance.
-        errors_eval = abs((test_evals - real_evals)/real_evals)
+        errors_eval = abs((mydmap.evals- real_evals)/real_evals)
         total_error = np.max(errors_eval)
         assert(total_error < THRESH)
 
@@ -109,7 +107,7 @@ class TestDiffusionMap(object):
         """
         # Setup true values to test again.
         # real_evals = kx^2 + ky^2 for kx = 0.5*[1 0 2 1] and ky = [0 1 0 1].
-        real_evals = 0.25*np.array([1, 4, 4, 5])
+        real_evals = -0.25*np.array([1, 4, 4, 5])
         # Setup data and accuracy threshold
         data, X, Y = uniform_2d_data
         THRESH = 0.2
@@ -117,10 +115,9 @@ class TestDiffusionMap(object):
         eps = 0.0025
         mydmap = dm.DiffusionMap(n_evecs=4, alpha=1.0, k=100, epsilon=eps)
         mydmap.fit(data)
-        test_evals = -1./mydmap.epsilon*(mydmap.evals - 1)
 
         # Check that relative error values are beneath tolerance.
-        errors_eval = abs((test_evals - real_evals)/real_evals)
+        errors_eval = abs((mydmap.evals- real_evals)/real_evals)
         total_error = np.max(errors_eval)
         assert(total_error < THRESH)
 
@@ -157,15 +154,14 @@ class TestDiffusionMap(object):
         """
         data, Phi, Theta = spherical_data
         # Setup true values to test against.
-        real_evals = np.array([2, 2, 2, 6])  # =l(l+1)
+        real_evals = -1 * np.array([2, 2, 2, 6])  # =l(l+1)
         THRESH = 0.1
         eps = 0.015
         mydmap = dm.DiffusionMap(n_evecs=4, alpha=1.0, k=400, epsilon=eps)
         mydmap.fit(data)
-        test_evals = -1./mydmap.epsilon_fitted*(mydmap.evals - 1)
 
         # Check eigenvalues pass below error tolerance.
-        errors_eval = abs((test_evals - real_evals)/real_evals)
+        errors_eval = abs((mydmap.evals- real_evals)/real_evals)
         max_eval_error = np.max(errors_eval)
         assert(max_eval_error < THRESH)
 
@@ -251,7 +247,7 @@ class TestWeighting(object):
         # Setup true values to test against.
         real_evecs = [Y, Y**2-1, Y**3-3*Y,
                       Y**4-6*Y**2+3]  # Hermite polynomials
-        real_evals = np.arange(1, 5)
+        real_evals = -1 * np.arange(1, 5)
         # Setup diffusion map
         if dmap_method == 'TMDmap':
             com_fxn = lambda y_j: np.exp(-.5*np.dot(y_j, y_j))
@@ -271,8 +267,7 @@ class TestWeighting(object):
         total_evec_error = 1 - np.min(errors_evec)
         assert(total_evec_error < EVEC_THRESH)
         # Check that relative eval error values are beneath tolerance.
-        test_evals = -1./mydmap.epsilon_fitted*(mydmap.evals - 1)
-        errors_eval = abs((test_evals - real_evals)/real_evals)
+        errors_eval = abs((mydmap.evals- real_evals)/real_evals)
         total_eval_error = np.min(errors_eval)
         assert(total_eval_error < EVAL_THRESH)
 

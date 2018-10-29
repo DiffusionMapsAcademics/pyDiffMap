@@ -122,23 +122,24 @@ class DiffusionMap(object):
         P = Dalpha * kernel_matrix
         return P
 
-    def _bandwidth_normalize(self, P, epsilon_fitted, bandwidths):
+    def _build_generator(self, P, epsilon_fitted, bandwidths=None):
+        print(epsilon_fitted, 'eps fitted')
         m, n = P.shape
-        L = P - sps.eye(m, n, k=(n - m))
-        scaled_bw = bandwidths / np.min(bandwidths)
-        bw_diag = sps.spdiags(np.power(scaled_bw, -2), 0, m, m)
-        P = sps.eye(m, n, k=(n - m)) + bw_diag * L
-        return P
+        L = (P - sps.eye(m, n, k=(n - m))) / epsilon_fitted
+        if bandwidths is not None:
+            bw_diag = sps.spdiags(np.power(bandwidths, -2), 0, m, m)
+            L = bw_diag * L
+        return L
 
-    def _make_diffusion_coords(self, P):
-        evals, evecs = spsl.eigs(P, k=(self.n_evecs+1), which='LR')
+    def _make_diffusion_coords(self, L):
+        evals, evecs = spsl.eigs(L, k=(self.n_evecs+1), which='LR')
         ix = evals.argsort()[::-1][1:]
         evals = np.real(evals[ix])
         evecs = np.real(evecs[:, ix])
-        dmap = np.dot(evecs, np.diag(evals))
+        dmap = np.dot(evecs, np.diag(np.sqrt(-1. / evals)))
         return dmap, evecs, evals
 
-    def construct_Pmat(self, X):
+    def construct_Lmat(self, X):
         """
         Builds the transition matrix, but does NOT compute the eigenvectors.  This is useful for applications where the transition matrix itself is the object of interest.
 
@@ -161,8 +162,7 @@ class DiffusionMap(object):
         q, right_norm_vec = self._make_right_norm_vec(kernel_matrix, q=density, bandwidths=my_kernel.bandwidths)
         P = self._right_normalize(kernel_matrix, right_norm_vec, weights)
         P = self._left_normalize(P)
-        if self.bandwidth_normalize:
-            P = self._bandwidth_normalize(P, self.epsilon_fitted, my_kernel.bandwidths)
+        L = self._build_generator(P, my_kernel.epsilon_fitted, my_kernel.bandwidths)
 
         # Save data
         self.local_kernel = my_kernel
@@ -171,7 +171,7 @@ class DiffusionMap(object):
         self.data = X
         self.weights = weights
         self.kernel_matrix = kernel_matrix
-        self.P = P
+        self.L = L
         self.q = q
         self.right_norm_vec = right_norm_vec
         return self
@@ -189,8 +189,8 @@ class DiffusionMap(object):
         -------
         self : the object itself
         """
-        self.construct_Pmat(X)
-        dmap, evecs, evals = self._make_diffusion_coords(self.P)
+        self.construct_Lmat(X)
+        dmap, evecs, evals = self._make_diffusion_coords(self.L)
 
         # Save constructed data.
         self.evals = evals
@@ -293,7 +293,10 @@ def nystroem_oos(dmap_object, Y):
     kernel_extended = dmap_object.local_kernel.compute(Y)
     weights = dmap_object._compute_weights(dmap_object.local_kernel.data, kernel_extended, Y)
     P = dmap_object._left_normalize(dmap_object._right_normalize(kernel_extended, dmap_object.right_norm_vec, weights))
-    return P * dmap_object.evecs
+    evals_p = dmap_object.local_kernel.epsilon_fitted * dmap_object.evals + 1.
+    oos_evecs = P * dmap_object.dmap
+    oos_dmap = np.dot(oos_evecs, np.diag(1. / evals_p))
+    return oos_evecs
 
 
 def power_oos(dmap_object, Y):
@@ -323,11 +326,10 @@ def power_oos(dmap_object, Y):
     weights = dmap_object._compute_weights(data_full, k_full, Y)
 
     P = dmap_object._left_normalize(dmap_object._right_normalize(k_full, right_norm_full, weights))
-    if dmap_object.bandwidth_normalize:
-        P = dmap_object._bandwidth_normalize(P, dmap_object.epsilon_fitted,
+    L = dmap_object._build_generator(P, dmap_object.epsilon_fitted,
                                              y_bandwidths)
-    P_yx = P[:, :-m]
-    P_yy = np.array(P[:, -m:].diagonal())
-    adj_evals = dmap_object.evals - P_yy.reshape(-1, 1)
-    dot_part = np.array(P_yx.dot(dmap_object.evecs))
-    return (dmap_object.evals / adj_evals) * dot_part
+    L_yx = L[:, :-m]
+    L_yy = np.array(L[:, -m:].diagonal())
+    adj_evals = dmap_object.evals - L_yy.reshape(-1, 1)
+    dot_part = np.array(L_yx.dot(dmap_object.dmap))
+    return (1. / adj_evals) * dot_part
