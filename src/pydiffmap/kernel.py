@@ -228,10 +228,7 @@ class NNKDE(object):
         for row in nn_graph:
             dense_row = np.array(row[row.nonzero()]).ravel()
             sorted_ndxs = np.argpartition(dense_row, k-1)
-            # print(sorted_ndxs)
-            # print(sorted_ndxs[:k])
             sorted_row = dense_row[sorted_ndxs[:k]]
-            print(sorted_row)
             sub_neighbors.append(sorted_row)
         return np.array(sub_neighbors)
 
