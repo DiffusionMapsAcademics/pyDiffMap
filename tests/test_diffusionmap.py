@@ -192,6 +192,21 @@ class TestDiffusionMap(object):
         evec_error = 1 - np.corrcoef(mydmap.dmap[:, 0], data_rotated[2, :])[0, 1]
         assert(evec_error < THRESH)
 
+    def test_explicit_density(self):
+        """
+        Test that we provide explicit density by density function call.
+        This test tests the implementation and is independent on all parameters.
+        """
+
+        data = np.random.randn(1000, 1)
+        density_fxn = lambda x: (1.0/(np.sqrt(np.pi * 2))) * np.exp(-0.5 * x**2).squeeze()
+
+        mydmap = dm.DiffusionMap(n_evecs=2, epsilon=0.1, alpha=0.5, k=100, density_fxn=density_fxn)
+        dmap = mydmap.fit(data)
+
+        err = np.max((np.abs(mydmap.q / np.linalg.norm(mydmap.q) - density_fxn(data) / np.linalg.norm(density_fxn(data)))))
+
+        assert(err == 0)
 
 class TestNystroem(object):
     @pytest.mark.parametrize('method', ['nystroem', 'power'])
