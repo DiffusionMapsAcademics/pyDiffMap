@@ -194,8 +194,8 @@ class TestDiffusionMap(object):
 
     def test_explicit_density(self):
         """
-        Test that we provide explicit density by density function call.
-        This test tests the implementation and is independent on all parameters.
+        Test explicit density function.
+        This test tests the implementation and is independent on all the other parameters.
         """
 
         data = np.random.randn(1000, 1)
@@ -207,6 +207,30 @@ class TestDiffusionMap(object):
         err = np.max((np.abs(mydmap.q / np.linalg.norm(mydmap.q) - density_fxn(data) / np.linalg.norm(density_fxn(data)))))
 
         assert(err == 0)
+
+    @pytest.mark.parametrize('epsilon', [0.1, 'bgh'])
+    def test_explicit_density_kde(self, epsilon):
+        """
+        Test the implicit kernel density estimator. Results depend on knearest neighbors
+        and epsilon. This test is not very stable, tolerancy threshold is therefore chosen high.
+        """
+        THRESH = 0.2
+        data = np.random.randn(1000, 1)
+        # reject_outliers to stabilise
+        m = 2
+        data = data[abs(data - np.mean(data)) < m * np.std(data), np.newaxis]
+
+        density_fxn = lambda x: (1.0/(np.sqrt(np.pi * 2))) * np.exp(-0.5 * x**2).squeeze()
+
+        mydmap = dm.DiffusionMap(n_evecs=2, epsilon=epsilon, alpha=0.5, k=500)
+        dmap = mydmap.fit(data)
+
+        true = density_fxn(data) / np.linalg.norm(density_fxn(data))
+        kde = mydmap.q / np.linalg.norm(mydmap.q)
+
+        err = np.linalg.norm(true - kde) / np.linalg.norm(kde)
+
+        assert(err < THRESH)
 
 class TestNystroem(object):
     @pytest.mark.parametrize('method', ['nystroem', 'power'])
