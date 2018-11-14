@@ -148,7 +148,7 @@ class Kernel(object):
         """
         if Y is None:
             Y = self.data
-        if np.array_equal(Y, self.data): # Avoid recomputing nearest neighbors unless needed.
+        if np.array_equal(Y, self.data):  # Avoid recomputing nearest neighbors unless needed.
             y_bandwidths = self.bandwidths
             K = self.scaled_dists
         else:

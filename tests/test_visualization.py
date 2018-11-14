@@ -10,7 +10,7 @@ from pydiffmap import visualization as viz
 def dummy_dmap(uniform_2d_data):
     data, X, Y = uniform_2d_data
     print(data)
-    mydmap = dm.DiffusionMap(n_evecs=3, k=5)
+    mydmap = dm.DiffusionMap.from_sklearn(n_evecs=3, k=5)
     mydmap.fit(data)
     return mydmap
 

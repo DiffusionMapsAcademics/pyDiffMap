@@ -14,32 +14,22 @@ from . import utils
 
 class DiffusionMap(object):
     """
-    Diffusion Map object to be used in data analysis for fun and profit.
+    Diffusion Map object for data analysis 
 
     Parameters
     ----------
+    kernel_object : Kernel object.
+        Kernel object that outputs the values of the kernel.  Must have the method .fit(X) and .compute() methods.
+        Any epsilon desired for normalization should be stored at kernel_object.epsilon_fitted and any bandwidths
+        should be located at kernel_object.bandwidths.
     alpha : scalar, optional
         Exponent to be used for the left normalization in constructing the diffusion map.
-    k : int, optional
-        Number of nearest neighbors over which to construct the kernel.
-    kernel_type : string, optional
-        Type of kernel to construct. Currently the only option is 'gaussian', but more will be implemented.
-    epsilon: string or scalar, optional
-        Method for choosing the epsilon.  Currently, the only options are to provide a scalar (epsilon is set to the provided scalar) or 'bgh' (Berry, Giannakis and Harlim).
     n_evecs : int, optional
         Number of diffusion map eigenvectors to return
-    neighbor_params : dict or None, optional
-        Optional parameters for the nearest Neighbor search. See scikit-learn NearestNeighbors class for details.
-    metric : string, optional
-        Metric for distances in the kernel. Default is 'euclidean'. The callable should take two arrays as input and return one value indicating the distance between them.
-    metric_params : dict or None, optional
-        Optional parameters required for the metric given.
     weight_fxn : callable or None, optional
         Callable function that take in two points (X_i and X_j), and outputs the value of the weight matrix at those points.
     density_fxn : callable or None, optional
         Callable function that take in X, and outputs the value of the density of X. Used instead of kernel density estimation in the normalisation.
-    bandwidth_type: callable, number, string, or None, optional
-        Type of bandwidth to use in the kernel.  If None (default), a fixed bandwidth kernel is used.  If a callable function, the data is passed to the function, and the bandwidth is output (note that the function must take in an entire dataset, not the points 1-by-1).  If a number, e.g. -.25, a kernel density estimate is performed, and the bandwidth is taken to be q**(input_number).  For a string input, the input is assumed to be an evaluatable expression in terms of the dimension d, e.g. "-1/(d+2)".  The dimension is then estimated, and the bandwidth is set to q**(evaluated input string).
     bandwidth_normalize: boolean, optional
         If true, normalize the final constructed transition matrix by the bandwidth as described in Berry and Harlim. [1]_
     oos : 'nystroem' or 'power', optional
@@ -70,8 +60,6 @@ class DiffusionMap(object):
         self.epsilon_fitted = None
         self.weight_fxn = weight_fxn
         self.bandwidth_normalize = bandwidth_normalize
-        # if ((bandwidth_type is None) and (bandwidth_normalize is True)):
-        #     warnings.warn('Bandwith normalization set to true, but no bandwidth function provided.  Setting to False.')
         self.oos = oos
         self.density_fxn = density_fxn
 #         my_kernel = kernel.Kernel(kernel_type=kernel_type, k=k,
@@ -84,16 +72,51 @@ class DiffusionMap(object):
     def from_sklearn(cls, alpha=0.5, k=64, kernel_type='gaussian', epsilon='bgh', n_evecs=1, neighbor_params=None,
                      metric='euclidean', metric_params=None, weight_fxn=None, density_fxn=None, bandwidth_type=None,
                      bandwidth_normalize=False, oos='nystroem'):
+        """
+        Builds the diffusion map using a kernel constructed using the Scikit-learn nearest neighbor object.
+        Parameters are largely the same as the constructor, but in place of the kernel object it takes 
+        the following parameters.
+        
+        Parameters
+        ----------
+        k : int, optional
+            Number of nearest neighbors over which to construct the kernel.
+        kernel_type : string, optional
+            Type of kernel to construct. Currently the only option is 'gaussian', but more will be implemented.
+        epsilon: string or scalar, optional
+            Method for choosing the epsilon.  Currently, the only options are to provide a scalar (epsilon is set to the provided scalar) or 'bgh' (Berry, Giannakis and Harlim).
+        neighbor_params : dict or None, optional
+            Optional parameters for the nearest Neighbor search. See scikit-learn NearestNeighbors class for details.
+        metric : string, optional
+            Metric for distances in the kernel. Default is 'euclidean'. The callable should take two arrays as input and return one value indicating the distance between them.
+        metric_params : dict or None, optional
+            Optional parameters required for the metric given.
+        bandwidth_type: callable, number, string, or None, optional
+            Type of bandwidth to use in the kernel.  If None (default), a fixed bandwidth kernel is used.  If a callable function, the data is passed to the function, and the bandwidth is output (note that the function must take in an entire dataset, not the points 1-by-1).  If a number, e.g. -.25, a kernel density estimate is performed, and the bandwidth is taken to be q**(input_number).  For a string input, the input is assumed to be an evaluatable expression in terms of the dimension d, e.g. "-1/(d+2)".  The dimension is then estimated, and the bandwidth is set to q**(evaluated input string).
+
+        Examples
+        --------
+        # setup neighbor_params list with as many jobs as CPU cores and kd_tree neighbor search.
+        >>> neighbor_params = {'n_jobs': -1, 'algorithm': 'kd_tree'}
+        # initialize diffusion map object with the top two eigenvalues being computed, epsilon set to 0.1
+        # and alpha set to 1.0.
+        >>> mydmap = DiffusionMap(n_evecs = 2, epsilon = .1, alpha = 1.0, neighbor_params = neighbor_params)
+
+        References
+        ----------
+        .. [1] T. Berry, and J. Harlim, Applied and Computational Harmonic Analysis 40, 68-96
+           (2016).
+        """
 
         buendia = kernel.Kernel(kernel_type=kernel_type, k=k, epsilon=epsilon, neighbor_params=neighbor_params, metric=metric, metric_params=metric_params, bandwidth_type=bandwidth_type)
         dmap = cls(buendia, alpha=alpha, n_evecs=n_evecs, weight_fxn=weight_fxn, density_fxn=density_fxn, bandwidth_normalize=bandwidth_normalize, oos=oos)
+        # if ((bandwidth_type is None) and (bandwidth_normalize is True)):
+        #     warnings.warn('Bandwith normalization set to true, but no bandwidth function provided.  Setting to False.')
         return dmap
-
-
 
     def _build_kernel(self, X, my_kernel):
         my_kernel.fit(X)
-        kernel_matrix = utils._symmetrize_matrix(my_kernel.compute(X))
+        kernel_matrix = utils._symmetrize_matrix(my_kernel.compute())
         return kernel_matrix, my_kernel
 
     def _compute_weights(self, X, kernel_matrix, Y):
@@ -126,13 +149,17 @@ class DiffusionMap(object):
         P = Dalpha * kernel_matrix
         return P
 
-    def _build_generator(self, P, epsilon_fitted, bandwidths=None):
+    def _build_generator(self, P, epsilon_fitted, bandwidths=None, bandwidth_normalize=False):
         print(epsilon_fitted, 'eps fitted')
         m, n = P.shape
         L = (P - sps.eye(m, n, k=(n - m))) / epsilon_fitted
-        if bandwidths is not None:
-            bw_diag = sps.spdiags(np.power(bandwidths, -2), 0, m, m)
-            L = bw_diag * L
+        if bandwidth_normalize:
+            if bandwidths is not None:
+                bw_diag = sps.spdiags(np.power(bandwidths, -2), 0, m, m)
+                L = bw_diag * L
+            else:
+                warnings.warn('Bandwith normalization set to true, but no bandwidth function was found in normalization.  Not performing normalization')
+
         return L
 
     def _make_diffusion_coords(self, L):
@@ -171,7 +198,7 @@ class DiffusionMap(object):
         q, right_norm_vec = self._make_right_norm_vec(kernel_matrix, q=density, bandwidths=bandwidths)
         P = self._right_normalize(kernel_matrix, right_norm_vec, weights)
         P = self._left_normalize(P)
-        L = self._build_generator(P, my_kernel.epsilon_fitted, bandwidths)
+        L = self._build_generator(P, my_kernel.epsilon_fitted, bandwidths, bandwidth_normalize=self.bandwidth_normalize)
 
         # Save data
         self.local_kernel = my_kernel
