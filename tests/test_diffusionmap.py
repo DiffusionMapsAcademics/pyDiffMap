@@ -19,7 +19,7 @@ class TestDiffusionMap(object):
         data = np.array([X]).transpose()
         THRESH = 0.05
         # Setup diffusion map
-        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=epsilon, alpha=1.0, k=20)
+        mydmap = dm.DiffusionMap.from_sklearn(n_evecs=4, epsilon=epsilon, alpha=1.0, k=20)
         mydmap.fit(data)
 
         # Check that relative error values are beneath tolerance.
@@ -42,7 +42,7 @@ class TestDiffusionMap(object):
         data = np.array([X]).transpose()
         THRESH = 0.003
         # Setup diffusion map
-        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=epsilon, alpha=1.0, k=40)
+        mydmap = dm.DiffusionMap.from_sklearn(n_evecs=4, epsilon=epsilon, alpha=1.0, k=40)
         mydmap.fit_transform(data)
         errors_evec = []
         for k in np.arange(4):
@@ -67,7 +67,7 @@ class TestDiffusionMap(object):
         data = np.array([X]).transpose()
         THRESH = 0.1
         # Setup diffusion map
-        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=epsilon, alpha=1.0, k=40)
+        mydmap = dm.DiffusionMap.from_sklearn(n_evecs=4, epsilon=epsilon, alpha=1.0, k=40)
         mydmap.fit_transform(data)
 
         # Check that relative error values are beneath tolerance.
@@ -89,7 +89,7 @@ class TestDiffusionMap(object):
         data = np.array([X]).transpose()
         THRESH = 0.01
         # Setup diffusion map
-        mydmap = dm.DiffusionMap(n_evecs=4, epsilon=epsilon, alpha=1.0, k=40)
+        mydmap = dm.DiffusionMap.from_sklearn(n_evecs=4, epsilon=epsilon, alpha=1.0, k=40)
         mydmap.fit_transform(data)
         errors_evec = []
         for k in np.arange(4):
@@ -113,7 +113,7 @@ class TestDiffusionMap(object):
         THRESH = 0.2
 
         eps = 0.0025
-        mydmap = dm.DiffusionMap(n_evecs=4, alpha=1.0, k=100, epsilon=eps)
+        mydmap = dm.DiffusionMap.from_sklearn(n_evecs=4, alpha=1.0, k=100, epsilon=eps)
         mydmap.fit(data)
 
         # Check that relative error values are beneath tolerance.
@@ -134,7 +134,7 @@ class TestDiffusionMap(object):
         THRESH = 0.01
 
         eps = 0.0025
-        mydmap = dm.DiffusionMap(n_evecs=4, alpha=1.0, k=100, epsilon=eps)
+        mydmap = dm.DiffusionMap.from_sklearn(n_evecs=4, alpha=1.0, k=100, epsilon=eps)
         mydmap.fit(data)
         errors_evec = []
         errors_evec.append(abs(np.corrcoef(np.cos(0.5*1*X), mydmap.evecs[:, 0])[0, 1]))
@@ -157,7 +157,7 @@ class TestDiffusionMap(object):
         real_evals = -1 * np.array([2, 2, 2, 6])  # =l(l+1)
         THRESH = 0.1
         eps = 0.015
-        mydmap = dm.DiffusionMap(n_evecs=4, alpha=1.0, k=400, epsilon=eps)
+        mydmap = dm.DiffusionMap.from_sklearn(n_evecs=4, alpha=1.0, k=400, epsilon=eps)
         mydmap.fit(data)
 
         # Check eigenvalues pass below error tolerance.
@@ -174,7 +174,7 @@ class TestDiffusionMap(object):
         data, Phi, Theta = spherical_data
         THRESH = 0.001
         eps = 0.015
-        mydmap = dm.DiffusionMap(n_evecs=4, alpha=1.0, k=400, epsilon=eps)
+        mydmap = dm.DiffusionMap.from_sklearn(n_evecs=4, alpha=1.0, k=400, epsilon=eps)
         mydmap.fit(data)
         # rotate sphere so that maximum of first DC is at the north pole
         northpole = np.argmax(mydmap.dmap[:, 0])
@@ -197,7 +197,7 @@ class TestDiffusionMap(object):
         data = harmonic_1d_data
         density_fxn = lambda x: (1.0/(np.sqrt(np.pi * 2))) * np.exp(-0.5 * x**2).squeeze()
 
-        mydmap = dm.DiffusionMap(n_evecs=2, epsilon=0.1, alpha=0.5, k=100, density_fxn=density_fxn)
+        mydmap = dm.DiffusionMap.from_sklearn(n_evecs=2, epsilon=0.1, alpha=0.5, k=100, density_fxn=density_fxn)
         mydmap.fit(data)
 
         err = np.max((np.abs(mydmap.q / np.linalg.norm(mydmap.q) - density_fxn(data) / np.linalg.norm(density_fxn(data)))))
@@ -218,7 +218,7 @@ class TestDiffusionMap(object):
 
         density_fxn = lambda x: (1.0/(np.sqrt(np.pi * 2))) * np.exp(-0.5 * x**2).squeeze()
 
-        mydmap = dm.DiffusionMap(n_evecs=2, epsilon=epsilon, alpha=0.5, k=100)
+        mydmap = dm.DiffusionMap.from_sklearn(n_evecs=2, epsilon=epsilon, alpha=0.5, k=100)
         dmap = mydmap.fit(data)
 
         true = density_fxn(data) / np.linalg.norm(density_fxn(data))
@@ -239,7 +239,7 @@ class TestNystroem(object):
         THRESH = 0.01
         # Setup diffusion map
         eps = 0.01
-        mydmap = dm.DiffusionMap(n_evecs=1, alpha=1.0, k=100, epsilon=eps, oos=method)
+        mydmap = dm.DiffusionMap.from_sklearn(n_evecs=1, alpha=1.0, k=100, epsilon=eps, oos=method)
         mydmap.fit(data)
         # Setup values to test against (regular grid)
         x_test, y_test = np.meshgrid(np.linspace(0, 2*np.pi, 80), np.linspace(0, np.pi, 40))
@@ -293,7 +293,7 @@ class TestWeighting(object):
             mydmap = dm.TMDmap(alpha=1., n_evecs=4, epsilon=epsilon, k=100, change_of_measure=com_fxn, oos=oos)
         else:
             weight_fxn = lambda x_i, y_j: np.exp(-.25*np.dot(y_j, y_j))
-            mydmap = dm.DiffusionMap(alpha=1., n_evecs=4, epsilon=epsilon, k=100, weight_fxn=weight_fxn, oos=oos)
+            mydmap = dm.DiffusionMap.from_sklearn(alpha=1., n_evecs=4, epsilon=epsilon, k=100, weight_fxn=weight_fxn, oos=oos)
 
         # Fit data and build dmap
         mydmap.fit(data_x)
@@ -326,7 +326,7 @@ class TestBandwidths(object):
         else:
             bandwidth_type = beta
 
-        mydmap = dm.DiffusionMap(n_evecs=3, epsilon='bgh', alpha=alpha,
+        mydmap = dm.DiffusionMap.from_sklearn(n_evecs=3, epsilon='bgh', alpha=alpha,
                                  k=50, bandwidth_type=bandwidth_type, bandwidth_normalize=True)
         mydmap.fit_transform(data)
         errors_evec = []
@@ -350,7 +350,7 @@ class TestBandwidths(object):
             bandwidth_type = lambda x: np.exp(-1. * x[:, 0]**2 * (beta / 2.))  # bandwidth is density^beta
         else:
             bandwidth_type = beta
-        mydmap = dm.DiffusionMap(n_evecs=3, epsilon='bgh', alpha=alpha,
+        mydmap = dm.DiffusionMap.from_sklearn(n_evecs=3, epsilon='bgh', alpha=alpha,
                                  k=50, bandwidth_type=bandwidth_type, bandwidth_normalize=True,
                                  oos='power')
         mydmap.fit(data)

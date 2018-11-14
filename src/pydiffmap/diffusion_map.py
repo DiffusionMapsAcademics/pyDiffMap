@@ -59,35 +59,39 @@ class DiffusionMap(object):
        (2016).
     """
 
-    def __init__(self, alpha=0.5, k=64, kernel_type='gaussian', epsilon='bgh', n_evecs=1, neighbor_params=None,
-                 metric='euclidean', metric_params=None, weight_fxn=None, density_fxn=None, bandwidth_type=None,
+    def __init__(self, kernel_object, alpha=0.5, n_evecs=1,
+                 weight_fxn=None, density_fxn=None,
                  bandwidth_normalize=False, oos='nystroem'):
         """
         Initializes Diffusion Map, sets parameters.
         """
         self.alpha = alpha
-        self.k = k
-        self.kernel_type = kernel_type
-        self.epsilon = epsilon
         self.n_evecs = n_evecs
-        self.neighbor_params = neighbor_params
-        self.metric = metric
-        self.metric_params = metric_params
         self.epsilon_fitted = None
-        self.d = None
         self.weight_fxn = weight_fxn
         self.bandwidth_normalize = bandwidth_normalize
-        self.bandwidth_type = bandwidth_type
-        if ((self.bandwidth_type is None) and (bandwidth_normalize is True)):
-            warnings.warn('Bandwith normalization set to true, but no bandwidth function provided.  Setting to False.')
+        # if ((bandwidth_type is None) and (bandwidth_normalize is True)):
+        #     warnings.warn('Bandwith normalization set to true, but no bandwidth function provided.  Setting to False.')
         self.oos = oos
         self.density_fxn = density_fxn
+#         my_kernel = kernel.Kernel(kernel_type=kernel_type, k=k,
+#                                   epsilon=epsilon, neighbor_params=neighbor_params,
+#                                   metric=metric, metric_params=metric_params,
+#                                   bandwidth_type=bandwidth_type)
+        self.local_kernel = kernel_object
 
-    def _build_kernel(self, X):
-        my_kernel = kernel.Kernel(kernel_type=self.kernel_type, k=self.k,
-                                  epsilon=self.epsilon, neighbor_params=self.neighbor_params,
-                                  metric=self.metric, metric_params=self.metric_params,
-                                  bandwidth_type=self.bandwidth_type)
+    @classmethod
+    def from_sklearn(cls, alpha=0.5, k=64, kernel_type='gaussian', epsilon='bgh', n_evecs=1, neighbor_params=None,
+                     metric='euclidean', metric_params=None, weight_fxn=None, density_fxn=None, bandwidth_type=None,
+                     bandwidth_normalize=False, oos='nystroem'):
+
+        buendia = kernel.Kernel(kernel_type=kernel_type, k=k, epsilon=epsilon, neighbor_params=neighbor_params, metric=metric, metric_params=metric_params, bandwidth_type=bandwidth_type)
+        dmap = cls(buendia, alpha=alpha, n_evecs=n_evecs, weight_fxn=weight_fxn, density_fxn=density_fxn, bandwidth_normalize=bandwidth_normalize, oos=oos)
+        return dmap
+
+
+
+    def _build_kernel(self, X, my_kernel):
         my_kernel.fit(X)
         kernel_matrix = utils._symmetrize_matrix(my_kernel.compute(X))
         return kernel_matrix, my_kernel
@@ -152,22 +156,26 @@ class DiffusionMap(object):
         -------
         self : the object itself
         """
-        kernel_matrix, my_kernel = self._build_kernel(X)
+        kernel_matrix, my_kernel = self._build_kernel(X, self.local_kernel)
         weights = self._compute_weights(X, kernel_matrix, X)
 
         if self.density_fxn is not None:
             density = self.density_fxn(X)
         else:
             density = None
-        q, right_norm_vec = self._make_right_norm_vec(kernel_matrix, q=density, bandwidths=my_kernel.bandwidths)
+        try:
+            bandwidths = my_kernel.bandwidths
+        except AttributeError:
+            bandwidths = None
+
+        q, right_norm_vec = self._make_right_norm_vec(kernel_matrix, q=density, bandwidths=bandwidths)
         P = self._right_normalize(kernel_matrix, right_norm_vec, weights)
         P = self._left_normalize(P)
-        L = self._build_generator(P, my_kernel.epsilon_fitted, my_kernel.bandwidths)
+        L = self._build_generator(P, my_kernel.epsilon_fitted, bandwidths)
 
         # Save data
         self.local_kernel = my_kernel
         self.epsilon_fitted = my_kernel.epsilon_fitted
-        self.d = my_kernel.d
         self.data = X
         self.weights = weights
         self.kernel_matrix = kernel_matrix
@@ -262,14 +270,17 @@ class TMDmap(DiffusionMap):
         def weight_fxn(x_i, y_i):
             return np.sqrt(change_of_measure(y_i))
 
-        super(TMDmap, self).__init__(alpha=alpha, k=k, kernel_type=kernel_type,
-                                     epsilon=epsilon, n_evecs=n_evecs,
-                                     neighbor_params=neighbor_params,
-                                     metric=metric, metric_params=metric_params,
-                                     density_fxn=density_fxn,
-                                     bandwidth_type=bandwidth_type,
-                                     bandwidth_normalize=bandwidth_normalize,
-                                     weight_fxn=weight_fxn, oos=oos)
+        buendia = kernel.Kernel(kernel_type=kernel_type, k=k, epsilon=epsilon, neighbor_params=neighbor_params, metric=metric, metric_params=metric_params, bandwidth_type=bandwidth_type)
+
+        super(TMDmap, self).__init__(buendia, alpha=alpha, n_evecs=n_evecs, weight_fxn=weight_fxn, density_fxn=density_fxn, bandwidth_normalize=bandwidth_normalize, oos=oos)
+        # super(TMDmap, self).__init__(alpha=alpha, k=k, kernel_type=kernel_type,
+        #                              epsilon=epsilon, n_evecs=n_evecs,
+        #                              neighbor_params=neighbor_params,
+        #                              metric=metric, metric_params=metric_params,
+        #                              density_fxn=density_fxn,
+        #                              bandwidth_type=bandwidth_type,
+        #                              bandwidth_normalize=bandwidth_normalize,
+        #                              weight_fxn=weight_fxn, oos=oos)
 
 
 def nystroem_oos(dmap_object, Y):
@@ -318,7 +329,6 @@ def power_oos(dmap_object, Y):
     m = int(Y.shape[0])
     k_yx, y_bandwidths = dmap_object.local_kernel.compute(Y, return_bandwidths=True)  # Evaluate on ref points
     yy_right_norm_vec = dmap_object._make_right_norm_vec(k_yx, y_bandwidths)[1]
-
     k_yy_diag = dmap_object.local_kernel.kernel_fxn(0, dmap_object.epsilon_fitted)
     data_full = np.vstack([dmap_object.local_kernel.data, Y])
     k_full = sps.hstack([k_yx, sps.eye(m) * k_yy_diag])
