@@ -14,7 +14,7 @@ from . import utils
 
 class DiffusionMap(object):
     """
-    Diffusion Map object for data analysis 
+    Diffusion Map object for data analysis
 
     Parameters
     ----------
@@ -35,14 +35,6 @@ class DiffusionMap(object):
     oos : 'nystroem' or 'power', optional
         Method to use for out-of-sample extension.
 
-    Examples
-    --------
-    # setup neighbor_params list with as many jobs as CPU cores and kd_tree neighbor search.
-    >>> neighbor_params = {'n_jobs': -1, 'algorithm': 'kd_tree'}
-    # initialize diffusion map object with the top two eigenvalues being computed, epsilon set to 0.1
-    # and alpha set to 1.0.
-    >>> mydmap = DiffusionMap(n_evecs = 2, epsilon = .1, alpha = 1.0, neighbor_params = neighbor_params)
-
     References
     ----------
     .. [1] T. Berry, and J. Harlim, Applied and Computational Harmonic Analysis 40, 68-96
@@ -62,10 +54,6 @@ class DiffusionMap(object):
         self.bandwidth_normalize = bandwidth_normalize
         self.oos = oos
         self.density_fxn = density_fxn
-#         my_kernel = kernel.Kernel(kernel_type=kernel_type, k=k,
-#                                   epsilon=epsilon, neighbor_params=neighbor_params,
-#                                   metric=metric, metric_params=metric_params,
-#                                   bandwidth_type=bandwidth_type)
         self.local_kernel = kernel_object
 
     @classmethod
@@ -74,9 +62,9 @@ class DiffusionMap(object):
                      bandwidth_normalize=False, oos='nystroem'):
         """
         Builds the diffusion map using a kernel constructed using the Scikit-learn nearest neighbor object.
-        Parameters are largely the same as the constructor, but in place of the kernel object it takes 
+        Parameters are largely the same as the constructor, but in place of the kernel object it take
         the following parameters.
-        
+
         Parameters
         ----------
         k : int, optional
@@ -100,7 +88,7 @@ class DiffusionMap(object):
         >>> neighbor_params = {'n_jobs': -1, 'algorithm': 'kd_tree'}
         # initialize diffusion map object with the top two eigenvalues being computed, epsilon set to 0.1
         # and alpha set to 1.0.
-        >>> mydmap = DiffusionMap(n_evecs = 2, epsilon = .1, alpha = 1.0, neighbor_params = neighbor_params)
+        >>> mydmap = DiffusionMap.from_sklearn(n_evecs = 2, epsilon = .1, alpha = 1.0, neighbor_params = neighbor_params)
 
         References
         ----------
@@ -300,14 +288,6 @@ class TMDmap(DiffusionMap):
         buendia = kernel.Kernel(kernel_type=kernel_type, k=k, epsilon=epsilon, neighbor_params=neighbor_params, metric=metric, metric_params=metric_params, bandwidth_type=bandwidth_type)
 
         super(TMDmap, self).__init__(buendia, alpha=alpha, n_evecs=n_evecs, weight_fxn=weight_fxn, density_fxn=density_fxn, bandwidth_normalize=bandwidth_normalize, oos=oos)
-        # super(TMDmap, self).__init__(alpha=alpha, k=k, kernel_type=kernel_type,
-        #                              epsilon=epsilon, n_evecs=n_evecs,
-        #                              neighbor_params=neighbor_params,
-        #                              metric=metric, metric_params=metric_params,
-        #                              density_fxn=density_fxn,
-        #                              bandwidth_type=bandwidth_type,
-        #                              bandwidth_normalize=bandwidth_normalize,
-        #                              weight_fxn=weight_fxn, oos=oos)
 
 
 def nystroem_oos(dmap_object, Y):
@@ -363,8 +343,7 @@ def power_oos(dmap_object, Y):
     weights = dmap_object._compute_weights(data_full, k_full, Y)
 
     P = dmap_object._left_normalize(dmap_object._right_normalize(k_full, right_norm_full, weights))
-    L = dmap_object._build_generator(P, dmap_object.epsilon_fitted,
-                                             y_bandwidths)
+    L = dmap_object._build_generator(P, dmap_object.epsilon_fitted, y_bandwidths)
     L_yx = L[:, :-m]
     L_yy = np.array(L[:, -m:].diagonal())
     adj_evals = dmap_object.evals - L_yy.reshape(-1, 1)
