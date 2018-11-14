@@ -25,10 +25,15 @@ Tweaks and Modifications
 * Improved the Diffusion Map test suite.
 * Moved out-of-sample routines into separate functions.
 * Moved matrix symmetrization into newly made utility file.
+* Adjusted constructor for the diffusion map to take the kernel object directly.
 
 Bugfixes
 ~~~~~~~~
 * Fixed bug where weight matrices were not included for out of sample extension.
+
+Other
+~~~~~
+* Moved to MIT license.
 
 0.1.0 (2017-12-06)
 ------------------

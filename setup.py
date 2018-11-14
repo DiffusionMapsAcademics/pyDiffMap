@@ -25,7 +25,7 @@ def read(*names, **kwargs):
 setup(
     name='pydiffmap',
     version='0.1.1',
-    license='GPL license',
+    license='MIT license',
     description='Library for constructing variable bandwidth diffusion maps',
     long_description='%s\n%s' % (
         re.compile('^.. start-badges.*^.. end-badges', re.M | re.S).sub('', read('README.rst')),

@@ -29,7 +29,7 @@ project = u'pydiffmap'
 year = '2017'
 author = u'Ralf Banisch, Erik Henning Thiede, Zofia Trstanova'
 copyright = '{0}, {1}'.format(year, author)
-version = release = u'0.1.0'
+version = release = u'0.2.0'
 
 pygments_style = 'trac'
 templates_path = ['.']
