@@ -111,12 +111,12 @@ class Kernel(object):
         -------
         self : the object itself
         """
-        self.k0 = min(self.k, np.shape(X)[0])
+        k0 = min(self.k, np.shape(X)[0])
         self.data = X
         # Construct Nearest Neighbor Tree
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", message="Parameter p is found in metric_params. The corresponding parameter from __init__ is ignored.")
-            self.neigh = NearestNeighbors(n_neighbors=self.k,
+            self.neigh = NearestNeighbors(n_neighbors=k0,
                                           metric=self.metric,
                                           metric_params=self.metric_params,
                                           **self.neighbor_params)
