@@ -2,7 +2,7 @@
 2D Four-well potential
 ======================
 
-.. code:: python
+.. code:: ipython3
 
     import matplotlib.pyplot as plt
     import numpy as np
@@ -16,7 +16,7 @@ Load sampled data: discretized Langevin dynamics at temperature T=1,
 friction 1, and time step size dt=0.01, with double-well potentials in x
 and y, with higher barrier in y.
 
-.. code:: python
+.. code:: ipython3
 
     X=np.load('Data/4wells_traj.npy')
     print(X.shape)
@@ -27,7 +27,7 @@ and y, with higher barrier in y.
     (9900, 2)
 
 
-.. code:: python
+.. code:: ipython3
 
     def DW1(x):
             return 2.0*(np.linalg.norm(x)**2-1.0)**2
@@ -62,16 +62,22 @@ and y, with higher barrier in y.
 
 
 
-.. image:: Four_Wells_4_0.png
+.. image:: output_4_0.png
 
 
 Compute diffusion map embedding
 -------------------------------
 
-.. code:: python
+.. code:: ipython3
 
-    mydmap = dm.DiffusionMap(n_evecs = 2, epsilon = .1, alpha = 0.5, k=400, metric='euclidean')
+    mydmap = dm.DiffusionMap.from_sklearn(n_evecs = 2, epsilon = .1, alpha = 0.5, k=400, metric='euclidean')
     dmap = mydmap.fit_transform(X)
+
+
+.. parsed-literal::
+
+    0.1 eps fitted
+
 
 Visualization
 -------------
@@ -79,7 +85,7 @@ Visualization
 We plot the first two diffusion coordinates against each other, colored
 by the x coordinate
 
-.. code:: python
+.. code:: ipython3
 
     from pydiffmap.visualization import embedding_plot
     
@@ -89,10 +95,10 @@ by the x coordinate
 
 
 
-.. image:: Four_Wells_8_0.png
+.. image:: output_8_0.png
 
 
-.. code:: python
+.. code:: ipython3
 
     #from matplotlib import cm
     #plt.scatter(dmap[:,0], dmap[:,1], c=X[:,0], s=5, cmap=cm.coolwarm)
@@ -107,7 +113,7 @@ by the x coordinate
 
 We visualize the data again, colored by the first eigenvector this time.
 
-.. code:: python
+.. code:: ipython3
 
     from pydiffmap.visualization import data_plot
     
@@ -116,7 +122,7 @@ We visualize the data again, colored by the first eigenvector this time.
 
 
 
-.. image:: Four_Wells_11_0.png
+.. image:: output_11_0.png
 
 
 Target measure diffusion map
@@ -127,7 +133,7 @@ exp(-beta V(q)) with inverse temperature beta = 1. TMDmap can be seen as
 a special case where the weights are the target distribution, and
 alpha=1.
 
-.. code:: python
+.. code:: ipython3
 
     V=DW
     beta=1
@@ -136,7 +142,13 @@ alpha=1.
                         k=400, change_of_measure=change_of_measure)
     tmdmap = mytdmap.fit_transform(X)
 
-.. code:: python
+
+.. parsed-literal::
+
+    0.1 eps fitted
+
+
+.. code:: ipython3
 
     embedding_plot(mytdmap, scatter_kwargs = {'c': X[:,0], 's': 5, 'cmap': 'coolwarm'})
     
@@ -144,7 +156,7 @@ alpha=1.
 
 
 
-.. image:: Four_Wells_15_0.png
+.. image:: output_15_0.png
 
 
 From the sampling at temperature 1/beta =1, we can compute diffusion map
@@ -153,7 +165,7 @@ target measure pi(q) = exp(-beta\_low V(q)). Here we set beta\_low = 10,
 and use the data obtained from sampling at higher temperature, i.e.
 pi(q) = exp(-beta V(q)) with beta = 1.
 
-.. code:: python
+.. code:: ipython3
 
     V=DW
     beta_2=10
@@ -162,7 +174,13 @@ pi(q) = exp(-beta V(q)) with beta = 1.
                                            k=400, change_of_measure=change_of_measure_2)
     tmdmap2 = mytdmap2.fit_transform(X)
 
-.. code:: python
+
+.. parsed-literal::
+
+    0.1 eps fitted
+
+
+.. code:: ipython3
 
     embedding_plot(mytdmap2, scatter_kwargs = {'c': X[:,0], 's': 5, 'cmap': 'coolwarm'})
     
@@ -170,7 +188,7 @@ pi(q) = exp(-beta V(q)) with beta = 1.
 
 
 
-.. image:: Four_Wells_18_0.png
+.. image:: output_18_0.png
 
 
 Kernel density estimate
@@ -179,7 +197,7 @@ Kernel density estimate
 We can compute kernel density estimate using kde used in the diffusion
 map computation.
 
-.. code:: python
+.. code:: ipython3
 
     plt.scatter(X[:,0], X[:,1], c = mytdmap.q, s=5, cmap=cm.coolwarm)
     
@@ -193,21 +211,21 @@ map computation.
 
 
 
-.. image:: Four_Wells_21_0.png
+.. image:: output_21_0.png
 
 
 Now we check how well we can approximate the target distribution by the
 formula in the paper (left dominant eigenvector times KDE).
 
-.. code:: python
+.. code:: ipython3
 
     import scipy.sparse.linalg as spsl
-    P = mytdmap.P
-    [evals, evecs] = spsl.eigs(P.transpose(),k=1, which='LM')
+    L = mytdmap.L
+    [evals, evecs] = spsl.eigs(L.transpose(),k=1, which='LR')
     
     phi = np.real(evecs.ravel())
 
-.. code:: python
+.. code:: ipython3
 
     q_est = phi*mytdmap.q
     q_est = q_est/sum(q_est)
@@ -219,24 +237,28 @@ formula in the paper (left dominant eigenvector times KDE).
 
 .. parsed-literal::
 
-    0.04039146172164323
+    0.040391461721631335
 
 
 visualize both. there is no visible difference.
 
-.. code:: python
+.. code:: ipython3
 
     plt.figure(figsize=(16,6))
     
     ax = plt.subplot(121)
-    ax.scatter(X[:,0], X[:,1], c = q_est, s=5, cmap=cm.coolwarm)
+    SC1 = ax.scatter(X[:,0], X[:,1], c = q_est, s=5, cmap=cm.coolwarm, vmin=0, vmax=2E-4)
     
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     ax.set_title('estimate of pi')
+    plt.colorbar(SC1, ax=ax)
+    
     
     ax2 = plt.subplot(122)
-    ax2.scatter(X[:,0], X[:,1], c = q_exact, s=5, cmap=cm.coolwarm)
+    SC2 = ax2.scatter(X[:,0], X[:,1], c = q_exact, s=5, cmap=cm.coolwarm, vmin=0, vmax=2E-4)
+    plt.colorbar(SC2, ax=ax2)
+    
     
     ax2.set_xlabel('x')
     ax2.set_ylabel('y')
@@ -246,5 +268,6 @@ visualize both. there is no visible difference.
 
 
 
-.. image:: Four_Wells_26_0.png
+.. image:: output_26_0.png
+
 

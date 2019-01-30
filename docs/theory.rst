@@ -20,13 +20,13 @@ much :math:`q` is allowed to bias the operator :math:`\mathcal{L}`.
 Standard diffusion maps on a dataset ``X``, which has to given as a numpy array with different rows corresponding to
 different observations, is implemented in pydiffmap as::
 
-  mydmap = diffusion_map.DiffusionMap(epsilon = my_epsilon, alpha = my_alpha)
+  mydmap = diffusion_map.DiffusionMap.from_sklearn(epsilon = my_epsilon, alpha = my_alpha)
   mydmap.fit(X)
 
-Here ``epsilon`` is a scale parameter used to rescale distances between data points. We can also choose ``epsilon``
-automatically due to an an algorithm by Berry, Harlim and Giannakis::
+Here ``epsilon`` is a scale parameter used to rescale distances between data points. 
+We can also choose ``epsilon`` automatically due to an an algorithm by Berry, Harlim and Giannakis::
 
-  mydmap = dm.DiffusionMap(alpha = my_alpha, epsilon = 'bgh')
+  mydmap = dm.DiffusionMap.from_sklearn(alpha = my_alpha, epsilon = 'bgh')
 
 For additional optional arguments of the DiffusionMap class, see usage and documentation.
 

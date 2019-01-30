@@ -6,7 +6,7 @@ In this notebook we try to reproduce the eigenfunctions of the Laplacian
 on the 2D sphere embedded in :math:`\mathbb{R}^3`. The eigenfunctions
 are the spherical harmonics :math:`Y_l^m(\theta, \phi)`.
 
-.. code:: python
+.. code:: ipython3
 
     import numpy as np
     
@@ -26,7 +26,7 @@ we sample longitude and latitude uniformly and then transform to
 :math:`\mathbb{R}^3` using geographical coordinates (latidude is
 measured from the equator).
 
-.. code:: python
+.. code:: ipython3
 
     m = 10000
     Phi = 2*np.pi*np.random.rand(m) - np.pi
@@ -48,10 +48,10 @@ controls the scale and is set here by hand. The k parameter controls the
 neighbour lists, a smaller k will increase performance but decrease
 accuracy.
 
-.. code:: python
+.. code:: ipython3
 
     eps = 0.01
-    mydmap = dm.DiffusionMap(n_evecs=4, epsilon=eps, alpha=1.0, k=400)
+    mydmap = dm.DiffusionMap.from_sklearn(n_evecs=4, epsilon=eps, alpha=1.0, k=400)
     mydmap.fit_transform(data)
     test_evals = -4./eps*(mydmap.evals - 1)
     print(test_evals)
@@ -59,7 +59,8 @@ accuracy.
 
 .. parsed-literal::
 
-    [ 1.87120055  1.89337561  1.91161358  5.58725164]
+    0.01 eps fitted
+    [1116.4945497  1143.35090854 1147.22344311 2378.50043128]
 
 
 The true eigenfunctions here are spherical harmonics
@@ -69,7 +70,7 @@ The true eigenfunctions here are spherical harmonics
 has multiplicity three, this gives the benchmark eigenvalues [2, 2, 2,
 6].
 
-.. code:: python
+.. code:: ipython3
 
     real_evals = np.array([2, 2, 2, 6])
     test_evals = -4./eps*(mydmap.evals - 1)
@@ -80,8 +81,8 @@ has multiplicity three, this gives the benchmark eigenvalues [2, 2, 2,
 
 .. parsed-literal::
 
-    [ 1.87120055  1.89337561  1.91161358  5.58725164]
-    [ 0.06439973  0.05331219  0.04419321  0.06879139]
+    [1116.4945497  1143.35090854 1147.22344311 2378.50043128]
+    [557.24727485 570.67545427 572.61172156 395.41673855]
 
 
 visualisation
@@ -91,7 +92,7 @@ With pydiffmap's visualization toolbox, we can get a quick look at the
 embedding produced by the first two diffusion coordinates and the data
 colored by the first eigenfunction.
 
-.. code:: python
+.. code:: ipython3
 
     from pydiffmap.visualization import embedding_plot, data_plot
     
@@ -101,17 +102,17 @@ colored by the first eigenfunction.
 
 
 
-.. image:: Spherical_Harmonics_files/Spherical_Harmonics_9_0.png
+.. image:: output_9_0.png
 
 
-.. code:: python
+.. code:: ipython3
 
     data_plot(mydmap, dim=3, scatter_kwargs = {'cmap': 'Spectral'})
     plt.show()
 
 
 
-.. image:: Spherical_Harmonics_files/Spherical_Harmonics_10_0.png
+.. image:: output_10_0.png
 
 
 Rotating the dataset
@@ -121,7 +122,7 @@ There is rotational symmetry in this dataset. To remove it, we define
 the 'north pole' to be the point where the first diffusion coordinate
 attains its maximum value.
 
-.. code:: python
+.. code:: ipython3
 
     northpole = np.argmax(mydmap.dmap[:,0])
     north = data[northpole,:]
@@ -131,7 +132,7 @@ attains its maximum value.
                   [-np.sin(phi_n), np.cos(phi_n), 0],
                  [np.cos(theta_n)*np.cos(phi_n), np.cos(theta_n)*np.sin(phi_n), np.sin(theta_n)]])
 
-.. code:: python
+.. code:: ipython3
 
     data_rotated = np.dot(R,data.transpose())
     data_rotated.shape
@@ -149,7 +150,7 @@ Now that the dataset is rotated, we can check how well the first
 diffusion coordinate approximates the first spherical harmonic
 :math:`Y_1^1(\theta, \phi) = \sin(\theta) = Z`.
 
-.. code:: python
+.. code:: ipython3
 
     print('Correlation between \phi and \psi_1')
     print(np.corrcoef(mydmap.dmap[:,0], data_rotated[2,:]))
@@ -176,10 +177,11 @@ diffusion coordinate approximates the first spherical harmonic
 .. parsed-literal::
 
     Correlation between \phi and \psi_1
-    [[ 1.          0.99939606]
-     [ 0.99939606  1.        ]]
+    [[1.         0.99915563]
+     [0.99915563 1.        ]]
 
 
 
-.. image:: Spherical_Harmonics_files/Spherical_Harmonics_15_1.png
+.. image:: output_15_1.png
+
 
