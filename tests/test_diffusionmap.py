@@ -23,7 +23,7 @@ class TestDiffusionMap(object):
         mydmap.fit(data)
 
         # Check that relative error values are beneath tolerance.
-        errors_eval = abs((mydmap.evals - real_evals)/real_evals)
+        errors_eval = abs((mydmap.evals- real_evals)/real_evals)
         total_error = np.max(errors_eval)
 
         assert(total_error < THRESH)
@@ -292,7 +292,7 @@ class TestWeighting(object):
             com_fxn = lambda y_j: np.exp(-.5*np.dot(y_j, y_j))
             mydmap = dm.TMDmap(alpha=1., n_evecs=4, epsilon=epsilon, k=100, change_of_measure=com_fxn, oos=oos)
         else:
-            weight_fxn = lambda y_j: np.exp(-.25*np.dot(y_j, y_j))
+            weight_fxn = lambda x_i, y_j: np.exp(-.25*np.dot(y_j, y_j))
             mydmap = dm.DiffusionMap.from_sklearn(alpha=1., n_evecs=4, epsilon=epsilon, k=100, weight_fxn=weight_fxn, oos=oos)
 
         # Fit data and build dmap
