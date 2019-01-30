@@ -107,9 +107,11 @@ class DiffusionMap(object):
         kernel_matrix = utils._symmetrize_matrix(my_kernel.compute())
         return kernel_matrix, my_kernel
 
-    def _compute_weights(self, X, kernel_matrix, Y):
+    def _compute_weights(self, X):
         if self.weight_fxn is not None:
-            return utils.sparse_from_fxn(X, kernel_matrix, self.weight_fxn, Y)
+            # return utils.sparse_from_fxn(X, kernel_matrix, self.weight_fxn, Y)
+            N = np.shape(X)[0]
+            return np.array([self.weight_fxn(Xi) for Xi in X]).reshape(N)
         else:
             return None
 
@@ -127,7 +129,8 @@ class DiffusionMap(object):
         Dalpha = sps.spdiags(right_norm_vec, 0, m, m)
         kernel_matrix = kernel_matrix * Dalpha
         if weights is not None:
-            kernel_matrix = kernel_matrix.multiply(weights)
+            weight_mat = sps.spdiags(weights, 0, m, m)
+            kernel_matrix = kernel_matrix * weight_mat
         return kernel_matrix
 
     def _left_normalize(self, kernel_matrix):
@@ -172,7 +175,7 @@ class DiffusionMap(object):
         self : the object itself
         """
         kernel_matrix, my_kernel = self._build_kernel(X, self.local_kernel)
-        weights = self._compute_weights(X, kernel_matrix, X)
+        weights = self._compute_weights(X)
 
         if self.density_fxn is not None:
             density = self.density_fxn(X)
@@ -282,7 +285,7 @@ class TMDmap(DiffusionMap):
                  metric_params=None, change_of_measure=None, density_fxn=None,
                  bandwidth_type=None, bandwidth_normalize=False, oos='nystroem'):
 
-        def weight_fxn(x_i, y_i):
+        def weight_fxn(y_i):
             return np.sqrt(change_of_measure(y_i))
 
         buendia = kernel.Kernel(kernel_type=kernel_type, k=k, epsilon=epsilon, neighbor_params=neighbor_params, metric=metric, metric_params=metric_params, bandwidth_type=bandwidth_type)
@@ -309,11 +312,11 @@ def nystroem_oos(dmap_object, Y):
     # check if Y is equal to data. If yes, no computation needed.
     # compute the values of the kernel matrix
     kernel_extended = dmap_object.local_kernel.compute(Y)
-    weights = dmap_object._compute_weights(dmap_object.local_kernel.data, kernel_extended, Y)
+    weights = dmap_object._compute_weights(dmap_object.local_kernel.data)
     P = dmap_object._left_normalize(dmap_object._right_normalize(kernel_extended, dmap_object.right_norm_vec, weights))
-    evals_p = dmap_object.local_kernel.epsilon_fitted * dmap_object.evals + 1.
     oos_evecs = P * dmap_object.dmap
-    oos_dmap = np.dot(oos_evecs, np.diag(1. / evals_p))
+    # evals_p = dmap_object.local_kernel.epsilon_fitted * dmap_object.evals + 1.
+    # oos_dmap = np.dot(oos_evecs, np.diag(1. / evals_p))
     return oos_evecs
 
 
@@ -340,7 +343,7 @@ def power_oos(dmap_object, Y):
     data_full = np.vstack([dmap_object.local_kernel.data, Y])
     k_full = sps.hstack([k_yx, sps.eye(m) * k_yy_diag])
     right_norm_full = np.hstack([dmap_object.right_norm_vec, yy_right_norm_vec])
-    weights = dmap_object._compute_weights(data_full, k_full, Y)
+    weights = dmap_object._compute_weights(data_full)
 
     P = dmap_object._left_normalize(dmap_object._right_normalize(k_full, right_norm_full, weights))
     L = dmap_object._build_generator(P, dmap_object.epsilon_fitted, y_bandwidths)

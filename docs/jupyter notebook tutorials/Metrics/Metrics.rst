@@ -5,7 +5,7 @@ Diffusion maps with general metric
 In this notebook, we illustrate how to use an optional metric in the
 diffusion maps embedding.
 
-.. code:: python
+.. code:: ipython3
 
     import matplotlib.pyplot as plt
     import numpy as np
@@ -24,7 +24,7 @@ with this reaction coordinate. As a metric, we use the root mean square
 deviation (RMSD) from the package
 https://pypi.python.org/pypi/rmsd/1.2.5.
 
-.. code:: python
+.. code:: ipython3
 
     traj=np.load('Data/dimer_trajectory.npy')
     energy=np.load('Data/dimer_energy.npy')
@@ -36,7 +36,7 @@ https://pypi.python.org/pypi/rmsd/1.2.5.
     Loaded trajectory of 1000 steps of dimer molecule: 2 particles in dimension 3.
 
 
-.. code:: python
+.. code:: ipython3
 
     def compute_radius(X):
         return np.linalg.norm(X[:,0,:]-X[:,1,:], 2, axis=1)
@@ -74,10 +74,10 @@ https://pypi.python.org/pypi/rmsd/1.2.5.
 
 
 
-.. image:: Metrics_files/Metrics_5_0.png
+.. image:: output_5_0.png
 
 
-.. code:: python
+.. code:: ipython3
 
     # download from https://pypi.python.org/pypi/rmsd/1.2.5
     import rmsd
@@ -107,18 +107,24 @@ https://pypi.python.org/pypi/rmsd/1.2.5.
 
 Compute diffusion map embedding using the rmsd metric from above.
 
-.. code:: python
+.. code:: ipython3
 
     epsilon=0.05
     
     Xresh=traj.reshape(traj.shape[0], traj.shape[1]*traj.shape[2])
-    mydmap = dm.DiffusionMap(n_evecs = 1, epsilon = epsilon, alpha = 0.5, k=1000, metric=myRMSDmetric)
+    mydmap = dm.DiffusionMap.from_sklearn(n_evecs = 1, epsilon = epsilon, alpha = 0.5, k=1000, metric=myRMSDmetric)
     dmap = mydmap.fit_transform(Xresh)
+
+
+.. parsed-literal::
+
+    0.05 eps fitted
+
 
 Plot the dominant eigenvector over radius, to show the correlation with
 this collective variable.
 
-.. code:: python
+.. code:: ipython3
 
     evecs = mydmap.evecs
     
@@ -140,5 +146,6 @@ this collective variable.
 
 
 
-.. image:: Metrics_files/Metrics_10_0.png
+.. image:: output_10_0.png
+
 
