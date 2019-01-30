@@ -27,7 +27,7 @@ class DiffusionMap(object):
     n_evecs : int, optional
         Number of diffusion map eigenvectors to return
     weight_fxn : callable or None, optional
-        Callable function that take in two points (X_i and X_j), and outputs the value of the weight matrix at those points.
+        Callable function that take in a point, and outputs the value of the weight matrix at those points.
     density_fxn : callable or None, optional
         Callable function that take in X, and outputs the value of the density of X. Used instead of kernel density estimation in the normalisation.
     bandwidth_normalize: boolean, optional
@@ -109,7 +109,6 @@ class DiffusionMap(object):
 
     def _compute_weights(self, X):
         if self.weight_fxn is not None:
-            # return utils.sparse_from_fxn(X, kernel_matrix, self.weight_fxn, Y)
             N = np.shape(X)[0]
             return np.array([self.weight_fxn(Xi) for Xi in X]).reshape(N)
         else:
