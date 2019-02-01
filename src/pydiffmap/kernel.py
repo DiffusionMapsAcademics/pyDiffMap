@@ -196,7 +196,7 @@ class Kernel(object):
         elif epsilon == 'bgh':  # Berry, Giannakis Harlim method.
             if (self.metric != 'euclidean'):  # TODO : replace with call to scipy metrics.
                 warnings.warn('The BGH method for choosing epsilon assumes a euclidean metric.  However, the metric being used is %s.  Proceed at your own risk...' % self.metric)
-            if self.scaled_dists is not None:
+            if self.scaled_dists is None:
                 self.scaled_dists = self._get_scaled_distance_mat(self.data, self.bandwidths)
             self.epsilon_fitted, self.d = choose_optimal_epsilon_BGH(self.scaled_dists.data**2)
         else:

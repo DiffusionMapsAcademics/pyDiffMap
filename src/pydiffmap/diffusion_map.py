@@ -140,7 +140,6 @@ class DiffusionMap(object):
         return P
 
     def _build_generator(self, P, epsilon_fitted, bandwidths=None, bandwidth_normalize=False):
-        print(epsilon_fitted, 'eps fitted')
         m, n = P.shape
         L = (P - sps.eye(m, n, k=(n - m))) / epsilon_fitted
         if bandwidth_normalize:
