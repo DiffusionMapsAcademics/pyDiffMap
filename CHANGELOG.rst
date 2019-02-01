@@ -2,13 +2,12 @@
 Changelog
 =========
 
-0.2.0 (2018-??-??)
+0.2.0 (2019-02-1)
 ------------------
 
 New Features
 ~~~~~~~~~~~~
 * Added support for user-provided kernel functions. 
-* Added support for general weight matrices that take both points as input.
 * Added a utility for building a sparse matrix from a function on the data.
 * (Re)added separate TMDmap class wrapping base diffusion map class to 
   allow for easier construction of TMDmaps. 
