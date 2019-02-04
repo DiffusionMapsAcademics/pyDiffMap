@@ -22,7 +22,7 @@ class Kernel(object):
     kernel_type : string or callable, optional
         Type of kernel to construct. Currently the only option is 'gaussian' (the default), but more will be implemented.
     epsilon : string, optional
-        Method for choosing the epsilon.  Currently, the only options are to provide a scalar (epsilon is set to the provided scalar) or 'bgh' (Berry, Giannakis and Harlim).
+        Method for choosing the epsilon.  Currently, the only options are to provide a scalar (epsilon is set to the provided scalar) 'bgh' (Berry, Giannakis and Harlim), and 'bgh_generous' ('bgh' method, with answer multiplied by 2.
     k : int, optional
         Number of nearest neighbors over which to construct the kernel.
     neighbor_params : dict or None, optional
@@ -193,12 +193,14 @@ class Kernel(object):
         if isinstance(epsilon, numbers.Number):  # if user provided.
             self.epsilon_fitted = epsilon
             return self
-        elif epsilon == 'bgh':  # Berry, Giannakis Harlim method.
+        elif ((epsilon == 'bgh') or (epsilon == 'bgh_generous')):  # Berry, Giannakis Harlim method.
             if (self.metric != 'euclidean'):  # TODO : replace with call to scipy metrics.
                 warnings.warn('The BGH method for choosing epsilon assumes a euclidean metric.  However, the metric being used is %s.  Proceed at your own risk...' % self.metric)
             if self.scaled_dists is None:
                 self.scaled_dists = self._get_scaled_distance_mat(self.data, self.bandwidths)
             self.epsilon_fitted, self.d = choose_optimal_epsilon_BGH(self.scaled_dists.data**2)
+            if epsilon == 'bgh_generous':
+                self.epsilon_fitted *= 2.
         else:
             raise ValueError("Method for automatically choosing epsilon was given as %s, but this was not recognized" % epsilon)
         return self

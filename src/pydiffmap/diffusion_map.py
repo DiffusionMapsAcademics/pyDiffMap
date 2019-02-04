@@ -72,7 +72,7 @@ class DiffusionMap(object):
         kernel_type : string, optional
             Type of kernel to construct. Currently the only option is 'gaussian', but more will be implemented.
         epsilon: string or scalar, optional
-            Method for choosing the epsilon.  Currently, the only options are to provide a scalar (epsilon is set to the provided scalar) or 'bgh' (Berry, Giannakis and Harlim).
+            Method for choosing the epsilon.  Currently, the only options are to provide a scalar (epsilon is set to the provided scalar) 'bgh' (Berry, Giannakis and Harlim), and 'bgh_generous' ('bgh' method, with answer multiplied by 2.
         neighbor_params : dict or None, optional
             Optional parameters for the nearest Neighbor search. See scikit-learn NearestNeighbors class for details.
         metric : string, optional

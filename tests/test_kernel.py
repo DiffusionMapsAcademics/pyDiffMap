@@ -73,12 +73,16 @@ class TestKernel(object):
         row_has_k_elements = (K_matrix.nnz == k0*len(x_values))
         assert(row_has_k_elements)
 
-    def test_auto_epsilon_selection(self):
+    @pytest.mark.parameterize('eps_method', ['bgh', 'bgh_generous'])
+    def test_auto_epsilon_selection(self, eps_method):
         X = np.arange(100).reshape(-1, 1)
         mykernel = kernel.Kernel(kernel_type='gaussian', metric='euclidean',
-                                 epsilon='bgh', k=10)
+                                 epsilon=eps_method, k=10)
         mykernel.fit(X)
-        assert(mykernel.epsilon_fitted == 0.25)
+        if eps_method == 'eps':
+            assert(mykernel.epsilon_fitted == 0.25)
+        else:
+            assert(mykernel.epsilon_fitted == 0.50)
         assert(mykernel.d == 1.0)
 
 
