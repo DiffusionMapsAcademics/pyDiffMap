@@ -7,7 +7,7 @@ author: Ralf Banisch
 We demonstrate the usage of the diffusion\_map class on a
 two-dimensional manifold embedded in :math:`\mathbb{R}^3`.
 
-.. code:: ipython3
+.. code:: python
 
     # import some necessary functions for plotting as well as the diffusion_map class from pydiffmap.
     import matplotlib.pyplot as plt
@@ -29,7 +29,7 @@ density of samples decreases with the distance from the origin
 In order to be handled correctly by the diffusion\_map class, we must
 ensure the data is a numpy array of shape (n\_points, n\_features).
 
-.. code:: ipython3
+.. code:: python
 
     # set parameters
     length_phi = 15   #length of swiss roll in angular direction
@@ -66,7 +66,7 @@ controls the scale and needs to be adjusted to the data at hand. The k
 parameter controls the neighbour lists, a smaller k will increase
 performance but decrease accuracy.
 
-.. code:: ipython3
+.. code:: python
 
     # initialize Diffusion map object.
     neighbor_params = {'n_jobs': -1, 'algorithm': 'ball_tree'}
@@ -81,7 +81,7 @@ performance but decrease accuracy.
     0.015625000000000007 eps fitted
 
 
-.. code:: ipython3
+.. code:: python
 
     mydmap.epsilon_fitted
 
@@ -104,7 +104,7 @@ Points are again colored according to the first diffusion coordinate,
 which seems to parameterize the :math:`\phi` direction. We can see that
 the diffusion map embedding 'unwinds' the swiss roll.
 
-.. code:: ipython3
+.. code:: python
 
     from pydiffmap.visualization import embedding_plot, data_plot
     
@@ -128,7 +128,7 @@ points according to the numerical estimate of the sampling density
 direction. For comparison, we color the original data set according to
 :math:`\phi` this time.
 
-.. code:: ipython3
+.. code:: python
 
     from pydiffmap.visualization import embedding_plot, data_plot
     
@@ -151,7 +151,7 @@ further away from the center are more spaced out. Let's check how the
 first two diffusion coordinates correlate with :math:`\phi` and
 :math:`Z`.
 
-.. code:: ipython3
+.. code:: python
 
     print('Correlation between \phi and \psi_1')
     print(np.corrcoef(dmap[:,0], phi))

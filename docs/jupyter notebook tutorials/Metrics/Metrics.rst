@@ -5,7 +5,7 @@ Diffusion maps with general metric
 In this notebook, we illustrate how to use an optional metric in the
 diffusion maps embedding.
 
-.. code:: ipython3
+.. code:: python
 
     import matplotlib.pyplot as plt
     import numpy as np
@@ -24,7 +24,7 @@ with this reaction coordinate. As a metric, we use the root mean square
 deviation (RMSD) from the package
 https://pypi.python.org/pypi/rmsd/1.2.5.
 
-.. code:: ipython3
+.. code:: python
 
     traj=np.load('Data/dimer_trajectory.npy')
     energy=np.load('Data/dimer_energy.npy')
@@ -36,7 +36,7 @@ https://pypi.python.org/pypi/rmsd/1.2.5.
     Loaded trajectory of 1000 steps of dimer molecule: 2 particles in dimension 3.
 
 
-.. code:: ipython3
+.. code:: python
 
     def compute_radius(X):
         return np.linalg.norm(X[:,0,:]-X[:,1,:], 2, axis=1)
@@ -77,7 +77,7 @@ https://pypi.python.org/pypi/rmsd/1.2.5.
 .. image:: output_5_0.png
 
 
-.. code:: ipython3
+.. code:: python
 
     # download from https://pypi.python.org/pypi/rmsd/1.2.5
     import rmsd
@@ -107,7 +107,7 @@ https://pypi.python.org/pypi/rmsd/1.2.5.
 
 Compute diffusion map embedding using the rmsd metric from above.
 
-.. code:: ipython3
+.. code:: python
 
     epsilon=0.05
     
@@ -124,7 +124,7 @@ Compute diffusion map embedding using the rmsd metric from above.
 Plot the dominant eigenvector over radius, to show the correlation with
 this collective variable.
 
-.. code:: ipython3
+.. code:: python
 
     evecs = mydmap.evecs
     
