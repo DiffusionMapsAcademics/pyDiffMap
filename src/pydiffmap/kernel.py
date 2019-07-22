@@ -7,10 +7,13 @@ import numpy as np
 import numexpr as ne
 import scipy.sparse as sps
 import warnings
-from scipy.special import logsumexp
 from sklearn.neighbors import NearestNeighbors
 from six import string_types
 from . import utils
+try:
+    from scipy.special import logsumexp
+except ModuleNotFoundError:
+    from scipy.misc import logsumexp
 
 
 class Kernel(object):
