@@ -4,15 +4,17 @@ import pytest
 from pydiffmap import kernel
 from scipy.spatial.distance import cdist
 from sklearn.neighbors import NearestNeighbors
+import scipy.sparse as sps
 
-x_values = np.vstack((np.linspace(-1, 1, 11), np.arange(11))).T  # set of X vals
-y_values_set = [None, x_values, np.arange(6).reshape(-1, 2), np.arange(22).reshape(-1, 2)]  # all sets of Y's
-bandwidth_fxns = [None, lambda x: np.ones(x.shape[0]), lambda x: x[:, 1]/10. + 1.]
+x_values_set = [np.vstack((np.linspace(-1, 1, 11), np.arange(11))).T]  # set of X vals
+y_values_set = [None, np.vstack((np.linspace(-1, 1, 11), np.arange(11))).T, np.arange(6).reshape(-1, 2), np.arange(22).reshape(-1, 2)]  # all sets of Y's
+bandwidth_fxns = [None, lambda x: np.ones(x.shape[0]), lambda x: x[:, 1]/10. + 1]
 epsilons = [10., 1.]  # Possible epsilons
 
 
 class TestKernel(object):
     # These decorators run the test against all possible y, epsilon values.
+    @pytest.mark.parametrize('x_values', x_values_set)
     @pytest.mark.parametrize('y_values', y_values_set)
     @pytest.mark.parametrize('epsilon', epsilons)
     @pytest.mark.parametrize('bandwidth_fxn', bandwidth_fxns)
@@ -20,7 +22,7 @@ class TestKernel(object):
         ('euclidean', None),
         ('minkowski', {'p': 1})
     ])
-    def test_matrix_output(self, y_values, epsilon, bandwidth_fxn, metric, metric_params):
+    def test_matrix_output(self, x_values, y_values, epsilon, bandwidth_fxn, metric, metric_params):
         """
         Test that we are returning the correct kernel values.
         """
@@ -45,7 +47,53 @@ class TestKernel(object):
         # Construct the kernel and fit to data.
         mykernel = kernel.Kernel(kernel_type='gaussian', metric=metric,
                                  metric_params=metric_params, epsilon=epsilon,
-                                 k=len(x_values), bandwidth_type=bandwidth_fxn)
+                                 k=x_values.shape[0],bandwidth_type=bandwidth_fxn)
+        mykernel.fit(x_values)
+        K_matrix = mykernel.compute(y_values).toarray()
+
+        # Check that error values are beneath tolerance.
+        error_values = (K_matrix-true_values).ravel()
+        total_error = np.linalg.norm(error_values)
+        assert(total_error < 1E-8)
+
+    @pytest.mark.parametrize('x_values', x_values_set)
+    @pytest.mark.parametrize('y_values', y_values_set)
+    @pytest.mark.parametrize('use_sparse', [True, False])
+    @pytest.mark.parametrize('metric, metric_params', [
+        ('euclidean', None),
+        ('minkowski', {'p': 1})
+    ])
+    def test_sparse_input(self, x_values, y_values, metric, metric_params, use_sparse):
+        """
+        Test that we are returning the correct kernel values.
+        """
+        # Setup true values to test again.
+        epsilon = 10.
+        bandwidth_fxn = None
+        if y_values is None:
+            y_values_ref = x_values
+        else:
+            y_values_ref = y_values
+        if metric == 'minkowski':
+            pw_distance = cdist(y_values_ref, x_values, metric='minkowski', p=metric_params['p'])
+        else:
+            pw_distance = cdist(y_values_ref, x_values, metric=metric)
+        if bandwidth_fxn is None:
+            ref_bandwidth_fxn = lambda x: np.ones(x.shape[0])
+        else:
+            ref_bandwidth_fxn = bandwidth_fxn
+        if use_sparse:
+            x_values = sps.csr_matrix(x_values)
+            y_values_ref = sps.csr_matrix(y_values_ref)
+        x_bandwidth = ref_bandwidth_fxn(x_values)
+        y_bandwidth = ref_bandwidth_fxn(y_values_ref).reshape(-1, 1)
+        scaled_sq_dists = pw_distance**2 / (x_bandwidth * y_bandwidth)
+        true_values = np.exp(-1.*scaled_sq_dists/(4. * epsilon))
+
+        # Construct the kernel and fit to data.
+        mykernel = kernel.Kernel(kernel_type='gaussian', metric=metric,
+                                 metric_params=metric_params, epsilon=epsilon,
+                                 k=x_values.shape[0], bandwidth_type=bandwidth_fxn)
         mykernel.fit(x_values)
         K_matrix = mykernel.compute(y_values).toarray()
 
@@ -56,12 +104,13 @@ class TestKernel(object):
 
     @pytest.mark.parametrize('k', np.arange(2, 14, 2))
     @pytest.mark.parametrize('neighbor_params', [{'algorithm': 'auto'}, {'algorithm': 'ball_tree'}])
-    def test_neighborlists(self, k, neighbor_params):
+    @pytest.mark.parametrize('x_values', x_values_set)
+    def test_neighborlists(self, x_values, k, neighbor_params):
         """
         Test that neighborlisting gives the right number of elements.
         """
         # Correct number of nearest neighbors.
-        k0 = min(k, len(x_values))
+        k0 = min(k, x_values.shape[0])
 
         # Construct kernel matrix.
         mykernel = kernel.Kernel(kernel_type='gaussian', metric='euclidean',
@@ -70,7 +119,7 @@ class TestKernel(object):
         K_matrix = mykernel.compute(x_values)
 
         # Check if each row has correct number of elements
-        row_has_k_elements = (K_matrix.nnz == k0*len(x_values))
+        row_has_k_elements = (K_matrix.nnz == k0*x_values.shape[0])
         assert(row_has_k_elements)
 
     @pytest.mark.parametrize('eps_method', ['bgh', 'bgh_generous'])

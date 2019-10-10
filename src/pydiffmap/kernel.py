@@ -148,7 +148,8 @@ class Kernel(object):
         """
         if Y is None:
             Y = self.data
-        if np.array_equal(Y, self.data):  # Avoid recomputing nearest neighbors unless needed.
+        # if np.array_equal(Y, self.data):  # Avoid recomputing nearest neighbors unless needed.
+        if _check_equal(Y, self.data):
             y_bandwidths = self.bandwidths
             K = self.scaled_dists
         else:
@@ -388,3 +389,31 @@ def _scale_by_bw(d_yx, bw_x, bw_y):
     inv_bw.sort_indices()
     d_yx.data = d_yx.data * inv_bw.data
     return d_yx
+
+
+def _check_equal(X, Y):
+    """
+    Check if two datasets are equal.
+
+    Parameters
+    ----------
+    X : array-like, shape (n_query, n_features), optional.
+        Data against which to calculate the kernel values.  If not provided, calculates against the data provided in the fit.
+    Y : array-like, shape (n_query, n_features), optional.
+        Data against which to calculate the kernel values.  If not provided, calculates against the data provided in the fit.
+
+    Returns
+    -------
+    is_equal : bool
+        True if the datasets are equal, False if not.
+    """
+    X_is_sparse = isinstance(X, sps.spmatrix)
+    Y_is_sparse = isinstance(Y, sps.spmatrix)
+    if (X_is_sparse and Y_is_sparse):
+        if X.shape != Y.shape:
+            return False
+        else:
+            nonzero_rows, nonzero_cols = (X - Y).nonzero()
+            return (len(nonzero_rows) == 0)
+    else:
+        return np.array_equal(X, Y)
