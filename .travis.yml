@@ -1,36 +1,41 @@
 language: python
-sudo: false
-cache: pip
+dist: xenial
+cache: false
 env:
   global:
     - LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so
     - SEGFAULT_SIGNALS=all
-  matrix:
-    - TOXENV=check
-    - TOXENV=docs
 matrix:
   include:
-    - python: '2.7'
-      env:
-        - TOXENV=py27,report,codecov
-    - python: '3.4'
-      env:
-        - TOXENV=py34,report,codecov
-    - python: '3.5'
-      env:
-        - TOXENV=py35,report,codecov
     - python: '3.6'
       env:
-        - TOXENV=py36,report,codecov
+        - TOXENV=check
+    - python: '3.6'
+      env:
+        - TOXENV=docs
+    - env:
+        - TOXENV=py27,codecov
+      python: '2.7'
+    - env:
+        - TOXENV=py35,codecov
+      python: '3.5'
+    - env:
+        - TOXENV=py36,codecov
+      python: '3.6'
+    - env:
+        - TOXENV=py37,codecov
+      python: '3.7'
+    - env:
+        - TOXENV=py38,codecov
 before_install:
   - python --version
   - uname -a
-  - lsb_release -a
+  - lsb_release -a || true
   - "export DISPLAY=:99.0"
   - "sh -e /etc/init.d/xvfb start"
-  - sleep 3 # give xvfb some time to start
+  - sleep 5 # give xvfb some time to start
 install:
-  - pip install tox
+  - python -mpip install --progress-bar=off tox -rci/requirements.txt
   - virtualenv --version
   - easy_install --version
   - pip --version
