@@ -3,6 +3,8 @@ Changelog
 =========
 
 0.2.0.1 (2019-02-04)
+--------------------
+
 New Features
 ~~~~~~~~~~~~
 * Added a more generous epsilon procedure for convenience.
