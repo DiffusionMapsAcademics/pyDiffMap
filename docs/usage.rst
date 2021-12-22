@@ -4,7 +4,7 @@ Usage
 
 To use pyDiffMap in a project::
 
-	import pyDiffMap
+	import pydiffmap
 
 To initialize a diffusion map object::
 
